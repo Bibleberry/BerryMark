@@ -173,6 +173,12 @@ After import, use Sanity to inspect actual appearance, handle transferred review
 
 **Security:** Bibleberry's currently public-readable Sanity `production` dataset is not a secure holding area for unpublished confidential manuscripts. Use only authorized, nonconfidential test material until an appropriate private/embargo-safe path is deliberately established.
 
+### Make development inspection unmistakable
+
+When a BerryMark draft is eventually tested in the running Bibleberry developer lab, require a **development-only test banner on every screen**, showing the true content source, document/revision fingerprint, and screen identifier/position. For detailed checks, expose optional small CB/nested-item ID labels. **Do not insert the word TEST or diagnostic IDs into Alexis's actual manuscript or BerryMark teaching text.** The reader/debug layer should render them, and normal production presentation must not.
+
+Maintain a screen-by-screen verification record: expected screen and block IDs, actual rendered blocks, any differing text/formatting, whether optional studies and choices work, and any missing/extra content. Record what was tested, on which revision, rather than merely saying "looks fine." See the diagnostic requirements in [Validation and Import](validation.md#8a-development-only-test-identification-agreed-goal-presentation-details-proposed).
+
 ## 9. Session handoff record: make every future chat resumable
 
 For **each manuscript adaptation**, maintain a small companion record next to the example, e.g. `examples/rejoice-always/workshop-notes.md` (path is a suggested convention, not a mandatory compiler format). Update it when decisions change.
