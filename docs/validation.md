@@ -1,0 +1,226 @@
+# BerryMark v0.1 — Validation, Preview, and Import (Working Draft)
+
+**Status:** Approved workflow principles plus proposed, testable rule categories. The parser/importer does not exist yet.  
+**See also:** [Language Specification](language-spec.md) · [Content Block Registry](block-registry.md)
+
+## 1. Two operations, no more (approved)
+
+### Validate
+
+**Validate** analyzes one BerryMark source file without writing to Sanity or any other external service.
+
+It should:
+
+1. Parse YAML front matter and explicit SCREEN / CB / nested-section markers.
+2. Validate IDs, nesting, ordering rules, content requirements, metadata, and formatting.
+3. Verify that each Sanity-target field is either explicitly provided, covered by an agreed visible default, or accounted for by controlled generation.
+4. Report **errors**, **warnings**, and unresolved **editorial annotations** separately.
+5. Optionally produce a **read-only structural preview**: ordered screens, headings/labels, block types, stable IDs, and nested items.
+
+Preview is an output mode of Validate, **not a third operation**. It is a structural interpretation, not a second rendering app or guarantee of final pixel layout. Exact CLI spelling and output format remain implementation decisions.
+
+### Import
+
+**Import** is a controlled one-way transition:
+
+1. Revalidate the source and its warning overrides.
+2. Reject any blocking errors and unauthorized warnings.
+3. Confirm the target Challenge does not already exist under its stable identity.
+4. Resolve required references and verify target schema compatibility.
+5. Create **one new Sanity draft**. Never publish, approve, overwrite, or create a duplicate.
+6. Record source-file/revision provenance and transferred review items.
+7. Return the **direct Sanity Studio editing link** for the new draft.
+
+After a successful import **Sanity owns the content**; the BerryMark source is a retained historical snapshot. There is no routine reimport, two-way diff, conflict resolution, or Markdown export requirement.
+
+## 2. Validation severity
+
+| Severity | Meaning | Effect on Validate | Effect on Import |
+| --- | --- | --- | --- |
+| **Error** | The document is malformed, unsafe, or cannot be reliably interpreted/mapped | Fails | Always blocks; cannot be overridden |
+| **Warning** | The document is structurally valid but deserves explicit editorial or presentation examination | Reports with precise location | Blocks **by default**; a scoped, justified override can allow **draft** import |
+| **Editorial note** | Non-reader-facing context, question, or work item | Reports by type | Never silently discarded; exact handling of unresolved TODO/REVIEW REQUIRED for draft import must be finalized |
+| **Info** | Nonblocking fact: default used, optional field omitted, counts, reference-only Scripture, etc. | Reports | Does not grant approval |
+
+A warning override **does not mean the warning was resolved or accepted**. It grants permission to inspect that issue in a real Sanity draft. Final editorial disposition in Sanity remains separate, and must account for changes to the imported content.
+
+If source content changes materially after an override, the previous override cannot silently apply to the new revision.
+
+## 3. Proposed error rules
+
+These examples are proposed classes of unoverridable error; the stable machine-readable rule codes are not yet finalized.
+
+### Parsing and structural errors
+
+- Missing, malformed, or unparseable YAML front matter.
+- Unknown BerryMark version, unsupported block code, unsupported or mismatched structural marker.
+- Unclosed, overlapping, improperly nested, or anonymous SCREEN/CB containers.
+- Duplicate screen IDs, duplicate CB instance IDs, or duplicate IDs in a repeatable nested collection.
+- Missing SCREEN or missing content blocks inside a SCREEN.
+- Missing mandatory parts of a registered CB: e.g., a CB4 without RIGHT, CB6 with fewer than two STEP entries, or a CB7 with exactly one CHOICE.
+- Undefined required CB field or incompatible field type.
+- A \`cycle: true\` sequence without \`returnCaption\`.
+
+### Mapping and fidelity errors
+
+- Supported Markdown cannot be reliably converted to the declared Portable Text field.
+- Rich Markdown is placed in a plain-text-only field and would be silently lost or reinterpreted.
+- Unknown directive or field that the compiler would otherwise discard.
+- Any required Sanity-facing field is unmapped and has no explicit documented default or controlled generation path.
+- A claim of confirmed Scripture rights contradicted by missing rights evidence or invalid Scripture status combination.
+- \`textStatus: provided\` with missing passage text; \`referenceOnly\` with passage text; \`practiceStatus: configured\` without rights-cleared provided passage.
+- Unsupported/invalid URL schemes for external links.
+- An attempt to import a Challenge whose stable identity already exists in Sanity (whether published or drafted).
+- An unresolved required Sanity reference or unavailable target schema, if an importer cannot safely produce its promised draft.
+
+**No “best-effort” data loss:** when source content cannot be faithfully represented, fail clearly rather than omit it.
+
+### Nuances to settle before a compiler is built
+
+- **Missing \`releaseAt\`:** valid to express \`null\` in a BerryMark working draft; Sanity's current schema requires a datetime. Never invent a date. Determine whether a draft import may proceed with a clearly flagged incomplete field or whether import must wait for a real timestamp. Publishing requires resolution.
+- **Editorial review metadata:** BerryMark's proposed approval fields do not exactly match Sanity's existing review schema. Never synthesize an approved reviewer or review date. This mapping must be reconciled before adapter implementation.
+- **Unknown HTML comments and escapes:** decide when an unknown comment is an innocuous author note versus an unsupported construct; no reader-visible leakage.
+- **Source rights evidence:** define the provenance/confirmation procedure for \`usageRightsConfirmed\`; a Boolean assertion must be truthful, not automatically inferred.
+
+## 4. Proposed warnings
+
+Warnings are for **valid but potentially suboptimal** authored content. Examples:
+
+- Comparison sides are visually unbalanced or unusually long for the intended UI.
+- A key statement is too long to read effectively as a callout.
+- Several cards or sequence steps have overly dense plain-text descriptions.
+- A reflection prompt is ambiguous or likely to invite a response that isn't supported by the UI.
+- A proposed structured adaptation seems to condense meaningful theological nuance.
+- A proposed deep study adds substantive claims requiring source verification.
+- An unusually large visual block warrants live presentation review.
+
+**Do not establish arbitrary screen count, screen height, CB1 paragraph, or teaching word limits.** Presentation review must follow the substance of the teaching, not truncate it to fit a template.
+
+Exact per-field advisory thresholds and warning codes will be chosen after testing representative manuscripts. Warnings need target identifiers and descriptions, not just a generic message.
+
+## 5. Warning overrides (approved principle)
+
+For every warning overridden to permit a Sanity *draft*, capture:
+
+- The **specific warning rule** being overridden.
+- The **specific target** (screen ID, CB instance ID, or nested item ID).
+- The **source file and revision** on which the override was granted.
+- A human-readable **reason** why draft import is justified.
+- A preserved review item that can be found and dispositioned in Sanity.
+
+A broad “ignore all warnings” switch is **not allowed**.
+
+The syntax for recording overrides inside BerryMark has **not been selected**; do not implement a guessed directive as an established language feature. Proposed data shape only:
+
+~~~yaml
+rule: visual-comparison-length
+target: feeling-versus-practice
+sourceRevision: review-2026-11-03
+reason: "Inspect the complete wording in the real presentation before shortening."
+~~~
+
+The compiler can use a future per-file override section or another explicit mechanism after that syntax is approved.
+
+Overrides must not conceal structural errors, copyright uncertainty, missing approvers, unapproved publication, or unverified facts.
+
+### Sanity warning-review handoff
+
+The current Bibleberry Sanity schema has \`reviewStatus: proposed|approved\` on CB4–CB8 and a general \`editorialReview.reviewNotes\` field, but **no dedicated structured per-warning disposition schema**. This is a confirmed integration design gap.
+
+The BerryMark adapter must not silently mark an overridden warning resolved. Determine a truthful, visible mechanism in Sanity for its warning ID, reason, and post-import resolution, with revision awareness. This may require a separately approved Sanity schema change.
+
+## 6. Editorial annotations and review gates
+
+Recognize conventional HTML comments:
+
+~~~markdown
+<!-- EDITORIAL NOTE: Preserve this explanatory nuance. -->
+<!-- TODO: Verify exact wording against the source manuscript. -->
+<!-- REVIEW REQUIRED: Inspect this adapted visual in the reader. -->
+~~~
+
+All three are excluded from reader-facing content. **TODO** and **REVIEW REQUIRED** are active editorial work items, not approvals. The exact distinction between “blocks draft import” and “allowed only by a specific documented override” remains open for v0.1, but **unresolved work may never silently pass as publication-ready**.
+
+Distinguish four separate gates:
+
+1. **BerryMark preflight validation:** Can the source be interpreted and mapped without unsupported loss or risk?
+2. **Sanity presentation/content review:** Does the imported draft read and render correctly, including overridden warning cases?
+3. **Human editorial approval:** Has an actual Aaron or Alexis reviewed and approved the adaptation, with truthful attribution and date?
+4. **Publication:** Has an authorized editor explicitly published the Challenge after resolving all publication blockers?
+
+No preceding gate substitutes for the next. Creating a draft is *never* an approval or release event.
+
+## 7. Structural preview (approved)
+
+Optional output of Validate, for example:
+
+~~~text
+BerryMark structural preview — Rejoice Always
+Source: rejoice-always.berry.md
+Status: draft structure
+
+SCREEN id=opening  ·  Encounter  ·  The Command
+  CB2 id=opening-scripture  ·  Scripture
+  CB1 id=opening-explanation  ·  Rich Teaching Text
+
+SCREEN id=distinction  ·  Clarify  ·  Two Different Things
+  CB1 id=distinguishing-joy  ·  Rich Teaching Text
+  CB4 id=feeling-versus-practice  ·  Comparison
+     LEFT, RIGHT, optional FOOTER
+
+Validation: [errors] errors, [warnings] warnings
+~~~
+
+This is an **illustrative shape**, not a claim of implemented output or the final screen breakdown of Alexis's manuscript. A real report should include machine-readable IDs and sufficiently precise source locations (file, line/range where possible).
+
+## 8. Pre-import report
+
+An Import request must surface or make available an inspectable summary *before write*:
+
+- Challenge title, slug, type, series, sequence.
+- Source file and revision.
+- Screen and Content Block counts and ordered structure.
+- Blocking errors, warnings, and any scoped overrides.
+- Missing/controlled defaults and unresolved metadata.
+- Target environment, Sanity dataset, and **draft-only** outcome.
+
+**Safety:** never expose privileged Sanity write tokens in the reader, GitHub repository content, or browser-facing client code. Write credentials belong in an appropriately secured execution environment. A successful import returns the draft's direct Studio link.
+
+## 9. Identity, duplicate detection, and versioning
+
+- The BerryMark **Challenge slug** is the human-readable stable identity. Decide exact Sanity document-ID convention before implementation; do not guess solely from a title.
+- On import, check for both a published document and a draft for the same identity. Refuse duplicates or overwrites.
+- Screen, CB, CARD, STEP, and CHOICE semantic IDs must map consistently to stable Sanity keys.
+- Preserve the imported BerryMark file/version as provenance. Subsequent direct Sanity edits are normal; they do not trigger automatic BerryMark sync.
+- A one-off replacement pathway, if ever needed, is a separate design decision and **out of v0.1 scope**.
+
+## 10. Tests required before calling the implementation complete
+
+**Parser tests:** Valid YAML and nested markers; malformed closings; escaped/literal marker text; duplicate IDs; reordering; unsupported directives.
+
+**Formatting tests:** Rich Markdown to Portable Text; plain-text fields; block quotes, lists, links; unsupported images/tables/code fences fail visibly.
+
+**Schema mapping tests:** Required fields and options for CB1–CB9 and nested objects; Scripture-rights truth table; \`challenge\` and \`challengeSeries\` reference rules.
+
+**Review tests:** Errors never overridden; warnings block by default; scoped override records; revision-sensitive invalidation; proposed review statuses not transformed into approved.
+
+**Import tests:** Fresh draft created once; direct edit URL returned; duplicate slug detected across draft and published forms; no accidental publish; missing reference/time behavior explicitly covered; failure paths do not pretend success.
+
+**End-to-end proof:** Import a designated, rights-safe \`hello-world.berry.md\` development Challenge and inspect it in Sanity and the Bibleberry developer reader. Then validate with substantive Alexis manuscript adaptations before declaring the language fit for editorial use.
+
+## 11. Open decisions (do not silently implement)
+
+1. Exact CLI syntax/output formats for Validate, preview mode, and Import.
+2. Exact grammar for block-internal fields and nested array content.
+3. Warning-override syntax and storage; editorial TODO disposition for draft import.
+4. Where Sanity stores visible per-warning review records.
+5. How truthful Aaron-or-Alexis approval maps into the Sanity schema.
+6. How absent \`releaseAt\` and unresolved series references affect draft import.
+7. Deterministic Sanity ID/key algorithm, revision marker convention, and duplicate detection.
+8. Concrete advisory length thresholds from real UI trials.
+
+These are **open design items**, not authorization to invent behavior while coding.
+
+---
+
+**Status reminder:** Only the workflow and principles are approved. This document is a draft for joint editorial and technical review, not a statement that a working validator or importer already exists.
