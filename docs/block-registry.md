@@ -7,7 +7,7 @@
 
 - **CB numbers are permanent, append-only identifiers.** Never renumber, recycle, or change the meaning of an existing code.
 - A CB type defines a *kind of content*, not an ordinal position or a fixed-size screen.
-- Every instance has a semantic, permanent \`id\`: \`[[CB1 id=opening-thought]]\`.
+- Every instance has a semantic, permanent `id`: `[[CB1 id=opening-thought]]`.
 - Natural document order controls presentation. Existing IDs remain stable when editors reorder.
 - A block's available fields and supported formatting must match its Sanity target; do not silently discard authored content.
 - **No arbitrary limit** on the number of screens, teaching paragraphs, or CB1 teaching length. Concise visual elements can receive advisory per-field warnings, not hidden truncation.
@@ -18,21 +18,21 @@
 
 | Code | Editorial purpose | Existing Sanity object | Review status field? |
 | --- | --- | --- | --- |
-| **CB1** | Rich Teaching Text | \`richTextBlock\` | No |
-| **CB2** | Scripture | \`scriptureBlock\` | No |
-| **CB3** | Key Statement | \`statementBlock\` | No |
-| **CB4** | Comparison | \`comparisonBlock\` | Yes |
-| **CB5** | Visual Cards | \`visualCardsBlock\` | Yes |
-| **CB6** | Connected Sequence | \`connectedSequenceBlock\` | Yes |
-| **CB7** | Optional Reflection | \`reflectionBlock\` | Yes |
-| **CB8** | Optional Deeper Study | \`optionalStudyBlock\` | Yes |
-| **CB9** | Prayer | \`prayerBlock\` | No |
+| **CB1** | Rich Teaching Text | `richTextBlock` | No |
+| **CB2** | Scripture | `scriptureBlock` | No |
+| **CB3** | Key Statement | `statementBlock` | No |
+| **CB4** | Comparison | `comparisonBlock` | Yes |
+| **CB5** | Visual Cards | `visualCardsBlock` | Yes |
+| **CB6** | Connected Sequence | `connectedSequenceBlock` | Yes |
+| **CB7** | Optional Reflection | `reflectionBlock` | Yes |
+| **CB8** | Optional Deeper Study | `optionalStudyBlock` | Yes |
+| **CB9** | Prayer | `prayerBlock` | No |
 
-The Sanity field \`reviewStatus\` currently allows \`proposed\` or \`approved\` for CB4–CB8, with \`proposed\` as the default. **Importing does not set \`approved\` automatically.** Current schema descriptions name Alexis as the reviewer; the intended human attribution also permits Aaron. That schema correction is deferred, not silently assumed here.
+The Sanity field `reviewStatus` currently allows `proposed` or `approved` for CB4–CB8, with `proposed` as the default. **Importing does not set `approved` automatically.** Current schema descriptions name Alexis as the reviewer; the intended human attribution also permits Aaron. That schema correction is deferred, not silently assumed here.
 
 ## CB1 — Rich Teaching Text
 
-**Sanity:** \`richTextBlock.body\` (required, at least one Portable Text block).
+**Sanity:** `richTextBlock.body` (required, at least one Portable Text block).
 
 **Editorial use:** Main teaching argument, development, transitions, explanation, careful exegetical nuance. Preserve Alexis's reasoning and voice; screens can contain multiple CB1 instances as needed.
 
@@ -50,10 +50,10 @@ This paragraph uses **bold** to reinforce the contrast.
 
 ## CB2 — Scripture
 
-**Sanity:** \`scriptureBlock.scripture\` (required \`scriptureReference\`).
+**Sanity:** `scriptureBlock.scripture` (required `scriptureReference`).
 
-**Required nested fields:** \`reference\`, \`translation\`, \`textStatus\` (\`referenceOnly\` / \`provided\`), \`practiceStatus\` (\`notConfigured\` / \`configured\`).  
-**Other fields:** \`passage\` (only when provided), \`usageRightsConfirmed\` (required truthfully before passage text use).
+**Required nested fields:** `reference`, `translation`, `textStatus` (`referenceOnly` / `provided`), `practiceStatus` (`notConfigured` / `configured`).  
+**Other fields:** `passage` (only when provided), `usageRightsConfirmed` (required truthfully before passage text use).
 
 ~~~text
 [[CB2 id=opening-passage]]
@@ -68,7 +68,7 @@ The field-line spelling is **illustrative**. A passage must never be copied into
 
 ## CB3 — Key Statement
 
-**Sanity:** \`statementBlock.text\` (required plain text); optional \`statementBlock.label\` (plain string, Sanity currently initializes it to “Alexis’s teaching”).
+**Sanity:** `statementBlock.text` (required plain text); optional `statementBlock.label` (plain string, Sanity currently initializes it to “Alexis’s teaching”).
 
 **Editorial use:** A faithful, prominent takeaway. Do not invent a pithy claim that changes the manuscript's theological meaning.
 
@@ -83,9 +83,9 @@ Text: Rejoicing is not the same thing as pretending suffering does not exist.
 
 ## CB4 — Comparison
 
-**Sanity:** \`comparisonBlock.left\` and \`.right\` (both required \`comparisonSide\`); optional plain-text \`.footer\`; required \`.reviewStatus\`.
+**Sanity:** `comparisonBlock.left` and `.right` (both required `comparisonSide`); optional plain-text `.footer`; required `.reviewStatus`.
 
-Each side has required **plain-text \`title\`** and required **Portable Text \`body\`**.
+Each side has required **plain-text `title`** and required **Portable Text `body`**.
 
 ~~~text
 [[CB4 id=feeling-versus-practice]]
@@ -105,15 +105,15 @@ The comparison must not suggest that feelings are irrelevant.
 [[/CB4]]
 ~~~
 
-**Requirements:** Left title/body and right title/body; \`reviewStatus: proposed\` until a human review in Sanity. Side bodies support rich Markdown; titles/footer do not. The example is schematic, not approved manuscript wording.
+**Requirements:** Left title/body and right title/body; `reviewStatus: proposed` until a human review in Sanity. Side bodies support rich Markdown; titles/footer do not. The example is schematic, not approved manuscript wording.
 
 **Advisory review:** Excessively long concepts, imbalance between sides, reduction of nuance, or theological oversimplification. Exact advisory thresholds are undecided; never silently truncate.
 
 ## CB5 — Visual Cards
 
-**Sanity:** \`visualCardsBlock.cards\`, required array of **one or more** \`visualCard\`; required \`reviewStatus\`.
+**Sanity:** `visualCardsBlock.cards`, required array of **one or more** `visualCard`; required `reviewStatus`.
 
-Each card has required **plain-text \`title\`** and optional **plain-text \`body\`**.
+Each card has required **plain-text `title`** and optional **plain-text `body`**.
 
 ~~~text
 [[CB5 id=places-to-pray]]
@@ -128,15 +128,15 @@ Body: Another brief description.
 [[/CB5]]
 ~~~
 
-**Requirements:** At least one card, stable ID for every card, required title per card. The exact internal \`Title:\` / \`Body:\` spelling is provisional. There is no fixed card count unless later reader testing justifies a documented rule.
+**Requirements:** At least one card, stable ID for every card, required title per card. The exact internal `Title:` / `Body:` spelling is provisional. There is no fixed card count unless later reader testing justifies a documented rule.
 
 **Review:** Mark as proposed. Cards are for visual organization, not a mandate to turn prose into short slogans.
 
 ## CB6 — Connected Sequence
 
-**Sanity:** \`connectedSequenceBlock.steps\`, at least **two** \`sequenceStep\` items; optional \`cycle\` boolean (default false), \`returnCaption\`, \`conclusion\`; required \`reviewStatus\`.
+**Sanity:** `connectedSequenceBlock.steps`, at least **two** `sequenceStep` items; optional `cycle` boolean (default false), `returnCaption`, `conclusion`; required `reviewStatus`.
 
-Each step has required **plain-text \`title\`** and **plain-text \`body\`**.
+Each step has required **plain-text `title`** and **plain-text `body`**.
 
 ~~~text
 [[CB6 id=example-process]]
@@ -153,15 +153,15 @@ Conclusion: A question or concluding statement.
 [[/CB6]]
 ~~~
 
-**Requirements:** Two or more ordered, stable-ID steps; when \`cycle: true\`, a nonempty \`returnCaption\` is mandatory. A cycle should only be used when the underlying argument actually returns to the starting point.
+**Requirements:** Two or more ordered, stable-ID steps; when `cycle: true`, a nonempty `returnCaption` is mandatory. A cycle should only be used when the underlying argument actually returns to the starting point.
 
 **Review:** Mark as proposed. Do not create artificial causal connections just because a sequence diagram looks attractive.
 
 ## CB7 — Optional Reflection
 
-**Sanity:** \`reflectionBlock.question\` (required plain text); optional \`choices\` array of \`reflectionChoice\`; optional \`closing\` (plain text); required \`reviewStatus\`.
+**Sanity:** `reflectionBlock.question` (required plain text); optional `choices` array of `reflectionChoice`; optional `closing` (plain text); required `reviewStatus`.
 
-If choices are supplied, there must be **at least two**, and each has required plain-text **\`label\`** and **\`prompt\`**.
+If choices are supplied, there must be **at least two**, and each has required plain-text **`label`** and **`prompt`**.
 
 ~~~text
 [[CB7 id=personal-response]]
@@ -184,7 +184,7 @@ Closing: This practice is optional.
 
 ## CB8 — Optional Deeper Study
 
-**Sanity:** \`optionalStudyBlock.title\` (required plain string); \`.body\` (required Portable Text); optional \`.scriptures\` array of \`scriptureReference\`; required \`.reviewStatus\`.
+**Sanity:** `optionalStudyBlock.title` (required plain string); `.body` (required Portable Text); optional `.scriptures` array of `scriptureReference`; required `.reviewStatus`.
 
 ~~~text
 [[CB8 id=historical-context]]
@@ -200,7 +200,7 @@ This deeper explanation can contain **rich Markdown** and links.
 
 ## CB9 — Prayer
 
-**Sanity:** \`prayerBlock.paragraphs\`, a required array with **at least one** plain-text paragraph.
+**Sanity:** `prayerBlock.paragraphs`, a required array with **at least one** plain-text paragraph.
 
 **Editorial use:** An authored prayer preserved faithfully. Do not manufacture a replacement prayer.
 
@@ -227,11 +227,11 @@ A production adapter must explicitly cover every required Sanity field and each 
 
 ## Open registry decisions before implementing the parser
 
-1. Freeze exact syntax for each type's field lines, including escaping a literal \`Title:\` or a reserved marker inside authored prose.
+1. Freeze exact syntax for each type's field lines, including escaping a literal `Title:` or a reserved marker inside authored prose.
 2. Decide how CB8's repeated Scripture references are represented in BerryMark.
 3. Set **advisory** length recommendations where a specific visual component benefits; no arbitrary CB1 cap.
 4. Decide whether type-specific defaults should appear explicitly in BerryMark or be transparently generated, with visible validation output.
-5. Freeze deterministic identity rules for nested repeatable items and safe compilation to Sanity \`_key\` values.
+5. Freeze deterministic identity rules for nested repeatable items and safe compilation to Sanity `_key` values.
 6. Test the registry against two or three substantive manuscript adaptations before declaring it implementation-ready.
 
 **This registry documents known objects and intended semantics. It does not mean the grammar or compiler already exists.**
