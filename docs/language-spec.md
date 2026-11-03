@@ -106,6 +106,27 @@ Practice Status: notConfigured
 - The nested section is **structured metadata**, not part of CB8's rich-text study body; its markers and field lines do not appear in reader prose. Ordinary prose surrounding a reference remains in the CB8 body.
 - The **section markers and ID requirement are now approved**. The exact spellings of field labels (such as `Text Status:`), literal-marker escaping and other unfinalized parser rules remain open; examples do not declare them implementation-ready.
 
+### Legacy pull quotes as CB3 (approved November 3, 2026)
+
+Where a Bibleberry Local Prototype `teachingText` block has an authored `pullQuote`, its BerryMark equivalent is **two ordered sibling Content Blocks**: a `CB1` holding the original rich teaching paragraphs, immediately followed by a `CB3` holding the exact highlighted statement as plain text. The CB3 is a standalone reader-facing callout, **not** a field nested inside CB1 and not a new CB type.
+
+~~~text
+[[CB1 id=teaching-before-question]]
+This is the paragraph that comes before the highlighted statement.
+[[/CB1]]
+
+[[CB3 id=highlighted-question]]
+Label: Alexis’s teaching
+Text: So how can we rejoice in a world filled with so much pain and difficulty?
+[[/CB3]]
+~~~
+
+- Preserve the statement's authored wording, punctuation, emphasis-by-placement, and relative order; do not silently duplicate it inside CB1.
+- Preserve the CB3 `label` intentionally (plain text). The working `Label:`/`Text:` field-line spelling remains part of the **not-yet-frozen** internal-field grammar.
+- Existing prototype highlights are mapped to `statementBlock` in Sanity. A CB3 is also available for other intentional key statements, but converting arbitrary prose into a new callout requires an explicit editorial choice.
+- Structural mapping approval is **not** approval of any underlying editorial adaptation or a guarantee of pixel-identical rendering. Compare actual visual emphasis and layout in the protected draft preview.
+- If the prototype placed a highlight differently from Alexis's original manuscript, record that discrepancy and let Aaron/Alexis decide whether to preserve or change the ordering; the migration does **not** silently correct it.
+
 ### Editorial comments
 
 Standard Markdown/HTML comments can record non-reader-facing editorial work:
