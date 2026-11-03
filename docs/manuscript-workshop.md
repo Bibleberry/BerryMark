@@ -21,13 +21,14 @@ The source manuscript must remain untouched. BerryMark is the *adaptation*, not 
 The human or AI facilitator should:
 
 1. **Locate and read the full actual manuscript**, not a summary or reconstructed paraphrase. When source text is absent, request or retrieve the real text before drafting it; do not invent the omitted paragraphs.
+2. **Search for any existing adaptation before proposing a new one.** Inspect relevant Bibleberry source files, local Challenge prototypes, prior Sanity drafts, and workshop notes. Record what already exists, its review status, and whether it is prototype-only, CMS-backed, or published. If a faithful screen/block adaptation already exists, **reuse and audit it** rather than starting over. An existing prototype is not automatically Alexis-approved.
 2. **Identify source and provenance:** original title, author, date, file/source revision, source location, passage references, Scripture translation, and any known companion material.
-3. **Identify the content categories** in the source: original devotional/teaching, authored prayer, quoted Scripture, references to other passages, editorial notes, marketing/support copy, and media links. Do not mistakenly make promotions into mandatory Challenge content.
-4. **Read current** `docs/language-spec.md`, `docs/block-registry.md`, and `docs/validation.md` on the actual working branch. Use the current nine-block registry, not remembered syntax from earlier chats.
-5. **Check the work-in-progress record** for this manuscript (see §9) and resume at the first unapproved decision. Don't redo an already-agreed screen, editorial change, or ID without explaining why.
-6. Confirm the intended deliverable: analysis, screen map, single screen adaptation, whole BerryMark file, or validation review. Don't claim code was compiled if the compiler doesn't yet exist.
+4. **Identify the content categories** in the source: original devotional/teaching, authored prayer, quoted Scripture, references to other passages, editorial notes, marketing/support copy, and media links. Do not mistakenly make promotions into mandatory Challenge content.
+5. **Read current** `docs/language-spec.md`, `docs/block-registry.md`, and `docs/validation.md` on the actual working branch. Use the current nine-block registry, not remembered syntax from earlier chats.
+6. **Check the work-in-progress record** for this manuscript (see §9) and resume at the first unapproved decision. Don't redo an already-agreed screen, editorial change, or ID without explaining why.
+7. Confirm the intended deliverable: analysis, screen map, single screen adaptation, whole BerryMark file, or validation review. Don't claim code was compiled if the compiler doesn't yet exist.
 
-**Output of this stage:** a source inventory and clearly identified open facts, not a screen design yet.
+**Output of this stage:** a source inventory, an **existing-work inventory**, and clearly identified open facts, not a duplicate screen design.
 
 ## 2. Analyze the theological and rhetorical argument *before* choosing screens
 
@@ -50,7 +51,7 @@ Annotate significant phrases **verbatim from the source** and record why they ma
 
 ## 3. Design screens around real rhetorical transitions
 
-Only after the argument map, propose a provisional sequence of screens. A screen is one coherent movement in the author's reasoning, **not a fixed number of words**. Group or split based on comprehension, emphasis, transitions, and presentation, while preserving continuity.
+Only after the argument map, inspect the existing adaptation (if one exists) and either **audit its established sequence** or propose a provisional sequence of screens. A screen is one coherent movement in the author's reasoning, **not a fixed number of words**. Group or split based on comprehension, emphasis, transitions, and presentation, while preserving continuity.
 
 For each proposed screen, record:
 
@@ -198,6 +199,6 @@ A future chat should be able to answer: **What did Alexis actually write? What h
 
 ## 10. Initial exercise and feedback loop
 
-The first exercise is **November 2, 2026: “Rejoice Always”** by Alexis Waid. Begin with its original manuscript, map its argument, suggest natural screens, and adapt them in collaboration. Document any syntax that feels awkward. Try at least two or three substantively different Challenges before freezing the parser grammar.
+The first exercise is **November 2, 2026: “Rejoice Always”** by Alexis Waid. An existing **seven-screen hardcoded Local Prototype** is already implemented in Bibleberry at `src/data/interactiveChallenges.ts` (Challenge `nov-2`), with display logic in `src/components/InteractiveChallengeLab.tsx`. **Start by reading both that prototype and the unchanged manuscript.** Audit source fidelity, screen/block boundaries, review flags, and target Sanity compatibility. Reconstruct it as human-readable BerryMark for editorial review **instead of redesigning the screens from scratch**. This prototype is not evidence of Alexis's final approval. Document any syntax that feels awkward. Try at least two or three substantively different Challenges before freezing the parser grammar.
 
 **The playbook itself is versioned.** Update it based on actual editorial experience, rather than making future collaborators infer procedural rules from a chat transcript.
