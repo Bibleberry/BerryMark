@@ -81,6 +81,8 @@ Text: Rejoicing is not the same thing as pretending suffering does not exist.
 
 **Requirements:** Nonempty statement. The grammar of field labels is provisional. Do not treat the plain statement text as Markdown.
 
+**Approved legacy mapping (November 3, 2026):** The Bibleberry Local Prototype's `teachingText.pullQuote` becomes a **separate CB3 immediately after the CB1 containing the corresponding teaching paragraphs**, preserving the source's exact highlighted wording, placement and label. The compiler maps CB3 to Sanity `statementBlock`; it does not silently append the quote to CB1, strip it, or duplicate it. Use a stable CB3 instance ID distinct from its preceding CB1. Whether a specific legacy highlight or placement is editorially appropriate still requires actual Aaron/Alexis review, and visual equivalence must be tested in the developer reader. CB3 can also be intentionally authored as a stand-alone key statement. No new Content Block type is necessary.
+
 ## CB4 — Comparison
 
 **Sanity:** `comparisonBlock.left` and `.right` (both required `comparisonSide`); optional plain-text `.footer`; required `.reviewStatus`.
