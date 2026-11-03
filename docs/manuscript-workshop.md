@@ -22,7 +22,7 @@ The human or AI facilitator should:
 
 1. **Locate and read the full actual manuscript**, not a summary or reconstructed paraphrase. When source text is absent, request or retrieve the real text before drafting it; do not invent the omitted paragraphs.
 2. **Search for any existing adaptation before proposing a new one.** Inspect relevant Bibleberry source files, local Challenge prototypes, prior Sanity drafts, and workshop notes. Record what already exists, its review status, and whether it is prototype-only, CMS-backed, or published. If a faithful screen/block adaptation already exists, **reuse and audit it** rather than starting over. An existing prototype is not automatically Alexis-approved.
-2. **Identify source and provenance:** original title, author, date, file/source revision, source location, passage references, Scripture translation, and any known companion material.
+3. **Identify source and provenance:** original title, author, date, file/source revision, source location, passage references, Scripture translation, and any known companion material.
 4. **Identify the content categories** in the source: original devotional/teaching, authored prayer, quoted Scripture, references to other passages, editorial notes, marketing/support copy, and media links. Do not mistakenly make promotions into mandatory Challenge content.
 5. **Read current** `docs/language-spec.md`, `docs/block-registry.md`, and `docs/validation.md` on the actual working branch. Use the current nine-block registry, not remembered syntax from earlier chats.
 6. **Check the work-in-progress record** for this manuscript (see §9) and resume at the first unapproved decision. Don't redo an already-agreed screen, editorial change, or ID without explaining why.
