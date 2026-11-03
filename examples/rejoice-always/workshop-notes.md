@@ -20,14 +20,14 @@
 - **Verification plan:** [`test-plan.md`](test-plan.md), with source/revision/test-run diagnostics, screen-by-screen expected blocks, intentional differences, negative tests and future protected draft-preview requirement.
 - **Baseline:** Bibleberry `main@c43b53146f3b4f6c1d5154e1ce0409a5aa3e4d3d`, Local Prototype Challenge `nov-2`.
 - **Manual marker preflight:** Seven screens, 16 top-level Content Blocks, four nested Scripture references, two companions, 35 uniquely named structural IDs, matching opening/closing markers (after excluding editorial comments). **This is not compiler validation.**
-- **Known blockers:** 11 explicit `REVIEW REQUIRED` comments; unresolved series, sequence, exact release timestamp and app Scripture usage rights; provisional block-internal syntax; editorial review not established.
+- **Known blockers:** 11 explicit `REVIEW REQUIRED` comments; unresolved series, sequence, exact release timestamp and app Scripture usage rights; provisional *field-label* syntax (CB8's nested `SCRIPTURE` markers are now approved); editorial review not established.
 - **No actual BerryMark import or public-reader release.** The existing Sanity CMS Lab currently queries the `published` perspective and excludes drafts. A **protected draft-preview mode** is necessary before we can inspect a newly imported draft in the reader without prematurely publishing it.
 
 ### What the first reverse mapping teaches us
 
 1. **The prior seven-screen layout is useful and already exists.** We do not need to redesign it to test the DSL.
 2. **Existing Local Prototype `teachingText.pullQuote` has no direct Sanity richTextBlock field.** The working source represents both pull quotes as CB3 statements; whether the look and the editorial semantics remain right needs review.
-3. **CB8 needs explicit repeated Scripture syntax.** The working exercise proposes `[[SCRIPTURE id=...]]` nested sections. It is **not yet approved grammar**. Freeze only after discussion and testing.
+3. **CB8 nested Scripture syntax approved November 3, 2026.** Repeatable references use `[[SCRIPTURE id=...]] ... [[/SCRIPTURE]]` inside CB8. This resolves the marker/identity question; field-line spellings, actual compiler behavior and Scripture-rights verification remain open.
 4. **Some original prose was editorially adapted into components.** CB4, CB5, CB6, CB7, and three CB8 studies must be reviewed as existing draft adaptations. Their existence in the prototype is not approval.
 5. **Scripture differs intentionally from the prototype:** `referenceOnly` and `notConfigured` are used because this exercise does not establish app quotation rights. Do not assume a text-present local prototype grants permission.
 6. **No TEST text was inserted into reader-facing prose.** Identification belongs to a developer-only screen banner and block IDs, as defined in the test plan.
@@ -102,7 +102,8 @@ Beyond required screens: existing `relatedResources` array stores social follow-
 - **2026-11-03 (earlier):** A separate provisional seven-screen plan was made from the manuscript without checking the pre-existing Local Prototype. **Superseded**; do not use that plan to redo the existing adaptation.
 - **2026-11-03 (corrected):** User supplied full screenshots of the working seven-screen Rejoice Always Local Prototype. GitHub source verified under `src/data/interactiveChallenges.ts`, entry `nov-2`. Workshop changed from greenfield adaptation to reverse-mapping/audit, not redesign.
 - **2026-11-03 (first source):** Seven-screen, 16-block `rejoice-always.berry.md` working example and independent `test-plan.md` committed. Marker nesting manually checked after excluding comments. No parser/compiler run; no human approval or Sanity change.
-- **Next action:** Review the candidate reverse mapping against the screenshots and manuscript, starting with screen `b1`. Resolve the **CB8 Scripture nesting grammar** and **pullQuote-to-CB3 mapping** before handing anything to a compiler implementer. Review proposed editorial additions with Aaron/Alexis separately.
+- **2026-11-03 (syntax approval):** Aaron approved `[[SCRIPTURE id=...]] ... [[/SCRIPTURE]]` as CB8's repeatable nested Scripture-reference marker. Language spec, block registry, validation and working example updated without changing reader-facing wording.
+- **Next action:** Review the candidate reverse mapping against screenshots and the manuscript, beginning with screen `b1`, and settle the **pullQuote-to-CB3 mapping** before compiler implementation. Review proposed editorial additions with Aaron/Alexis separately.
 
 ## Future-chat resume instruction
 
