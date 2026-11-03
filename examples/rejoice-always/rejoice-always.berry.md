@@ -102,7 +102,8 @@ But rejoicing also isn't putting on rose-colored glasses and pretending everythi
 God doesn't ask us to pretend that everything is fine. In fact, Scripture gives us countless examples of people who experienced tremendous suffering, grief, and disappointment. We even see Jesus Himself weeping.
 [[/CB1]]
 
-<!-- REVIEW REQUIRED: The Local Prototype renders the following as teachingText.pullQuote. Sanity richTextBlock has no pullQuote field. CB3 is the proposed mapping; compare its presentation and editorial meaning against the original. -->
+<!-- EDITORIAL NOTE: Approved structural mapping: Local Prototype teachingText.pullQuote -> adjacent standalone CB3, rather than a field within CB1. -->
+<!-- REVIEW REQUIRED: Compare the resulting statement's visual emphasis and editorial meaning with the prototype; structural mapping approval is not Alexis's editorial approval. -->
 [[CB3 id=suffering-question]]
 Label: Alexis’s teaching
 Text: So how can we rejoice in a world filled with so much pain and difficulty?
@@ -165,7 +166,8 @@ Body: He sent His Son, Jesus Christ, to atone for the sins of humanity and recon
 We know that what we experience in this broken world is not the end of the story.
 [[/CB1]]
 
-<!-- REVIEW REQUIRED: Original Local Prototype uses teachingText.pullQuote and places the quote after 'not the end of the story.' The original devotional has this line before that paragraph. This preserves the *prototype order*, not necessarily the manuscript order. CB3 is a proposed presentation mapping. -->
+<!-- EDITORIAL NOTE: Approved structural mapping: the Local Prototype's teachingText.pullQuote becomes the immediately following CB3. -->
+<!-- REVIEW REQUIRED: The Local Prototype places this quote after 'not the end of the story,' but the original manuscript places it before that paragraph. Preserve the prototype order for this migration exercise until Aaron/Alexis decides; review actual visual presentation and theology before approval. -->
 [[CB3 id=where-rejoicing-comes-from]]
 Label: Alexis’s teaching
 Text: And that's where our rejoicing comes from.
