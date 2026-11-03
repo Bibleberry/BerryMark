@@ -85,7 +85,7 @@ Names in the **BerryMark ID** column are newly proposed semantic IDs; they do no
 - No automatic editorial approval, auto-publish, or public availability merely from import.
 - No review-required visual adaptation silently promoted to approved.
 - No optional deeper study, reflection or companion item counted as a completion requirement.
-- No loss of the two prototype `pullQuote` presentations. The proposed mapping to separate CB3 statements needs direct inspection.
+- No loss of the two prototype `pullQuote` presentations. **Approved mapping:** adjacent standalone CB3 after the relevant CB1, with exact quote text and order preserved, no duplicate in CB1. **Still required:** inspect visual emphasis in protected draft preview and review the original manuscript's different ordering of the Gospel highlight.
 - No re-import over an existing draft/publication with the same stable identity.
 - No browser-visible privileged Sanity token or public leak of draft provenance.
 
