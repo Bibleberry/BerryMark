@@ -1,9 +1,18 @@
 # Rejoice Always — Manuscript Workshop Notes
 
-**Status:** INITIAL ANALYSIS, NOT APPROVED. No BerryMark adaptation has been accepted; no compiler or importer has been run.  
+**Status:** EXISTING PROTOTYPE FOUND — reverse-mapping and editorial audit pending. A complete interactive seven-screen **Local Prototype already exists** in Bibleberry, but it is **not necessarily editorially approved** or migrated into BerryMark/Sanity. No BerryMark compiler or importer has run.  
 **Working branch:** `docs/berrymark-v0.1-specification` (ContraPhilosophy/BerryMark)  
 **Procedure:** [Manuscript Workshop Playbook](../../docs/manuscript-workshop.md)  
 **Source:** `nov2challenge(1).txt`, provided in the AppDev conversation/project files. Read the full original before adapting; it is not copied into this repository.
+
+## Existing implementation (confirmed November 3, 2026)
+
+- **Existing seven-screen adaptation:** [Bibleberry `src/data/interactiveChallenges.ts`](https://github.com/ContraPhilosophy/Bibleberry/blob/main/src/data/interactiveChallenges.ts), entry `id: 'nov-2'` (screen objects `b1`–`b7`). This is a real, working hardcoded prototype, **not a newly proposed or imported BerryMark program**.
+- **Interactive renderer:** [Bibleberry `src/components/InteractiveChallengeLab.tsx`](https://github.com/ContraPhilosophy/Bibleberry/blob/main/src/components/InteractiveChallengeLab.tsx), selected under **Local Prototype**, with separate navigation, progress and saved-Scripture behavior.
+- **User visual proof:** November 3, 2026 screenshots show all seven rendered screens, including interactive selections, deeper studies, prayer, and optional companion material.
+- **Important distinction:** Bibleberry also has a distinct Sanity CMS development renderer and a two-screen synthetic fixture at `src/cms/sanity/developmentFixture.ts`. That fixture is **not** this seven-screen Rejoice Always experience. Do not conflate the two data sources.
+- **Editorial state:** Several original prototype blocks are visibly flagged **Draft editorial · For Alexis’s review**. Their existence in the reader does **not** constitute approval.
+- **Next exercise:** **Reverse-map and audit** the existing screen/block model against the unchanged manuscript and the BerryMark CB1–CB9 registry; do not redesign already working screens by default.
 
 ## Source inventory
 
@@ -36,36 +45,46 @@
 - **The key closing refrain and the prayer** should stay verbatim unless a human editor explicitly changes them.
 - **No unapproved new historical, linguistic, or theological research** is inserted during adaptation.
 
-## Provisional screen architecture (UNREVIEWED)
+## Existing seven-screen architecture (IMPLEMENTED PROTOTYPE, editorial review not established)
 
-The seven-screen plan below follows rhetorical transitions, **not** a fixed length limit. Screen counts, IDs, boundaries, labels and block selection are all proposals.
+This is the actual structure already implemented in `Bibleberry/src/data/interactiveChallenges.ts`, not a new proposal. Keep existing stable legacy IDs for traceability, then choose long-term semantic BerryMark IDs deliberately when adapting. Preserve each source paragraph's meaning and assess any proposed edits with Alexis/Aaron.
 
-| Screen / stable ID | Source span | Function | Candidate blocks | Main risk |
-| --- | --- | --- | --- | --- |
-| **1 · `command-and-question`** | lines 2–6; Scripture and “And there's a difference.” | Introduce the hard command and the distinction between feeling joy and rejoicing. | CB2 Scripture (reference only) + CB1 prose | If source NIV passage is pasted without rights verification, import would misrepresent rights. |
-| **2 · `posture-of-rejoicing`** | line 7 | Define rejoicing as recognition of God's goodness across circumstances. | CB1; optionally test CB4 comparison after discussion | Condensing prose into comparisons could flatten the positive definition. |
-| **3 · `suffering-is-real`** | lines 8–10 | Show why rejoicing does not demand pretending everything is wonderful. | CB1 | Must preserve scriptural suffering, Jesus's grief and transition question. |
-| **4 · `gospel-foundation`** | lines 11–15 | Supply the Gospel-grounded rationale: sin, atonement, reconciliation, redemption and promise. | CB1 | Must not reduce this core argument to a decorative card or one-liner. |
-| **5 · `attention-and-gratitude`** | lines 16–17 | Show how attention to God trains the reader's response and awareness of gratitude. | CB1 | Avoid treating gratitude as a forced emotional outcome. |
-| **6 · `practice-and-remembrance`** | lines 18–19 | Invite a concrete daily practice and retain the authored concluding refrain. | CB1 + CB3 (verbatim source key statement) | Final refrain must keep the difference between “everything is good” and “God is good.” |
-| **7 · `closing-prayer`** | lines 20–21 | Preserve Alexis's authored prayer. | CB9 | Keep original wording and punctuation. |
+| Screen | Existing step label / heading | Existing prototype content | BerryMark equivalence to investigate |
+| --- | --- | --- | --- |
+| **`b1`** | Encounter · Rejoice always. But how? | NIV Scripture panel plus the exact opening teaching paragraphs | CB2 + CB1 |
+| **`b2`** | Distinguish · Feeling joyful is not the same as rejoicing | Two-sided comparison and concluding paragraph; marked draft editorial | CB4 |
+| **`b3`** | Clarify · Rejoicing isn’t pretending | Teaching paragraphs with an emphasized question; optional studies on John 11:33–35 and 2 Corinthians 6:10 | CB1, possible CB3 for legacy `pullQuote`, two CB8 |
+| **`b4`** | Gospel · We have to remember the Gospel | Three visual cards (brokenness, God's response, Christ's reconciliation), teaching text, emphasized conclusion | CB5 + CB1, possible CB3 for `pullQuote` |
+| **`b5`** | Hope · What God has done, is doing, and will do | Connected three-step sequence, sustained teaching prose, optional study on Romans 8:18–25 and Revelation 21:1–5 | CB6 + CB1 + CB8 |
+| **`b6`** | Practice · Rejoicing in real circumstances | Gratitude teaching and two selectable reflection paths; preserves concluding refrain | CB1 + CB7 |
+| **`b7`** | Pray · A prayer for today | Alexis's original authored prayer | CB9 |
 
-The social/Patreon lines 23–26 remain **outside** the seven-screen required teaching flow and require deliberate companion metadata handling. Any screen grouping can be revised upon human review; no screen is yet approved.
+Beyond required screens: existing `relatedResources` array stores social follow-on and ministry support outside the completion flow. Translate thoughtfully to Sanity `companionLinks` metadata, without inventing URLs.
 
-## Questions to resolve with Aaron / Alexis
+### Translation differences that the exercise must expose
 
-1. **Screen 1:** Should the opening screen contain the introductory question and spontaneous-joy examples in one CB1, or should the distinction stand on its own screen?
-2. Is CB4 Comparison useful for line 7, or does keeping it as CB1 better preserve the nuance?
-3. Does the Gospel section deserve one sustained screen or two natural movements? No fixed screen limit.
-4. Do we need to add optional reflection content? The manuscript does not supply a separate reflection question; do not manufacture one without an editorial choice.
-5. Where will companion social and Patreon metadata live without entering mandatory Challenge completion?
-6. Before import: series slug/reference, sequence, releaseAt, rights evidence, and actual editorial reviewer remain unresolved.
+1. **Legacy data model is not the Sanity model.** For example, the local prototype `teachingText.pullQuote` has no identical property on Sanity's `richTextBlock`. Determine whether a separate CB3 statement faithfully reproduces the presentation or a schema change is needed. Avoid losing emphasis silently.
+2. **Repeatable nested items:** Local visual cards and sequence steps are identified chiefly by titles/positions rather than stable per-item IDs. BerryMark requires semantic `CARD`/`STEP` IDs; assign them during translation without changing editorial meaning.
+3. **Review-state differences:** Legacy `draftEditorial` flags don't map one-to-one to Sanity's `reviewStatus: proposed|approved`. Start proposed and retain human review requirements; no fabricated approvals.
+4. **Original Scripture panel includes supplied NIV text and configured practice** in this local prototype. That does **not** prove the future app's quotation rights. A BerryMark/Sanity import must use `referenceOnly` or receive documented rights confirmation first. Don't treat a copyright-risky fixture state as production policy.
+5. **Additional study copy** in the prototype goes beyond the original devotional. Preserve it as existing **proposed** editorial content and separately verify factual/textual claims and approval.
+6. **Prototype versus proposed changes:** It may be appropriate to improve its seven screens, but only after the source-fidelity and layout audit. Do not discard the prior investment.
+
+## Open review questions
+
+1. Is the existing seven-screen layout and content **editorially acceptable** to Aaron and Alexis, or are there concrete screens to revise? Screenshots establish that it works, not that it's approved.
+2. How should the legacy `pullQuote` be mapped while preserving appearance and theological emphasis?
+3. Are the proposed optional deeper studies, comparisons, sequence, and reflection choices approved as written?
+4. What semantic stable screen IDs and nested IDs should replace/augment the legacy code identifiers, if needed?
+5. Which Scripture passages may be shown in full in the actual app, under documented quotation rights?
+6. Confirm companion metadata, series, sequence, `releaseAt`, and truthful review provenance before any future draft import.
 
 ## Change and decision log
 
-- **2026-11-03:** Initial full-manuscript argument map and **proposed** seven-screen outline generated for workshop review. No adaptation or authorial change approved. No Sanity changes made.
-- **Next action:** Discuss **Screen 1 · `command-and-question`**, using actual source lines 2–6. Confirm purpose, boundary, and CB2+CB1 choice before drafting the BerryMark text. Then update this record with the human decision.
+- **2026-11-03 (earlier):** A separate provisional seven-screen plan was made from the manuscript without checking the pre-existing Local Prototype. **Superseded**; do not use that plan to redo the existing adaptation.
+- **2026-11-03 (corrected):** User supplied full screenshots of the working seven-screen Rejoice Always Local Prototype. GitHub source verified under `src/data/interactiveChallenges.ts`, entry `nov-2`. Workshop changed from greenfield adaptation to **reverse-mapping/audit of existing implementation**. No editorial approval claimed, no Sanity content changed.
+- **Next action:** Review existing **`b1` Encounter** against its original source paragraphs and map its CB2 + CB1 to BerryMark. Then systematically walk all seven existing screens and record any mapping gaps or proposed editorial changes.
 
 ## Future-chat resume instruction
 
-Read [the workshop playbook](../../docs/manuscript-workshop.md), the three BerryMark v0.1 design docs, the full original `nov2challenge(1).txt`, and this note. Check actual GitHub branch and latest commit. **Do not treat the seven-screen plan as approved** or quote the source Scripture in imported app content without verified rights. Resume at the **Screen 1 proposal**. Do not write, approve, import or publish the full Challenge on assumptions.
+Read [the workshop playbook](../../docs/manuscript-workshop.md), the three BerryMark v0.1 design docs, the full original `nov2challenge(1).txt`, and this note. Check actual GitHub branch and latest commit. **Read the existing Local Prototype source before proposing any changes.** It is a functioning seven-screen adaptation but **not necessarily approved**. Do not import the NIV text without verified rights. Resume with a source-fidelity and BerryMark mapping audit of legacy **screen `b1`**. Do not redesign, approve, import, or publish the full Challenge on assumptions.
