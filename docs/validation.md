@@ -59,7 +59,7 @@ These examples are proposed classes of unoverridable error; the stable machine-r
 - Missing SCREEN or missing content blocks inside a SCREEN.
 - Missing mandatory parts of a registered CB: e.g., a CB4 without RIGHT, CB6 with fewer than two STEP entries, or a CB7 with exactly one CHOICE.
 - Undefined required CB field or incompatible field type.
-- A \`cycle: true\` sequence without \`returnCaption\`.
+- A `cycle: true` sequence without `returnCaption`.
 
 ### Mapping and fidelity errors
 
@@ -68,7 +68,7 @@ These examples are proposed classes of unoverridable error; the stable machine-r
 - Unknown directive or field that the compiler would otherwise discard.
 - Any required Sanity-facing field is unmapped and has no explicit documented default or controlled generation path.
 - A claim of confirmed Scripture rights contradicted by missing rights evidence or invalid Scripture status combination.
-- \`textStatus: provided\` with missing passage text; \`referenceOnly\` with passage text; \`practiceStatus: configured\` without rights-cleared provided passage.
+- `textStatus: provided` with missing passage text; `referenceOnly` with passage text; `practiceStatus: configured` without rights-cleared provided passage.
 - Unsupported/invalid URL schemes for external links.
 - An attempt to import a Challenge whose stable identity already exists in Sanity (whether published or drafted).
 - An unresolved required Sanity reference or unavailable target schema, if an importer cannot safely produce its promised draft.
@@ -77,10 +77,10 @@ These examples are proposed classes of unoverridable error; the stable machine-r
 
 ### Nuances to settle before a compiler is built
 
-- **Missing \`releaseAt\`:** valid to express \`null\` in a BerryMark working draft; Sanity's current schema requires a datetime. Never invent a date. Determine whether a draft import may proceed with a clearly flagged incomplete field or whether import must wait for a real timestamp. Publishing requires resolution.
+- **Missing `releaseAt`:** valid to express `null` in a BerryMark working draft; Sanity's current schema requires a datetime. Never invent a date. Determine whether a draft import may proceed with a clearly flagged incomplete field or whether import must wait for a real timestamp. Publishing requires resolution.
 - **Editorial review metadata:** BerryMark's proposed approval fields do not exactly match Sanity's existing review schema. Never synthesize an approved reviewer or review date. This mapping must be reconciled before adapter implementation.
 - **Unknown HTML comments and escapes:** decide when an unknown comment is an innocuous author note versus an unsupported construct; no reader-visible leakage.
-- **Source rights evidence:** define the provenance/confirmation procedure for \`usageRightsConfirmed\`; a Boolean assertion must be truthful, not automatically inferred.
+- **Source rights evidence:** define the provenance/confirmation procedure for `usageRightsConfirmed`; a Boolean assertion must be truthful, not automatically inferred.
 
 ## 4. Proposed warnings
 
@@ -125,7 +125,7 @@ Overrides must not conceal structural errors, copyright uncertainty, missing app
 
 ### Sanity warning-review handoff
 
-The current Bibleberry Sanity schema has \`reviewStatus: proposed|approved\` on CB4–CB8 and a general \`editorialReview.reviewNotes\` field, but **no dedicated structured per-warning disposition schema**. This is a confirmed integration design gap.
+The current Bibleberry Sanity schema has `reviewStatus: proposed|approved` on CB4–CB8 and a general `editorialReview.reviewNotes` field, but **no dedicated structured per-warning disposition schema**. This is a confirmed integration design gap.
 
 The BerryMark adapter must not silently mark an overridden warning resolved. Determine a truthful, visible mechanism in Sanity for its warning ID, reason, and post-import resolution, with revision awareness. This may require a separately approved Sanity schema change.
 
@@ -200,13 +200,13 @@ An Import request must surface or make available an inspectable summary *before 
 
 **Formatting tests:** Rich Markdown to Portable Text; plain-text fields; block quotes, lists, links; unsupported images/tables/code fences fail visibly.
 
-**Schema mapping tests:** Required fields and options for CB1–CB9 and nested objects; Scripture-rights truth table; \`challenge\` and \`challengeSeries\` reference rules.
+**Schema mapping tests:** Required fields and options for CB1–CB9 and nested objects; Scripture-rights truth table; `challenge` and `challengeSeries` reference rules.
 
 **Review tests:** Errors never overridden; warnings block by default; scoped override records; revision-sensitive invalidation; proposed review statuses not transformed into approved.
 
 **Import tests:** Fresh draft created once; direct edit URL returned; duplicate slug detected across draft and published forms; no accidental publish; missing reference/time behavior explicitly covered; failure paths do not pretend success.
 
-**End-to-end proof:** Import a designated, rights-safe \`hello-world.berry.md\` development Challenge and inspect it in Sanity and the Bibleberry developer reader. Then validate with substantive Alexis manuscript adaptations before declaring the language fit for editorial use.
+**End-to-end proof:** Import a designated, rights-safe `hello-world.berry.md` development Challenge and inspect it in Sanity and the Bibleberry developer reader. Then validate with substantive Alexis manuscript adaptations before declaring the language fit for editorial use.
 
 ## 11. Open decisions (do not silently implement)
 
@@ -215,7 +215,7 @@ An Import request must surface or make available an inspectable summary *before 
 3. Warning-override syntax and storage; editorial TODO disposition for draft import.
 4. Where Sanity stores visible per-warning review records.
 5. How truthful Aaron-or-Alexis approval maps into the Sanity schema.
-6. How absent \`releaseAt\` and unresolved series references affect draft import.
+6. How absent `releaseAt` and unresolved series references affect draft import.
 7. Deterministic Sanity ID/key algorithm, revision marker convention, and duplicate detection.
 8. Concrete advisory length thresholds from real UI trials.
 
