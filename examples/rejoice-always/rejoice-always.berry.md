@@ -44,7 +44,7 @@ companionLinks:
 <!-- EDITORIAL NOTE: The seven screen divisions, displayed headings and text follow the Local Prototype at the exact source revision above. Semantic IDs are NEW PROPOSALS, with their legacy IDs recorded in the accompanying test plan. -->
 <!-- REVIEW REQUIRED: The Local Prototype displays supplied NIV text with configured memorization. This draft deliberately uses referenceOnly and notConfigured because application quotation rights have not been confirmed. Do not paste the passage from the prototype or claim rights in an importer. -->
 <!-- REVIEW REQUIRED: Publishing series, sequence and exact releaseAt are unresolved. No importer should invent them. -->
-<!-- EDITORIAL NOTE: Several block-internal field labels and [[SCRIPTURE]] nested sections below are PROVISIONAL v0.1 syntax. Do not describe this file as compiler-validated. -->
+<!-- EDITORIAL NOTE: CB8 nested [[SCRIPTURE id=...]] / [[/SCRIPTURE]] markers are approved. Other block-internal field-label spellings remain provisional v0.1 syntax. This file is not compiler-validated. -->
 <!-- EDITORIAL NOTE: TEST banners and CB ID labels are NOT written into Alexis's reader-facing content. Development diagnostics are defined separately in the test plan. -->
 
 [[SCREEN id=encounter-command]]
@@ -114,7 +114,6 @@ Title: Explore Jesus and human grief — John 11:33–35
 
 In John 11, Jesus encounters the grief surrounding Lazarus's death. He is deeply moved and weeps. His example is important here: Christian rejoicing cannot be reduced to suppressing sorrow.
 
-<!-- PROVISIONAL SYNTAX: repeatable nested Scripture references within CB8 have not been finalized in the language spec. -->
 [[SCRIPTURE id=study-john-11-33-35]]
 Reference: John 11:33–35
 Translation: Not configured
