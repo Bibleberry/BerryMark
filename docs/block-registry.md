@@ -191,10 +191,18 @@ Closing: This practice is optional.
 Title: An Optional Closer Look
 
 This deeper explanation can contain **rich Markdown** and links.
+
+[[SCRIPTURE id=john-11-33-35]]
+Reference: John 11:33–35
+Translation: Not configured
+Text Status: referenceOnly
+Usage Rights Confirmed: false
+Practice Status: notConfigured
+[[/SCRIPTURE]]
 [[/CB8]]
 ~~~
 
-**Requirements:** Nonempty title and body. Related Scripture items must follow the same rights/translation conventions as CB2; the exact BerryMark syntax for their array is not yet decided.
+**Requirements:** Nonempty title and body. CB8 may contain **zero or more** nested `[[SCRIPTURE id=...]] ... [[/SCRIPTURE]]` sections. Their relative order and stable semantic IDs are preserved in Sanity `optionalStudyBlock.scriptures[]`. Each item is one structured `scriptureReference` governed by CB2's rights/status rules; it is *not* text within CB8's Portable Text `body`. Opening/closing section markers and required IDs are approved; internal field-label spellings remain provisional.
 
 **Review:** Mark as proposed, especially for new research or added theological/historical assertions. Reader presentation is collapsed and optional; there is no pressure to open it.
 
@@ -228,10 +236,11 @@ A production adapter must explicitly cover every required Sanity field and each 
 ## Open registry decisions before implementing the parser
 
 1. Freeze exact syntax for each type's field lines, including escaping a literal `Title:` or a reserved marker inside authored prose.
-2. Decide how CB8's repeated Scripture references are represented in BerryMark.
-3. Set **advisory** length recommendations where a specific visual component benefits; no arbitrary CB1 cap.
-4. Decide whether type-specific defaults should appear explicitly in BerryMark or be transparently generated, with visible validation output.
-5. Freeze deterministic identity rules for nested repeatable items and safe compilation to Sanity `_key` values.
-6. Test the registry against two or three substantive manuscript adaptations before declaring it implementation-ready.
+2. Set **advisory** length recommendations where a specific visual component benefits; no arbitrary CB1 cap.
+3. Decide whether type-specific defaults should appear explicitly in BerryMark or be transparently generated, with visible validation output.
+4. Freeze deterministic identity rules for nested repeatable items and safe compilation to Sanity `_key` values.
+5. Test the registry against two or three substantive manuscript adaptations before declaring it implementation-ready.
+
+**Resolved November 3, 2026:** CB8's repeated Scripture array uses nested, stable-ID `[[SCRIPTURE id=...]] ... [[/SCRIPTURE]]` sections; it is no longer an open syntax question.
 
 **This registry documents known objects and intended semantics. It does not mean the grammar or compiler already exists.**
