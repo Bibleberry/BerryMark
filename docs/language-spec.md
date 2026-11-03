@@ -76,9 +76,35 @@ The opening/closing markers and stable `id` concept are approved. **The exact sp
 - Opening syntax: `[[CBn id=meaningful-name]]`; matching closing syntax: `[[/CBn]]`.
 - `CBn` must be a registered type. See [block-registry.md](block-registry.md).
 - Content Block IDs must be stable across ordinary editorial rearrangements.
-- For repeated nested items: `[[CARD id=...]]`, `[[STEP id=...]]`, `[[CHOICE id=...]]`.
+- For repeated nested items: `[[CARD id=...]]`, `[[STEP id=...]]`, `[[CHOICE id=...]]`, and **within CB8** `[[SCRIPTURE id=...]]`.
 - For singular nested areas: `[[LEFT]]`, `[[RIGHT]]`, `[[FOOTER]]`; these do not need individual IDs.
-- The exact content/field grammar *inside* each block is a **v0.1 design item**, not yet implementation-ready.
+- The exact content/field grammar *inside* most blocks is a **v0.1 design item**, not yet implementation-ready. The CB8 nested `SCRIPTURE` section form is approved; its internal field-label spellings are still provisional.
+
+### CB8 nested Scripture references (approved November 3, 2026)
+
+An Optional Deeper Study (`CB8`) may contain **zero or more** structured Scripture references using an explicitly opened and closed nested section:
+
+~~~text
+[[CB8 id=study-human-grief]]
+Title: Explore Jesus and human grief
+
+The optional study's rich teaching text goes here.
+
+[[SCRIPTURE id=john-11-33-35]]
+Reference: John 11:33–35
+Translation: Not configured
+Text Status: referenceOnly
+Usage Rights Confirmed: false
+Practice Status: notConfigured
+[[/SCRIPTURE]]
+[[/CB8]]
+~~~
+
+- `[[SCRIPTURE id=stable-semantic-id]]` must be closed with `[[/SCRIPTURE]]`, fully nested inside one CB8, and is **not** a new top-level Content Block code or a substitute for CB2.
+- Each nested Scripture occurrence has a unique, stable ID; its order in the CB8 determines the resulting `optionalStudyBlock.scriptures[]` order.
+- A nested `SCRIPTURE` maps to one existing Sanity `scriptureReference`, with the same reference, translation, text-availability, quotation-rights, and memorization-practice rules used by CB2.
+- The nested section is **structured metadata**, not part of CB8's rich-text study body; its markers and field lines do not appear in reader prose. Ordinary prose surrounding a reference remains in the CB8 body.
+- The **section markers and ID requirement are now approved**. The exact spellings of field labels (such as `Text Status:`), literal-marker escaping and other unfinalized parser rules remain open; examples do not declare them implementation-ready.
 
 ### Editorial comments
 
