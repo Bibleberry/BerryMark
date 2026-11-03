@@ -27,15 +27,15 @@ The only agreed commands/operations are **Validate** and **Import**. Exact CLI c
 
 A BerryMark Challenge document has:
 
-- YAML front matter between opening/closing \`---\` delimiters.
+- YAML front matter between opening/closing `---` delimiters.
 - One or more explicit **SCREEN** containers, in reading order.
-- Each SCREEN has a permanent author-chosen \`id\`, optional small label and heading, and one or more ordered **CB** instances.
-- Each Content Block has a permanent, semantic **instance ID** and one permanent **type code** (\`CB1\` through \`CB9\` in v0.1).
-- Complex blocks may contain named nested sections (\`LEFT\`, \`RIGHT\`, \`FOOTER\`) or repeatable entries (\`CARD\`, \`STEP\`, \`CHOICE\`). Repeatable entries carry stable IDs.
+- Each SCREEN has a permanent author-chosen `id`, optional small label and heading, and one or more ordered **CB** instances.
+- Each Content Block has a permanent, semantic **instance ID** and one permanent **type code** (`CB1` through `CB9` in v0.1).
+- Complex blocks may contain named nested sections (`LEFT`, `RIGHT`, `FOOTER`) or repeatable entries (`CARD`, `STEP`, `CHOICE`). Repeatable entries carry stable IDs.
 
-**Identity is not position.** Reordering a screen or block must not require renaming its ID. Never use positional IDs such as \`screen-1\` merely because an element is currently first. The importer must preserve stable identities when generating Sanity array keys; the exact deterministic key algorithm is an implementation detail still to specify.
+**Identity is not position.** Reordering a screen or block must not require renaming its ID. Never use positional IDs such as `screen-1` merely because an element is currently first. The importer must preserve stable identities when generating Sanity array keys; the exact deterministic key algorithm is an implementation detail still to specify.
 
-**Type-code registry is append-only.** \`CB1\` will always mean rich teaching text, even if a later code becomes more common. Never renumber, recycle, or silently redefine an existing code.
+**Type-code registry is append-only.** `CB1` will always mean rich teaching text, even if a later code becomes more common. Never renumber, recycle, or silently redefine an existing code.
 
 ### Structural illustration
 
@@ -60,24 +60,24 @@ This paragraph can include **emphasis** and *italics*.
 [[/SCREEN]]
 ~~~
 
-The opening/closing markers and stable \`id\` concept are approved. **The exact spelling of internal field lines** such as \`Reference:\` and \`Text Status:\` is provisional until tested against real manuscripts and frozen in the grammar.
+The opening/closing markers and stable `id` concept are approved. **The exact spelling of internal field lines** such as `Reference:` and `Text Status:` is provisional until tested against real manuscripts and frozen in the grammar.
 
 ### Screens
 
-- Opening syntax: \`[[SCREEN id=meaningful-name]]\`.
-- Closing syntax: \`[[/SCREEN]]\`.
-- Optional label: \`Label: Encounter\` (small reader-facing screen label).
-- Optional screen heading: a top-level Markdown \`# Heading\` at screen level.
+- Opening syntax: `[[SCREEN id=meaningful-name]]`.
+- Closing syntax: `[[/SCREEN]]`.
+- Optional label: `Label: Encounter` (small reader-facing screen label).
+- Optional screen heading: a top-level Markdown `# Heading` at screen level.
 - The order of SCREEN declarations determines reader order; screen count and teaching length are not capped.
 - No anonymous or overlapping SCREEN containers.
 
 ### Content Blocks
 
-- Opening syntax: \`[[CBn id=meaningful-name]]\`; matching closing syntax: \`[[/CBn]]\`.
-- \`CBn\` must be a registered type. See [block-registry.md](block-registry.md).
+- Opening syntax: `[[CBn id=meaningful-name]]`; matching closing syntax: `[[/CBn]]`.
+- `CBn` must be a registered type. See [block-registry.md](block-registry.md).
 - Content Block IDs must be stable across ordinary editorial rearrangements.
-- For repeated nested items: \`[[CARD id=...]]\`, \`[[STEP id=...]]\`, \`[[CHOICE id=...]]\`.
-- For singular nested areas: \`[[LEFT]]\`, \`[[RIGHT]]\`, \`[[FOOTER]]\`; these do not need individual IDs.
+- For repeated nested items: `[[CARD id=...]]`, `[[STEP id=...]]`, `[[CHOICE id=...]]`.
+- For singular nested areas: `[[LEFT]]`, `[[RIGHT]]`, `[[FOOTER]]`; these do not need individual IDs.
 - The exact content/field grammar *inside* each block is a **v0.1 design item**, not yet implementation-ready.
 
 ### Editorial comments
@@ -94,7 +94,7 @@ Comments do not appear in the reader. TODO and REVIEW REQUIRED are not silently 
 
 ## 4. Front matter
 
-YAML front matter carries the editorially meaningful Challenge metadata. The following is a **working illustrative shape**, not a finalized parser schema. Unknown values must remain explicit (for example \`null\`); BerryMark must never manufacture approvals, Scripture permissions, URLs, or release times.
+YAML front matter carries the editorially meaningful Challenge metadata. The following is a **working illustrative shape**, not a finalized parser schema. Unknown values must remain explicit (for example `null`); BerryMark must never manufacture approvals, Scripture permissions, URLs, or release times.
 
 ~~~yaml
 ---
@@ -134,50 +134,50 @@ companionLinks: []
 
 | BerryMark | Bibleberry Sanity field or action | Notes |
 | --- | --- | --- |
-| \`challenge.title\` | \`challenge.title\` | Required. |
-| \`challenge.slug\` | \`challenge.slug.current\` | Stable, immutable identity once progress exists; do not derive from title during import. |
-| \`challenge.type\` | \`challenge.challengeType\` | Existing values: \`teaching\`, \`discipline\`, \`reflection\`, \`memorization\`. |
-| \`challenge.summary\` | \`challenge.summary\` | Optional. |
-| \`publishing.series\` | \`challenge.series\` reference | Working convention: resolve an existing series by stable slug; do not fabricate a new series. |
-| \`publishing.sequence\` | \`challenge.sequence\` | Positive integer; don't infer order from release dates. |
-| \`publishing.releaseAt\` | \`challenge.releaseAt\` | Sanity requires explicit datetime. \`null\` can mean *not scheduled yet* during BerryMark drafting, but cannot be silently turned into a publication-ready value. |
-| \`scripture.*\` | \`challenge.primaryScripture\` | Must conform to the shared \`scriptureReference\` structure. |
-| ordered \`SCREEN\` blocks | \`challenge.screens\` | Ordered \`challengeScreen\` objects with stable array keys. |
-| \`companionLinks\` | \`challenge.companionLinks\` | Optional metadata, never mandatory for Challenge completion. |
-| \`editorial.*\` | \`challenge.editorialReview\` plus provenance | **Compatibility gap:** existing Sanity review fields do not map one-to-one to proposed BerryMark approval metadata. Do not claim a review occurred simply to satisfy a schema requirement. |
+| `challenge.title` | `challenge.title` | Required. |
+| `challenge.slug` | `challenge.slug.current` | Stable, immutable identity once progress exists; do not derive from title during import. |
+| `challenge.type` | `challenge.challengeType` | Existing values: `teaching`, `discipline`, `reflection`, `memorization`. |
+| `challenge.summary` | `challenge.summary` | Optional. |
+| `publishing.series` | `challenge.series` reference | Working convention: resolve an existing series by stable slug; do not fabricate a new series. |
+| `publishing.sequence` | `challenge.sequence` | Positive integer; don't infer order from release dates. |
+| `publishing.releaseAt` | `challenge.releaseAt` | Sanity requires explicit datetime. `null` can mean *not scheduled yet* during BerryMark drafting, but cannot be silently turned into a publication-ready value. |
+| `scripture.*` | `challenge.primaryScripture` | Must conform to the shared `scriptureReference` structure. |
+| ordered `SCREEN` blocks | `challenge.screens` | Ordered `challengeScreen` objects with stable array keys. |
+| `companionLinks` | `challenge.companionLinks` | Optional metadata, never mandatory for Challenge completion. |
+| `editorial.*` | `challenge.editorialReview` plus provenance | **Compatibility gap:** existing Sanity review fields do not map one-to-one to proposed BerryMark approval metadata. Do not claim a review occurred simply to satisfy a schema requirement. |
 
 The Sanity schema currently calls a review field **“Adaptation reviewed by Alexis”**. The intended workflow permits review by **Alexis or Aaron**, with truthful attribution. Correcting this field and its publication validation is a **separate, deferred schema change**; it is *not* part of the present BerryMark documentation commit.
 
-The current \`editorialReview\` schema has \`sourceTitle\`, optional \`sourceRevision\`, boolean \`adaptationReviewed\`, optional \`reviewedBy\`, \`reviewedAt\`, and \`reviewNotes\`. BerryMark's \`sourceAuthor\`, \`approvalStatus\`, \`approvedBy\`, and \`approvedAt\` cannot be assumed to have matching destinations without a deliberate adapter mapping/schema decision.
+The current `editorialReview` schema has `sourceTitle`, optional `sourceRevision`, boolean `adaptationReviewed`, optional `reviewedBy`, `reviewedAt`, and `reviewNotes`. BerryMark's `sourceAuthor`, `approvalStatus`, `approvedBy`, and `approvedAt` cannot be assumed to have matching destinations without a deliberate adapter mapping/schema decision.
 
 A publication time must use a timezone-aware datetime/offset before publishing. A missing value never means “publish now.” Sanity may flag an incomplete **draft** as invalid; the importer must distinguish draft creation from publication readiness.
 
 ### Shared Scripture data
 
-The Sanity \`scriptureReference\` fields are: \`reference\`, \`translation\`, \`textStatus\` (\`referenceOnly\` or \`provided\`), optional \`passage\`, \`usageRightsConfirmed\`, and \`practiceStatus\` (\`notConfigured\` or \`configured\`). A provided passage requires confirmed app quotation rights; configured memorization practice requires rights-cleared passage text.
+The Sanity `scriptureReference` fields are: `reference`, `translation`, `textStatus` (`referenceOnly` or `provided`), optional `passage`, `usageRightsConfirmed`, and `practiceStatus` (`notConfigured` or `configured`). A provided passage requires confirmed app quotation rights; configured memorization practice requires rights-cleared passage text.
 
 **A manuscript containing a Bible translation is not proof of app quotation rights.** Defaults are conservative: reference only, rights not confirmed, practice not configured. Other Scripture instances (e.g. CB2, optional-study references) follow the same rules.
 
 ### Companion links
 
-Each Sanity companion link currently supports \`provider\` (\`social\`, \`patreon\`, \`podcast\`, \`walkingReel\`, \`youtube\`, \`other\`), required \`label\`, and optional \`description\`, verified HTTP(S) \`url\`, and \`availability\`. These are metadata, not required reading or completion steps. Do not invent URLs.
+Each Sanity companion link currently supports `provider` (`social`, `patreon`, `podcast`, `walkingReel`, `youtube`, `other`), required `label`, and optional `description`, verified HTTP(S) `url`, and `availability`. These are metadata, not required reading or completion steps. Do not invent URLs.
 
 ### Series records
 
-A Challenge may point to an already-existing \`challengeSeries\` record. That schema contains required title and slug; optional description, start/end dates, cover image, and image alternative text. A separate BerryMark *series document format* was discussed conceptually, but its grammar and creation/import workflow are **not approved for v0.1 yet**. Until decided, resolve an existing Sanity series or report an unresolved-reference problem.
+A Challenge may point to an already-existing `challengeSeries` record. That schema contains required title and slug; optional description, start/end dates, cover image, and image alternative text. A separate BerryMark *series document format* was discussed conceptually, but its grammar and creation/import workflow are **not approved for v0.1 yet**. Until decided, resolve an existing Sanity series or report an unresolved-reference problem.
 
 ## 5. Supported text formatting
 
 Where Sanity uses the project's Portable Text field, the approved Markdown subset is:
 
 - Paragraphs and line breaks where representable.
-- \`**bold**\`, \`*italic*\`.
-- \`##\` and \`###\` headings.
+- `**bold**`, `*italic*`.
+- `##` and `###` headings.
 - Markdown block quotations.
 - Bulleted and numbered lists.
 - External HTTP(S) Markdown links.
 
-Portable Text currently supports normal, \`h2\`, \`h3\`, \`blockquote\`; bullet/number lists; \`strong\`, \`em\`; and HTTP(S) link annotations.
+Portable Text currently supports normal, `h2`, `h3`, `blockquote`; bullet/number lists; `strong`, `em`; and HTTP(S) link annotations.
 
 **Do not silently strip unsupported Markdown** (for example code fences, tables, images, or arbitrary inline HTML) from reader content. Report unsupported constructs and decide explicitly whether to extend the language or rewrite the adaptation.
 
@@ -209,6 +209,6 @@ Before importer implementation:
 
 ## 8. First acceptance exercise
 
-Use Alexis's original **November 2, 2026 “Rejoice Always”** manuscript as the first serious exercise, after preserving the source unchanged. Collaboratively adapt each screen, verify the theological argument, and inspect the full result for gaps in the grammar. A ceremonial \`hello-world.berry.md\` can later test end-to-end import, but illustrative samples are not evidence that an importer already exists.
+Use Alexis's original **November 2, 2026 “Rejoice Always”** manuscript as the first serious exercise, after preserving the source unchanged. Collaboratively adapt each screen, verify the theological argument, and inspect the full result for gaps in the grammar. A ceremonial `hello-world.berry.md` can later test end-to-end import, but illustrative samples are not evidence that an importer already exists.
 
 **Working draft, not compiler-ready.** No parser or importer is claimed to exist as of this document.
