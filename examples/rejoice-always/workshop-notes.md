@@ -1,6 +1,6 @@
 # Rejoice Always — Manuscript Workshop Notes
 
-**Status:** EXISTING PROTOTYPE FOUND — reverse-mapping and editorial audit pending. A complete interactive seven-screen **Local Prototype already exists** in Bibleberry, but it is **not necessarily editorially approved** or migrated into BerryMark/Sanity. No BerryMark compiler or importer has run.  
+**Status:** FIRST REVERSE-MAPPED BERRYMARK SOURCE COMMITTED — MANUAL PREFLIGHT ONLY; editorial, syntax and integration review pending. The complete existing seven-screen Local Prototype is now represented in a separate working BerryMark file; it has **not** been compiled, imported, or editorially approved.  
 **Working branch:** `docs/berrymark-v0.1-specification` (ContraPhilosophy/BerryMark)  
 **Procedure:** [Manuscript Workshop Playbook](../../docs/manuscript-workshop.md)  
 **Source:** `nov2challenge(1).txt`, provided in the AppDev conversation/project files. Read the full original before adapting; it is not copied into this repository.
@@ -13,6 +13,24 @@
 - **Important distinction:** Bibleberry also has a distinct Sanity CMS development renderer and a two-screen synthetic fixture at `src/cms/sanity/developmentFixture.ts`. That fixture is **not** this seven-screen Rejoice Always experience. Do not conflate the two data sources.
 - **Editorial state:** Several original prototype blocks are visibly flagged **Draft editorial · For Alexis’s review**. Their existence in the reader does **not** constitute approval.
 - **Next exercise:** **Reverse-map and audit** the existing screen/block model against the unchanged manuscript and the BerryMark CB1–CB9 registry; do not redesign already working screens by default.
+
+## Current BerryMark working artifacts
+
+- **Source file:** [`rejoice-always.berry.md`](rejoice-always.berry.md), a *first-pass human-readable reverse mapping* of the existing Local Prototype. It uses seven semantic SCREEN identifiers and 16 top-level CB1–CB9 blocks, including three CB8 studies and four nested Scripture references.
+- **Verification plan:** [`test-plan.md`](test-plan.md), with source/revision/test-run diagnostics, screen-by-screen expected blocks, intentional differences, negative tests and future protected draft-preview requirement.
+- **Baseline:** Bibleberry `main@c43b53146f3b4f6c1d5154e1ce0409a5aa3e4d3d`, Local Prototype Challenge `nov-2`.
+- **Manual marker preflight:** Seven screens, 16 top-level Content Blocks, four nested Scripture references, two companions, 35 uniquely named structural IDs, matching opening/closing markers (after excluding editorial comments). **This is not compiler validation.**
+- **Known blockers:** 11 explicit `REVIEW REQUIRED` comments; unresolved series, sequence, exact release timestamp and app Scripture usage rights; provisional block-internal syntax; editorial review not established.
+- **No actual BerryMark import or public-reader release.** The existing Sanity CMS Lab currently queries the `published` perspective and excludes drafts. A **protected draft-preview mode** is necessary before we can inspect a newly imported draft in the reader without prematurely publishing it.
+
+### What the first reverse mapping teaches us
+
+1. **The prior seven-screen layout is useful and already exists.** We do not need to redesign it to test the DSL.
+2. **Existing Local Prototype `teachingText.pullQuote` has no direct Sanity richTextBlock field.** The working source represents both pull quotes as CB3 statements; whether the look and the editorial semantics remain right needs review.
+3. **CB8 needs explicit repeated Scripture syntax.** The working exercise proposes `[[SCRIPTURE id=...]]` nested sections. It is **not yet approved grammar**. Freeze only after discussion and testing.
+4. **Some original prose was editorially adapted into components.** CB4, CB5, CB6, CB7, and three CB8 studies must be reviewed as existing draft adaptations. Their existence in the prototype is not approval.
+5. **Scripture differs intentionally from the prototype:** `referenceOnly` and `notConfigured` are used because this exercise does not establish app quotation rights. Do not assume a text-present local prototype grants permission.
+6. **No TEST text was inserted into reader-facing prose.** Identification belongs to a developer-only screen banner and block IDs, as defined in the test plan.
 
 ## Source inventory
 
@@ -82,9 +100,10 @@ Beyond required screens: existing `relatedResources` array stores social follow-
 ## Change and decision log
 
 - **2026-11-03 (earlier):** A separate provisional seven-screen plan was made from the manuscript without checking the pre-existing Local Prototype. **Superseded**; do not use that plan to redo the existing adaptation.
-- **2026-11-03 (corrected):** User supplied full screenshots of the working seven-screen Rejoice Always Local Prototype. GitHub source verified under `src/data/interactiveChallenges.ts`, entry `nov-2`. Workshop changed from greenfield adaptation to **reverse-mapping/audit of existing implementation**. No editorial approval claimed, no Sanity content changed.
-- **Next action:** Review existing **`b1` Encounter** against its original source paragraphs and map its CB2 + CB1 to BerryMark. Then systematically walk all seven existing screens and record any mapping gaps or proposed editorial changes.
+- **2026-11-03 (corrected):** User supplied full screenshots of the working seven-screen Rejoice Always Local Prototype. GitHub source verified under `src/data/interactiveChallenges.ts`, entry `nov-2`. Workshop changed from greenfield adaptation to reverse-mapping/audit, not redesign.
+- **2026-11-03 (first source):** Seven-screen, 16-block `rejoice-always.berry.md` working example and independent `test-plan.md` committed. Marker nesting manually checked after excluding comments. No parser/compiler run; no human approval or Sanity change.
+- **Next action:** Review the candidate reverse mapping against the screenshots and manuscript, starting with screen `b1`. Resolve the **CB8 Scripture nesting grammar** and **pullQuote-to-CB3 mapping** before handing anything to a compiler implementer. Review proposed editorial additions with Aaron/Alexis separately.
 
 ## Future-chat resume instruction
 
-Read [the workshop playbook](../../docs/manuscript-workshop.md), the three BerryMark v0.1 design docs, the full original `nov2challenge(1).txt`, and this note. Check actual GitHub branch and latest commit. **Read the existing Local Prototype source before proposing any changes.** It is a functioning seven-screen adaptation but **not necessarily approved**. Do not import the NIV text without verified rights. Resume with a source-fidelity and BerryMark mapping audit of legacy **screen `b1`**. Do not redesign, approve, import, or publish the full Challenge on assumptions.
+Read [the workshop playbook](../../docs/manuscript-workshop.md), the three BerryMark v0.1 design docs, the full original `nov2challenge(1).txt`, and this note. Check actual GitHub branch and latest commit. **Read the existing Local Prototype source before proposing any changes.** It is a functioning seven-screen adaptation but **not necessarily approved**. Do not import the NIV text without verified rights. Open the **working BerryMark file and test plan** next to the existing Local Prototype; resume source-fidelity and BerryMark mapping review, beginning with legacy **screen `b1`**. Do not redesign, approve, import, or publish the full Challenge on assumptions.
