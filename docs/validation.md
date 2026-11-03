@@ -58,6 +58,7 @@ These examples are proposed classes of unoverridable error; the stable machine-r
 - Duplicate screen IDs, duplicate CB instance IDs, or duplicate IDs in a repeatable nested collection.
 - Missing SCREEN or missing content blocks inside a SCREEN.
 - Missing mandatory parts of a registered CB: e.g., a CB4 without RIGHT, CB6 with fewer than two STEP entries, or a CB7 with exactly one CHOICE.
+- A nested `[[SCRIPTURE id=...]]` outside CB8; an unclosed `[[/SCRIPTURE]]` marker; a missing, duplicate or unstable nested Scripture ID; or malformed nested Scripture data. CB8 may have zero such sections.
 - Undefined required CB field or incompatible field type.
 - A `cycle: true` sequence without `returnCaption`.
 
@@ -212,7 +213,7 @@ An Import request must surface or make available an inspectable summary *before 
 
 ## 10. Tests required before calling the implementation complete
 
-**Parser tests:** Valid YAML and nested markers; malformed closings; escaped/literal marker text; duplicate IDs; reordering; unsupported directives.
+**Parser tests:** Valid YAML and nested markers; malformed closings; escaped/literal marker text; duplicate IDs; reordering; unsupported directives; CB8 with zero, one, or multiple stable-ID `SCRIPTURE` children; rejection of nested `SCRIPTURE` outside CB8; preserving array order and excluding Scripture directives from Portable Text.
 
 **Formatting tests:** Rich Markdown to Portable Text; plain-text fields; block quotes, lists, links; unsupported images/tables/code fences fail visibly.
 
@@ -227,7 +228,7 @@ An Import request must surface or make available an inspectable summary *before 
 ## 11. Open decisions (do not silently implement)
 
 1. Exact CLI syntax/output formats for Validate, preview mode, and Import.
-2. Exact grammar for block-internal fields and nested array content.
+2. Exact grammar for remaining block-internal field labels and nested arrays; **CB8's nested `SCRIPTURE` section markers and stable-ID requirement are approved**.
 3. Warning-override syntax and storage; editorial TODO disposition for draft import.
 4. Where Sanity stores visible per-warning review records.
 5. How truthful Aaron-or-Alexis approval maps into the Sanity schema.
