@@ -26,7 +26,7 @@
 ### What the first reverse mapping teaches us
 
 1. **The prior seven-screen layout is useful and already exists.** We do not need to redesign it to test the DSL.
-2. **Existing Local Prototype `teachingText.pullQuote` has no direct Sanity richTextBlock field.** The working source represents both pull quotes as CB3 statements; whether the look and the editorial semantics remain right needs review.
+2. **Approved November 3, 2026:** Existing Local Prototype `teachingText.pullQuote` is represented by an adjacent, standalone CB3 `statementBlock` following the related CB1, with exact wording and placement preserved. This **resolves the structural mapping question**; visual equivalence and the source-versus-prototype placement discrepancy still require review.
 3. **CB8 nested Scripture syntax approved November 3, 2026.** Repeatable references use `[[SCRIPTURE id=...]] ... [[/SCRIPTURE]]` inside CB8. This resolves the marker/identity question; field-line spellings, actual compiler behavior and Scripture-rights verification remain open.
 4. **Some original prose was editorially adapted into components.** CB4, CB5, CB6, CB7, and three CB8 studies must be reviewed as existing draft adaptations. Their existence in the prototype is not approval.
 5. **Scripture differs intentionally from the prototype:** `referenceOnly` and `notConfigured` are used because this exercise does not establish app quotation rights. Do not assume a text-present local prototype grants permission.
@@ -71,8 +71,8 @@ This is the actual structure already implemented in `Bibleberry/src/data/interac
 | --- | --- | --- | --- |
 | **`b1`** | Encounter · Rejoice always. But how? | NIV Scripture panel plus the exact opening teaching paragraphs | CB2 + CB1 |
 | **`b2`** | Distinguish · Feeling joyful is not the same as rejoicing | Two-sided comparison and concluding paragraph; marked draft editorial | CB4 |
-| **`b3`** | Clarify · Rejoicing isn’t pretending | Teaching paragraphs with an emphasized question; optional studies on John 11:33–35 and 2 Corinthians 6:10 | CB1, possible CB3 for legacy `pullQuote`, two CB8 |
-| **`b4`** | Gospel · We have to remember the Gospel | Three visual cards (brokenness, God's response, Christ's reconciliation), teaching text, emphasized conclusion | CB5 + CB1, possible CB3 for `pullQuote` |
+| **`b3`** | Clarify · Rejoicing isn’t pretending | Teaching paragraphs with an emphasized question; optional studies on John 11:33–35 and 2 Corinthians 6:10 | CB1 + adjacent CB3 for legacy `pullQuote` + two CB8 |
+| **`b4`** | Gospel · We have to remember the Gospel | Three visual cards (brokenness, God's response, Christ's reconciliation), teaching text, emphasized conclusion | CB5 + CB1 + adjacent CB3 for legacy `pullQuote` |
 | **`b5`** | Hope · What God has done, is doing, and will do | Connected three-step sequence, sustained teaching prose, optional study on Romans 8:18–25 and Revelation 21:1–5 | CB6 + CB1 + CB8 |
 | **`b6`** | Practice · Rejoicing in real circumstances | Gratitude teaching and two selectable reflection paths; preserves concluding refrain | CB1 + CB7 |
 | **`b7`** | Pray · A prayer for today | Alexis's original authored prayer | CB9 |
@@ -81,7 +81,7 @@ Beyond required screens: existing `relatedResources` array stores social follow-
 
 ### Translation differences that the exercise must expose
 
-1. **Legacy data model is not the Sanity model.** For example, the local prototype `teachingText.pullQuote` has no identical property on Sanity's `richTextBlock`. Determine whether a separate CB3 statement faithfully reproduces the presentation or a schema change is needed. Avoid losing emphasis silently.
+1. **Legacy data model is not the Sanity model.** The approved conversion of local `teachingText.pullQuote` is an adjacent CB3 mapped to Sanity `statementBlock` after CB1. **Verify visual equivalence**, preserving precise wording/order without duplication; no Sanity schema change is planned just for this mapping.
 2. **Repeatable nested items:** Local visual cards and sequence steps are identified chiefly by titles/positions rather than stable per-item IDs. BerryMark requires semantic `CARD`/`STEP` IDs; assign them during translation without changing editorial meaning.
 3. **Review-state differences:** Legacy `draftEditorial` flags don't map one-to-one to Sanity's `reviewStatus: proposed|approved`. Start proposed and retain human review requirements; no fabricated approvals.
 4. **Original Scripture panel includes supplied NIV text and configured practice** in this local prototype. That does **not** prove the future app's quotation rights. A BerryMark/Sanity import must use `referenceOnly` or receive documented rights confirmation first. Don't treat a copyright-risky fixture state as production policy.
@@ -91,7 +91,7 @@ Beyond required screens: existing `relatedResources` array stores social follow-
 ## Open review questions
 
 1. Is the existing seven-screen layout and content **editorially acceptable** to Aaron and Alexis, or are there concrete screens to revise? Screenshots establish that it works, not that it's approved.
-2. How should the legacy `pullQuote` be mapped while preserving appearance and theological emphasis?
+2. **Visual review only:** Does the approved adjacent CB3 mapping match the original prototype's presentation and preserve theological emphasis? The structural mapping itself is settled.
 3. Are the proposed optional deeper studies, comparisons, sequence, and reflection choices approved as written?
 4. What semantic stable screen IDs and nested IDs should replace/augment the legacy code identifiers, if needed?
 5. Which Scripture passages may be shown in full in the actual app, under documented quotation rights?
@@ -103,7 +103,8 @@ Beyond required screens: existing `relatedResources` array stores social follow-
 - **2026-11-03 (corrected):** User supplied full screenshots of the working seven-screen Rejoice Always Local Prototype. GitHub source verified under `src/data/interactiveChallenges.ts`, entry `nov-2`. Workshop changed from greenfield adaptation to reverse-mapping/audit, not redesign.
 - **2026-11-03 (first source):** Seven-screen, 16-block `rejoice-always.berry.md` working example and independent `test-plan.md` committed. Marker nesting manually checked after excluding comments. No parser/compiler run; no human approval or Sanity change.
 - **2026-11-03 (syntax approval):** Aaron approved `[[SCRIPTURE id=...]] ... [[/SCRIPTURE]]` as CB8's repeatable nested Scripture-reference marker. Language spec, block registry, validation and working example updated without changing reader-facing wording.
-- **Next action:** Review the candidate reverse mapping against screenshots and the manuscript, beginning with screen `b1`, and settle the **pullQuote-to-CB3 mapping** before compiler implementation. Review proposed editorial additions with Aaron/Alexis separately.
+- **2026-11-03 (mapping approval):** Aaron approved mapping Local Prototype `teachingText.pullQuote` to a standalone CB3 immediately after its CB1. Both existing highlights retain their exact text and prototype placement. Actual rendered appearance and one legacy source-order discrepancy remain review items.
+- **Next action:** Review the candidate reverse mapping against screenshots and the manuscript, beginning with screen `b1`. The next **open syntax design** concerns exact CB field-line parsing (e.g. `Title:`, `Text:`) and escaping; do not assume approval merely because examples use them. Review editorial additions with Aaron/Alexis separately.
 
 ## Future-chat resume instruction
 
