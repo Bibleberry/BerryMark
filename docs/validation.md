@@ -73,6 +73,7 @@ These examples are proposed classes of unoverridable error; the stable machine-r
 - Unsupported/invalid URL schemes for external links.
 - An attempt to import a Challenge whose stable identity already exists in Sanity (whether published or drafted).
 - An unresolved required Sanity reference or unavailable target schema, if an importer cannot safely produce its promised draft.
+- During an explicitly requested **legacy pullQuote migration**, loss of a highlighted statement, duplication into both CB1 and CB3, alteration of its wording, or reordering without a recorded editorial decision. The accepted mapping is an adjacent `CB1` followed by a stand-alone `CB3` mapped to `statementBlock`. Ordinary author-created CB3 statements need not be adjacent to CB1.
 
 **No “best-effort” data loss:** when source content cannot be faithfully represented, fail clearly rather than omit it.
 
@@ -215,7 +216,7 @@ An Import request must surface or make available an inspectable summary *before 
 
 **Parser tests:** Valid YAML and nested markers; malformed closings; escaped/literal marker text; duplicate IDs; reordering; unsupported directives; CB8 with zero, one, or multiple stable-ID `SCRIPTURE` children; rejection of nested `SCRIPTURE` outside CB8; preserving array order and excluding Scripture directives from Portable Text.
 
-**Formatting tests:** Rich Markdown to Portable Text; plain-text fields; block quotes, lists, links; unsupported images/tables/code fences fail visibly.
+**Formatting tests:** Rich Markdown to Portable Text; plain-text fields; block quotes, lists, links; unsupported images/tables/code fences fail visibly. For legacy `teachingText.pullQuote` cases, verify exact text, one CB3 per source highlight, stable instance ID, adjacency/order after the corresponding CB1, separate `statementBlock` output, and retention of any source-vs-prototype ordering discrepancy as an editorial review item.
 
 **Schema mapping tests:** Required fields and options for CB1–CB9 and nested objects; Scripture-rights truth table; `challenge` and `challengeSeries` reference rules.
 
