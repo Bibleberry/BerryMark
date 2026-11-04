@@ -11,7 +11,9 @@
     "check": "node src/cli.js check examples/hello-world.berry.md",
     "preview": "node src/cli.js preview examples/hello-world.berry.md",
     "compile": "node src/compiler-cli.js examples/compiler-all-blocks.berry.md",
-    "compile:rejoice": "node src/compiler-cli.js examples/rejoice-always/rejoice-always.berry.md"
+    "compile:rejoice": "node src/compiler-cli.js examples/rejoice-always/rejoice-always.berry.md",
+    "plan": "node src/import-plan-cli.js examples/compiler-all-blocks.compiled.json --source examples/compiler-all-blocks.berry.md",
+    "plan:artifact": "node src/import-plan-cli.js examples/compiler-all-blocks.compiled.json"
   },
   "dependencies": {
     "marked": "18.1.3",
