@@ -44,7 +44,7 @@ companionLinks:
 <!-- EDITORIAL NOTE: The seven screen divisions, displayed headings and text follow the Local Prototype at the exact source revision above. Semantic IDs are NEW PROPOSALS, with their legacy IDs recorded in the accompanying test plan. -->
 <!-- REVIEW REQUIRED: The Local Prototype displays supplied NIV text with configured memorization. This draft deliberately uses referenceOnly and notConfigured because application quotation rights have not been confirmed. Do not paste the passage from the prototype or claim rights in an importer. -->
 <!-- REVIEW REQUIRED: Publishing series, sequence and exact releaseAt are unresolved. No importer should invent them. -->
-<!-- EDITORIAL NOTE: CB8 nested [[SCRIPTURE id=...]] / [[/SCRIPTURE]] markers are approved. Other block-internal field-label spellings remain provisional v0.1 syntax. This file is not compiler-validated. -->
+<!-- EDITORIAL NOTE: CB8 nested [[SCRIPTURE id=...]] / [[/SCRIPTURE]] markers and context-sensitive named-field syntax (including blank-line rich-body headers and multiline | text) are approved BerryMark v0.1 grammar. This file is a working example and has NOT been compiler-validated. -->
 <!-- EDITORIAL NOTE: TEST banners and CB ID labels are NOT written into Alexis's reader-facing content. Development diagnostics are defined separately in the test plan. -->
 
 [[SCREEN id=encounter-command]]
