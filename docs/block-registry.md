@@ -1,6 +1,6 @@
 # BerryMark v0.1 — Content Block Registry (Working Draft)
 
-**Status:** Working editorial registry, checked against the Bibleberry Sanity schemas as of November 3, 2026. Detailed inside-block syntax remains to be tested and finalized.  
+**Status:** Working editorial registry, checked against Bibleberry Sanity schemas as of November 3, 2026. **Context-sensitive field-declaration grammar approved November 3, 2026**; other adapter/parser details still require implementation and tests.  
 **See also:** [Language Specification](language-spec.md) · [Validation and Import](validation.md)
 
 ## Registry commitments (approved)
@@ -64,7 +64,7 @@ Practice Status: notConfigured
 [[/CB2]]
 ~~~
 
-The field-line spelling is **illustrative**. A passage must never be copied into the output without verified app rights. Providing a Scripture reference and translation is safe even when quotation rights are unresolved. Optional memorization remains unconfigured absent licensed passage text.
+These named field spellings are **approved** for CB2 and nested CB8 SCRIPTURE sections. A passage must never be copied into the output without verified app rights. Providing a Scripture reference and translation is safe even when quotation rights are unresolved. Optional memorization remains unconfigured absent licensed passage text.
 
 ## CB3 — Key Statement
 
@@ -79,7 +79,7 @@ Text: Rejoicing is not the same thing as pretending suffering does not exist.
 [[/CB3]]
 ~~~
 
-**Requirements:** Nonempty statement. The grammar of field labels is provisional. Do not treat the plain statement text as Markdown.
+**Requirements:** Nonempty statement. `Text:` is required and `Label:` is optional; both use the approved exact, case-sensitive field syntax, including `Name: |` for indented multiline plain-text values. Do not treat the plain statement text as Markdown.
 
 **Approved legacy mapping (November 3, 2026):** The Bibleberry Local Prototype's `teachingText.pullQuote` becomes a **separate CB3 immediately after the CB1 containing the corresponding teaching paragraphs**, preserving the source's exact highlighted wording, placement and label. The compiler maps CB3 to Sanity `statementBlock`; it does not silently append the quote to CB1, strip it, or duplicate it. Use a stable CB3 instance ID distinct from its preceding CB1. Whether a specific legacy highlight or placement is editorially appropriate still requires actual Aaron/Alexis review, and visual equivalence must be tested in the developer reader. CB3 can also be intentionally authored as a stand-alone key statement. No new Content Block type is necessary.
 
@@ -93,11 +93,13 @@ Each side has required **plain-text `title`** and required **Portable Text `body
 [[CB4 id=feeling-versus-practice]]
 [[LEFT]]
 Title: Feeling Joy
+
 An emotion that may not be present in every circumstance.
 [[/LEFT]]
 
 [[RIGHT]]
 Title: Rejoicing
+
 A response grounded in the goodness of God.
 [[/RIGHT]]
 
@@ -107,7 +109,7 @@ The comparison must not suggest that feelings are irrelevant.
 [[/CB4]]
 ~~~
 
-**Requirements:** Left title/body and right title/body; `reviewStatus: proposed` until a human review in Sanity. Side bodies support rich Markdown; titles/footer do not. The example is schematic, not approved manuscript wording.
+**Requirements:** Left title/body and right title/body; `reviewStatus: proposed` until a human review in Sanity. The first nonblank line of each LEFT and RIGHT must be `Title: ...` with a **blank line** before its rich Markdown body. Subsequent `Title:` lines in the body are literal prose. The FOOTER contains freeform plain text, not named fields. The example is schematic, not approved manuscript wording.
 
 **Advisory review:** Excessively long concepts, imbalance between sides, reduction of nuance, or theological oversimplification. Exact advisory thresholds are undecided; never silently truncate.
 
@@ -130,7 +132,7 @@ Body: Another brief description.
 [[/CB5]]
 ~~~
 
-**Requirements:** At least one card, stable ID for every card, required title per card. The exact internal `Title:` / `Body:` spelling is provisional. There is no fixed card count unless later reader testing justifies a documented rule.
+**Requirements:** At least one card, stable ID for every card, required title per card. CARD has exact, case-sensitive `Title:` (required) and `Body:` (optional) fields. The `Body: |` two-space-indented multiline form is permitted for plain text. No fixed card count unless later reader testing justifies a documented rule.
 
 **Review:** Mark as proposed. Cards are for visual organization, not a mandate to turn prose into short slogans.
 
@@ -155,7 +157,7 @@ Conclusion: A question or concluding statement.
 [[/CB6]]
 ~~~
 
-**Requirements:** Two or more ordered, stable-ID steps; when `cycle: true`, a nonempty `returnCaption` is mandatory. A cycle should only be used when the underlying argument actually returns to the starting point.
+**Requirements:** Two or more ordered, stable-ID steps; when `Cycle: true`, a nonempty `Return Caption:` is mandatory. Before the first STEP, `Cycle:` and optional `Return Caption:` are fields; after the final STEP, optional `Conclusion:` is a field. Each STEP has exact `Title:` and `Body:` fields. These positions are separated by structural STEP markers, not by blank lines. A cycle should only be used when the underlying argument actually returns to the starting point.
 
 **Review:** Mark as proposed. Do not create artificial causal connections just because a sequence diagram looks attractive.
 
@@ -180,7 +182,7 @@ Closing: This practice is optional.
 [[/CB7]]
 ~~~
 
-**Requirements:** Question is required; choices are optional but must number two or more if present. Choices reveal reader-local prompts only; no personal reflection response is stored in Sanity.
+**Requirements:** `Question:` is required; choices are optional but must number two or more if present. `Question:` appears before any CHOICE, each CHOICE has required exact `Label:` and `Prompt:` fields, and optional `Closing:` follows the final CHOICE (or Question if no CHOICE). CHOICE markers, not blank lines, define phases. Choices reveal reader-local prompts only; no personal reflection response is stored in Sanity.
 
 **Review:** Mark as proposed. Reflection is optional, not a completion barrier.
 
@@ -204,7 +206,7 @@ Practice Status: notConfigured
 [[/CB8]]
 ~~~
 
-**Requirements:** Nonempty title and body. CB8 may contain **zero or more** nested `[[SCRIPTURE id=...]] ... [[/SCRIPTURE]]` sections. Their relative order and stable semantic IDs are preserved in Sanity `optionalStudyBlock.scriptures[]`. Each item is one structured `scriptureReference` governed by CB2's rights/status rules; it is *not* text within CB8's Portable Text `body`. Opening/closing section markers and required IDs are approved; internal field-label spellings remain provisional.
+**Requirements:** Nonempty title and body. CB8 requires the first nonblank line `Title: ...`, then one blank line before rich Markdown body text. Later `Title:` lines in its body are ordinary teaching text. CB8 may contain **zero or more** nested `[[SCRIPTURE id=...]] ... [[/SCRIPTURE]]` sections, with the same approved field names as CB2. Their relative order and stable semantic IDs are preserved in Sanity `optionalStudyBlock.scriptures[]`. Each is a structured `scriptureReference`, *not* part of CB8's Portable Text `body`. Nested Scripture may only occur after the rich-body portion, not interspersed into field declarations.
 
 **Review:** Mark as proposed, especially for new research or added theological/historical assertions. Reader presentation is collapsed and optional; there is no pressure to open it.
 
@@ -224,6 +226,10 @@ Help us remember what is true when circumstances are difficult.
 
 **Requirements:** Nonempty text; preserve paragraph boundaries and punctuation. A blank line can separate paragraphs in the working syntax. Do not interpret Markdown emphasis or headings inside plain-text prayer paragraphs unless a later schema change explicitly supports them.
 
+## Approved field-declaration conventions
+
+The [language spec](language-spec.md#field-declarations-and-literal-prose-approved-november-3-2026) and [approved RFC](proposals/field-declarations-v0.1.md) define the **exact, case-sensitive `Name: value` names**, where they may appear, their field-only versus freeform treatment, and the one-blank-line separation required for CB4 LEFT/RIGHT and CB8 title headers. A plain-text field can use `Name: |` with continuation lines indented by at least two spaces; two spaces are removed in the parsed value. Full reserved marker lines intended literally at the start of freeform prose must be escaped as `\[[...]]`. Unexpected or duplicated field declarations are errors. CB1 teaching, CB9 prayer and CB4 FOOTER treat field-looking lines as prose.
+
 ## Block-to-Sanity translation requirements
 
 A production adapter must explicitly cover every required Sanity field and each approved optional field for a block. It must preserve order, stable identities, supported rich text, and proposed review state. It must not invent missing Scripture rights, author attribution, or prose.
@@ -237,11 +243,12 @@ A production adapter must explicitly cover every required Sanity field and each 
 
 ## Open registry decisions before implementing the parser
 
-1. Freeze exact syntax for each type's field lines, including escaping a literal `Title:` or a reserved marker inside authored prose.
-2. Set **advisory** length recommendations where a specific visual component benefits; no arbitrary CB1 cap.
-3. Decide whether type-specific defaults should appear explicitly in BerryMark or be transparently generated, with visible validation output.
-4. Freeze deterministic identity rules for nested repeatable items and safe compilation to Sanity `_key` values.
-5. Test the registry against two or three substantive manuscript adaptations before declaring it implementation-ready.
+1. Set **advisory** length recommendations where a specific visual component benefits; no arbitrary CB1 cap.
+2. Decide whether type-specific defaults should appear explicitly in BerryMark or be transparently generated, with visible validation output.
+3. Freeze deterministic identity rules for nested repeatable items and safe compilation to Sanity `_key` values.
+4. Test the registry against two or three substantive manuscript adaptations before declaring it implementation-ready.
+
+**Resolved November 3, 2026:** Context-sensitive field declarations, exact field names, CB4/CB8 header separation, multiline plain-text `|`, and literal full-marker backslash escapes are approved. Authorial prose beginning with a field-looking label is not a new grammar decision.
 
 **Resolved November 3, 2026:** CB8's repeated Scripture array uses nested, stable-ID `[[SCRIPTURE id=...]] ... [[/SCRIPTURE]]` sections; it is no longer an open syntax question.
 
