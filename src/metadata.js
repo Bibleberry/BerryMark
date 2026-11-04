@@ -45,7 +45,7 @@ function diagnostic(diagnostics, severity, code, message, line, column = 1, path
  * Explicit non-core tags, anchors, and aliases are rejected so the typed
  * representation remains acyclic and safe to serialize as JSON.
  */
-export function parseMetadata(frontmatter, diagnostics) {
+export function parseMetadata(frontmatter, diagnostics, locationsOut) {
   if (!frontmatter) return null
   const initialErrorCount = diagnostics.filter(item => item.severity === 'error').length
   const lineCounter = new LineCounter()
@@ -142,6 +142,9 @@ export function parseMetadata(frontmatter, diagnostics) {
   }
 
   validateMetadata(value, diagnostics, locationFor)
+  if (locationsOut) {
+    for (const [path, offset] of locations) locationsOut.set(path, locateOffset(offset))
+  }
   return value
 }
 

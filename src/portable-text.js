@@ -37,6 +37,7 @@ function isHttpUrl(value) {
  */
 export function markdownToPortableText(markdown, context, diagnostics) {
   const keyer = new DeterministicKeyer()
+  const parentIdentity = context.parentIdentity ?? context.target
   const location = new MarkdownLocation(markdown, context.line)
   const report = (code, message, token, advance = false) => {
     diagnostics.push({
@@ -46,7 +47,8 @@ export function markdownToPortableText(markdown, context, diagnostics) {
       filename: context.filename,
       ...location.locate(token?.raw, advance),
       path: context.path,
-      target: context.target
+      target: context.target,
+      ...(context.side ? { side: context.side } : {})
     })
   }
   const unsupported = (token, construct = token.type) => {
@@ -60,7 +62,7 @@ export function markdownToPortableText(markdown, context, diagnostics) {
       const uniqueMarks = [...new Set(marks)]
       const span = {
         _type: 'span',
-        _key: keyer.next(context.target, 'span', { text, marks: uniqueMarks }),
+        _key: keyer.next(parentIdentity, 'span', { text, marks: uniqueMarks }),
         marks: uniqueMarks,
         text
       }
@@ -91,7 +93,7 @@ export function markdownToPortableText(markdown, context, diagnostics) {
           unsupported(token, 'link title')
           continue
         }
-        const annotationKey = keyer.next(context.target, 'link', { href: token.href })
+        const annotationKey = keyer.next(parentIdentity, 'link', { href: token.href })
         markDefs.push({ _type: 'link', _key: annotationKey, href: token.href })
         spans.push(...inline(token.tokens, [...inheritedMarks, annotationKey], markDefs))
       } else if (token.type === 'br') {
@@ -111,7 +113,7 @@ export function markdownToPortableText(markdown, context, diagnostics) {
       style: options.style ?? 'normal',
       ...(options.listItem ? { listItem: options.listItem, level: options.level ?? 1 } : {})
     }
-    return { ...content, _key: keyer.next(context.target, 'block', content) }
+    return { ...content, _key: keyer.next(parentIdentity, 'block', content) }
   }
 
   const convertList = token => {
