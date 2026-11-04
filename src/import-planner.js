@@ -8,9 +8,14 @@ const clone = value => JSON.parse(JSON.stringify(value))
 
 function sourceComparisonResult(compilation) {
   const comparable = clone(compilation)
-  for (const item of comparable.reviewReport?.editorialItems ?? []) {
-    delete item.classification
-    delete item.reviewHistory
+  const editorialItems = comparable.reviewReport?.editorialItems
+  if (Array.isArray(editorialItems)) {
+    for (const item of editorialItems) {
+      if (item && typeof item === 'object') {
+        delete item.classification
+        delete item.reviewHistory
+      }
+    }
   }
   return comparable
 }
@@ -150,7 +155,8 @@ export function planBerryMarkImport({ compilation, source, schemaSnapshot } = {}
       translation: requirement.translation
     })
   }
-  for (const item of compilation?.reviewReport?.unresolved ?? []) {
+  const unresolvedItems = Array.isArray(compilation?.reviewReport?.unresolved) ? compilation.reviewReport.unresolved : []
+  for (const item of unresolvedItems) {
     warnings.push({ ...clone(item), severity: 'warning' })
   }
 
@@ -159,21 +165,22 @@ export function planBerryMarkImport({ compilation, source, schemaSnapshot } = {}
     status: 'required',
     reason: 'Authenticated duplicate checks must cover the canonical ID, exact draft ID, and matching slug under other IDs'
   }
-  const seriesLookup = compilation?.reviewReport?.pendingLookups?.map(item => ({
-    type: item.type,
+  const pendingLookups = Array.isArray(compilation?.reviewReport?.pendingLookups) ? compilation.reviewReport.pendingLookups : []
+  const seriesLookup = pendingLookups.map(item => ({
+    type: item?.type,
     status: 'required',
-    slug: item.slug,
-    sourcePath: item.sourcePath,
-    destinationPath: item.destinationPath,
-    reason: item.reason
-  })) ?? []
+    slug: item?.slug,
+    sourcePath: item?.sourcePath,
+    destinationPath: item?.destinationPath,
+    reason: item?.reason
+  }))
   const unresolvedLookups = [identityLookup, ...seriesLookup, ...rightsRequirements]
   const editorialItems = Array.isArray(compilation?.reviewReport?.editorialItems) ? compilation.reviewReport.editorialItems : []
   const unresolvedEditorialDecisions = editorialItems.filter(item => (
-    item.kind === 'TODO' || item.kind === 'REVIEW REQUIRED' || (item.kind === 'EDITORIAL NOTE' && item.classification === 'actionable')
+    item?.kind === 'TODO' || item?.kind === 'REVIEW REQUIRED' || (item?.kind === 'EDITORIAL NOTE' && item.classification === 'actionable')
   )).map(item => annotation(item, sourceFilename, 'actionable'))
   const informationalEditorialNotes = editorialItems.filter(item => (
-    item.kind === 'EDITORIAL NOTE' && item.classification !== 'actionable'
+    item?.kind === 'EDITORIAL NOTE' && item.classification !== 'actionable'
   )).map(item => annotation(item, sourceFilename, 'informational'))
 
   const sourceVerification = {

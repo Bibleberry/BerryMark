@@ -260,6 +260,9 @@ export function validateImportCompilation(compilation, schemaSnapshot) {
   if (!object(report, 'reviewReport', REPORT_FIELDS, REPORT_FIELDS)) return { errors, warnings, structuralValid: false }
 
   string(candidate.title, 'sanityCandidate.title')
+  if (hasOwn(candidate, 'series')) {
+    add('BM_IMPORT_CANDIDATE_SERIES_FORBIDDEN', 'The pure compiler candidate cannot supply series; the Sanity reference must remain unresolved for authenticated lookup', 'sanityCandidate.series')
+  }
   if (!isObject(candidate.slug)) add('BM_IMPORT_RESULT_INVALID', 'sanityCandidate.slug must be an object', 'sanityCandidate.slug')
   string(candidate.challengeType, 'sanityCandidate.challengeType')
   if (hasOwn(candidate, 'summary')) string(candidate.summary, 'sanityCandidate.summary')
@@ -386,6 +389,7 @@ export function validateImportCompilation(compilation, schemaSnapshot) {
       object(report.authoredMetadata[section], `reviewReport.authoredMetadata.${section}`, fields, fields.filter(field => hasOwn(report.authoredMetadata[section] ?? {}, field)))
     }
     const metadata = report.authoredMetadata
+    if (hasOwn(metadata, 'companionLinks')) array(metadata.companionLinks, 'reviewReport.authoredMetadata.companionLinks')
     if (metadata.challenge?.title !== candidate.title || metadata.challenge?.slug !== candidate.slug?.current || metadata.challenge?.type !== candidate.challengeType) {
       add('BM_IMPORT_RESULT_INVALID', 'authoredMetadata.challenge does not match the candidate', 'reviewReport.authoredMetadata.challenge')
     }
@@ -418,9 +422,11 @@ export function validateImportCompilation(compilation, schemaSnapshot) {
       for (const field of fields) expectedStates[`${section}.${field}`] = valueState(metadata[section], field)
     }
     expectedStates.companionLinks = valueState(metadata, 'companionLinks')
-    for (const [index, link] of (metadata.companionLinks ?? []).entries()) {
-      for (const field of ['description', 'url', 'availability']) {
-        expectedStates[`companionLinks[${index}].${field}`] = valueState(link, field)
+    if (Array.isArray(metadata.companionLinks)) {
+      for (const [index, link] of metadata.companionLinks.entries()) {
+        for (const field of ['description', 'url', 'availability']) {
+          expectedStates[`companionLinks[${index}].${field}`] = valueState(link, field)
+        }
       }
     }
     if (!same(report.metadataStates, expectedStates)) add('BM_IMPORT_RESULT_INVALID', 'metadataStates do not match authoredMetadata', 'reviewReport.metadataStates')
@@ -451,43 +457,50 @@ export function validateImportCompilation(compilation, schemaSnapshot) {
     if (expectedSummary.errors > 0) add('BM_IMPORT_RESULT_INVALID', 'Error-severity compiler diagnostics block import planning', 'result.diagnostics')
   }
 
-  for (const name of ['unresolved', 'controlledMappings', 'pendingLookups', 'skippedDestinationFields', 'editorialItems']) {
-    if (!array(report[name], `reviewReport.${name}`)) continue
+  if (array(report.unresolved, 'reviewReport.unresolved')) {
+    report.unresolved.forEach((item, index) => {
+      diagnostic(item, `reviewReport.unresolved[${index}]`)
+      if (!compilation.diagnostics.some(candidateDiagnostic => same(candidateDiagnostic, item))) {
+        add('BM_IMPORT_RESULT_INVALID', 'Unresolved item is absent from compiler diagnostics', `reviewReport.unresolved[${index}]`)
+      }
+    })
   }
-  report.unresolved?.forEach((item, index) => {
-    diagnostic(item, `reviewReport.unresolved[${index}]`)
-    if (!compilation.diagnostics.some(candidateDiagnostic => same(candidateDiagnostic, item))) {
-      add('BM_IMPORT_RESULT_INVALID', 'Unresolved item is absent from compiler diagnostics', `reviewReport.unresolved[${index}]`)
-    }
-  })
-  report.controlledMappings?.forEach((item, index) => {
-    const path = `reviewReport.controlledMappings[${index}]`
-    if (object(item, path, ['code', 'path', 'target', 'value', 'reason'], ['code', 'path', 'value', 'reason'])) {
-      string(item.code, `${path}.code`); string(item.path, `${path}.path`); string(item.reason, `${path}.reason`)
-    }
-  })
-  report.pendingLookups?.forEach((item, index) => {
-    const path = `reviewReport.pendingLookups[${index}]`
-    if (object(item, path, ['type', 'slug', 'sourcePath', 'destinationPath', 'status', 'reason'], ['type', 'slug', 'sourcePath', 'destinationPath', 'status', 'reason'])) {
-      if (item.type !== 'challengeSeriesSlug' || item.status !== 'unresolved') add('BM_IMPORT_RESULT_INVALID', 'Unsupported pending lookup', path)
-    }
-  })
-  report.skippedDestinationFields?.forEach((item, index) => {
-    const path = `reviewReport.skippedDestinationFields[${index}]`
-    if (object(item, path, ['sourcePath', 'reason'], ['sourcePath', 'reason'])) {
-      string(item.sourcePath, `${path}.sourcePath`); string(item.reason, `${path}.reason`)
-    }
-  })
-  report.editorialItems?.forEach((item, index) => {
-    const path = `reviewReport.editorialItems[${index}]`
-    if (!object(item, path, ['kind', 'status', 'line', 'column', 'text', 'classification', 'reviewHistory'], ['kind', 'status', 'line', 'column', 'text'])) return
-    if (!['EDITORIAL NOTE', 'TODO', 'REVIEW REQUIRED', 'COMMENT'].includes(item.kind)) add('BM_IMPORT_RESULT_INVALID', 'Unknown editorial annotation category', `${path}.kind`)
-    if (item.status !== 'unresolved') add('BM_IMPORT_RESULT_INVALID', 'Planner input annotations must remain unresolved', `${path}.status`)
-    integer(item.line, `${path}.line`); integer(item.column, `${path}.column`); string(item.text, `${path}.text`)
-    if (hasOwn(item, 'classification') && !['actionable', 'informational'].includes(item.classification)) add('BM_IMPORT_RESULT_INVALID', 'Invalid editorial classification', `${path}.classification`)
-    if (['TODO', 'REVIEW REQUIRED'].includes(item.kind) && item.classification === 'informational') add('BM_IMPORT_RESULT_INVALID', 'Actionable annotation cannot be classified as informational', `${path}.classification`)
-    if (hasOwn(item, 'reviewHistory') && !Array.isArray(item.reviewHistory)) add('BM_IMPORT_RESULT_INVALID', 'reviewHistory must be an array', `${path}.reviewHistory`)
-  })
+  if (array(report.controlledMappings, 'reviewReport.controlledMappings')) {
+    report.controlledMappings.forEach((item, index) => {
+      const path = `reviewReport.controlledMappings[${index}]`
+      if (object(item, path, ['code', 'path', 'target', 'value', 'reason'], ['code', 'path', 'value', 'reason'])) {
+        string(item.code, `${path}.code`); string(item.path, `${path}.path`); string(item.reason, `${path}.reason`)
+      }
+    })
+  }
+  if (array(report.pendingLookups, 'reviewReport.pendingLookups')) {
+    report.pendingLookups.forEach((item, index) => {
+      const path = `reviewReport.pendingLookups[${index}]`
+      if (object(item, path, ['type', 'slug', 'sourcePath', 'destinationPath', 'status', 'reason'], ['type', 'slug', 'sourcePath', 'destinationPath', 'status', 'reason'])) {
+        if (item.type !== 'challengeSeriesSlug' || item.status !== 'unresolved') add('BM_IMPORT_RESULT_INVALID', 'Unsupported pending lookup', path)
+      }
+    })
+  }
+  if (array(report.skippedDestinationFields, 'reviewReport.skippedDestinationFields')) {
+    report.skippedDestinationFields.forEach((item, index) => {
+      const path = `reviewReport.skippedDestinationFields[${index}]`
+      if (object(item, path, ['sourcePath', 'reason'], ['sourcePath', 'reason'])) {
+        string(item.sourcePath, `${path}.sourcePath`); string(item.reason, `${path}.reason`)
+      }
+    })
+  }
+  if (array(report.editorialItems, 'reviewReport.editorialItems')) {
+    report.editorialItems.forEach((item, index) => {
+      const path = `reviewReport.editorialItems[${index}]`
+      if (!object(item, path, ['kind', 'status', 'line', 'column', 'text', 'classification', 'reviewHistory'], ['kind', 'status', 'line', 'column', 'text'])) return
+      if (!['EDITORIAL NOTE', 'TODO', 'REVIEW REQUIRED', 'COMMENT'].includes(item.kind)) add('BM_IMPORT_RESULT_INVALID', 'Unknown editorial annotation category', `${path}.kind`)
+      if (item.status !== 'unresolved') add('BM_IMPORT_RESULT_INVALID', 'Planner input annotations must remain unresolved', `${path}.status`)
+      integer(item.line, `${path}.line`); integer(item.column, `${path}.column`); string(item.text, `${path}.text`)
+      if (hasOwn(item, 'classification') && !['actionable', 'informational'].includes(item.classification)) add('BM_IMPORT_RESULT_INVALID', 'Invalid editorial classification', `${path}.classification`)
+      if (['TODO', 'REVIEW REQUIRED'].includes(item.kind) && item.classification === 'informational') add('BM_IMPORT_RESULT_INVALID', 'Actionable annotation cannot be classified as informational', `${path}.classification`)
+      if (hasOwn(item, 'reviewHistory') && !Array.isArray(item.reviewHistory)) add('BM_IMPORT_RESULT_INVALID', 'reviewHistory must be an array', `${path}.reviewHistory`)
+    })
+  }
 
   if (object(report.compatibility, 'reviewReport.compatibility', ['targetRepository', 'targetRevision', 'schemaComplete', 'missingRequiredFields', 'note'], ['targetRepository', 'targetRevision', 'schemaComplete', 'missingRequiredFields', 'note'])) {
     if (report.compatibility.targetRepository !== schemaSnapshot?.repository || report.compatibility.targetRevision !== schemaSnapshot?.revision) {

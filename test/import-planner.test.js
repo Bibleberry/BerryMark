@@ -245,6 +245,46 @@ test('unresolved companion URLs remain visible without inventing values', () => 
   assert.equal(report.provenanceChanges.sourceOrArtifactRepairPerformed, false)
 })
 
+test('malformed report collections return structured rejections instead of throwing', () => {
+  for (const field of ['unresolved', 'controlledMappings', 'pendingLookups', 'skippedDestinationFields', 'editorialItems']) {
+    for (const exactSource of [undefined, source]) {
+      const changed = clone(artifact)
+      changed.reviewReport[field] = { malformed: true }
+      let report
+      assert.doesNotThrow(() => { report = plan(changed, exactSource) }, `${field} must not throw`)
+      assert.equal(report.structuralValid, false)
+      assert.equal(report.importEligible, false)
+      assert.equal(report.proposedAction, 'reject')
+      assert.ok(report.errors.some(item => item.code === 'BM_IMPORT_RESULT_INVALID' && item.path === `reviewReport.${field}`))
+    }
+  }
+})
+
+test('malformed nested companion metadata returns a structured rejection instead of throwing', () => {
+  for (const malformed of [null, { malformed: true }, 'not-an-array']) {
+    const changed = clone(artifact)
+    changed.reviewReport.authoredMetadata.companionLinks = malformed
+    let report
+    assert.doesNotThrow(() => { report = plan(changed) })
+    assert.equal(report.structuralValid, false)
+    assert.equal(report.proposedAction, 'reject')
+    assert.ok(report.errors.some(item => item.code === 'BM_IMPORT_RESULT_INVALID' && item.path === 'reviewReport.authoredMetadata.companionLinks'))
+  }
+})
+
+test('artifact-only planning rejects every candidate-supplied series value', () => {
+  for (const series of [null, {}, { _type: 'reference', _ref: 'existing-series' }, 'existing-series']) {
+    const changed = clone(artifact)
+    changed.sanityCandidate.series = series
+    const report = plan(changed)
+    assert.equal(report.sourceVerification.state, 'artifact-only')
+    assert.equal(report.structuralValid, false)
+    assert.equal(report.importEligible, false)
+    assert.equal(report.proposedAction, 'reject')
+    assert.ok(report.errors.some(item => item.code === 'BM_IMPORT_CANDIDATE_SERIES_FORBIDDEN' && item.path === 'sanityCandidate.series'))
+  }
+})
+
 test('CLI prints a complete source-verified JSON report and exits successfully', () => {
   const result = runCli([artifactPath, '--source', sourcePath])
   assert.equal(result.status, 0, result.stderr)
@@ -280,6 +320,25 @@ test('CLI returns nonzero with structured output for malformed JSON', () => {
     const report = JSON.parse(result.stdout)
     assert.equal(report.structuralValid, false)
     assert.equal(report.proposedAction, 'reject')
+  } finally {
+    rmSync(directory, { recursive: true, force: true })
+  }
+})
+
+test('CLI returns structured validation failure for incorrectly typed collections', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'berrymark-plan-'))
+  try {
+    const malformed = clone(artifact)
+    malformed.reviewReport.unresolved = { malformed: true }
+    const malformedPath = join(directory, 'malformed-collection.json')
+    writeFileSync(malformedPath, JSON.stringify(malformed), 'utf8')
+    const result = runCli([malformedPath])
+    assert.equal(result.status, 1, result.stderr)
+    assert.equal(result.stderr, '')
+    const report = JSON.parse(result.stdout)
+    assert.equal(report.structuralValid, false)
+    assert.equal(report.proposedAction, 'reject')
+    assert.ok(report.errors.some(item => item.code === 'BM_IMPORT_RESULT_INVALID' && item.path === 'reviewReport.unresolved'))
   } finally {
     rmSync(directory, { recursive: true, force: true })
   }
