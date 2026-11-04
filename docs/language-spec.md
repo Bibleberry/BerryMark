@@ -258,4 +258,8 @@ Before importer implementation:
 
 Use Alexis's original **November 2, 2026 “Rejoice Always”** manuscript as the first serious exercise, after preserving the source unchanged. Collaboratively adapt each screen, verify the theological argument, and inspect the full result for gaps in the grammar. A ceremonial `hello-world.berry.md` can later test end-to-end import, but illustrative samples are not evidence that an importer already exists.
 
+### Pending field-declaration RFC
+
+The [field-declaration proposal](proposals/field-declarations-v0.1.md) explores **context-sensitive `Name: value` lines**, a blank-line boundary for the rich-body headers of CB8 and CB4 LEFT/RIGHT, strict fields in field-only contexts, and a possible indented `|` multiline plain-text form. It was manually checked against the current *Rejoice Always* example. **This is not yet an approved rule**; do not silently implement it in the compiler or claim its escaping conventions are settled.
+
 **Working draft, not compiler-ready.** No parser or importer is claimed to exist as of this document.
