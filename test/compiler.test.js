@@ -39,6 +39,7 @@ companionLinks: []`
 const wrap = (body, yaml = validYaml) => `---\n${yaml}\n---\n${body}`
 const screen = (blocks, header = 'Label: Test\n# Synthetic screen') => `[[SCREEN id=synthetic-screen]]\n${header}\n${blocks}\n[[/SCREEN]]`
 const cb1 = (text = 'Synthetic teaching.', id = 'synthetic-teaching') => `[[CB1 id=${id}]]\n${text}\n[[/CB1]]`
+const cb4 = (left, right, id = 'feeling-versus-practice') => `[[CB4 id=${id}]]\n[[LEFT]]\nTitle: Left\n\n${left}\n[[/LEFT]]\n[[RIGHT]]\nTitle: Right\n\n${right}\n[[/RIGHT]]\n[[/CB4]]`
 const success = (blocks, yaml) => {
   const body = screen(blocks, '').replace('[[SCREEN id=synthetic-screen]]\n\n', '[[SCREEN id=synthetic-screen]]\n')
   return compile(wrap(body, yaml))
@@ -130,6 +131,42 @@ test('CB4 maps comparisonSide Portable Text, literal footer, and proposed review
   assert.equal(block.reviewStatus, 'proposed')
 })
 
+test('CB4 comparison sides have distinct deterministic identities and independent key churn', () => {
+  const text = 'Identical [text](https://example.com).'
+  const source = wrap(screen(cb4(text, text)))
+  const first = compile(source)
+  assert.equal(first.ok, true, JSON.stringify(first.diagnostics))
+  assert.deepEqual(compile(source), first)
+  const comparison = first.sanityCandidate.screens[0].blocks[0]
+  const keys = body => body.flatMap(block => [
+    block._key,
+    ...block.children.map(span => span._key),
+    ...block.markDefs.map(definition => definition._key)
+  ])
+  const leftKeys = keys(comparison.left.body)
+  const rightKeys = keys(comparison.right.body)
+  assert.ok(leftKeys.length > 2 && rightKeys.length > 2)
+  assert.equal(leftKeys.some(key => rightKeys.includes(key)), false)
+  const edited = compile(wrap(screen(cb4('Edited left content.', text))))
+  assert.deepEqual(edited.sanityCandidate.screens[0].blocks[0].right.body, comparison.right.body)
+  assert.notEqual(edited.sanityCandidate.screens[0].blocks[0].left.body[0]._key, comparison.left.body[0]._key)
+})
+
+test('CB4 Markdown diagnostics retain the parent ID and identify the affected side', () => {
+  for (const side of ['left', 'right']) {
+    const left = side === 'left' ? 'Unsupported `left`.' : 'Valid left.'
+    const right = side === 'right' ? 'Unsupported `right`.' : 'Valid right.'
+    const result = compile(wrap(screen(cb4(left, right))))
+    assert.equal(result.ok, false)
+    assert.equal(result.sanityCandidate, null)
+    const diagnostic = result.diagnostics.find(item => item.code === 'BM_MARKDOWN_UNSUPPORTED')
+    assert.equal(diagnostic.target, 'feeling-versus-practice')
+    assert.equal(diagnostic.side, side)
+    assert.equal(diagnostic.path, `screens.synthetic-screen.blocks.feeling-versus-practice.${side}.body`)
+    assert.ok(diagnostic.line > 1 && diagnostic.column > 0)
+  }
+})
+
 test('CB5 cards preserve order, IDs, required titles, and genuinely optional bodies', () => {
   const block = fixture().sanityCandidate.screens[0].blocks[4]
   assert.deepEqual(block.cards.map(card => [card._type, card._key]), [
@@ -208,6 +245,33 @@ test('metadata maps exactly and source fingerprint is deterministic SHA-256', ()
   assert.equal(candidate.editorialReview.adaptationReviewed, false)
   assert.equal(result.reviewReport.source.sha256, createHash('sha256').update(fixtureSource).digest('hex'))
   assert.equal(result.reviewReport.source.revision, 'bm-test-revision-1')
+})
+
+test('matching validated AST and source share an exact non-enumerable digest binding', () => {
+  const source = wrap(screen(cb1()))
+  const validation = parseBerryMark(source, { filename: 'bound.berry.md' })
+  const digest = createHash('sha256').update(source).digest('hex')
+  assert.equal(validation.sourceSha256, digest)
+  assert.equal(JSON.parse(JSON.stringify(validation)).sourceSha256, undefined)
+  const result = compileValidatedBerryMark(validation, { source })
+  assert.equal(result.ok, true, JSON.stringify(result.diagnostics))
+  assert.equal(result.reviewReport.source.sha256, digest)
+})
+
+test('different source cannot borrow a valid AST or falsify a successful provenance report', () => {
+  const source = wrap(screen(cb1()))
+  const otherSource = source.replace('Synthetic teaching.', 'Different teaching.')
+  const validation = parseBerryMark(source, { filename: 'original.berry.md' })
+  const result = compileValidatedBerryMark(validation, { source: otherSource })
+  assert.equal(result.ok, false)
+  assert.equal(result.sanityCandidate, null)
+  assert.equal(result.diagnostics[0].code, 'BM_COMPILER_SOURCE_MISMATCH')
+  assert.equal(result.reviewReport.source.sha256, validation.sourceSha256)
+  assert.notEqual(result.reviewReport.source.sha256, createHash('sha256').update(otherSource).digest('hex'))
+  const unbound = compileValidatedBerryMark({ ...validation }, { source })
+  assert.equal(unbound.ok, false)
+  assert.equal(unbound.sanityCandidate, null)
+  assert.equal(unbound.diagnostics[0].code, 'BM_COMPILER_SOURCE_BINDING_REQUIRED')
 })
 
 test('series slug stays a pending lookup and never becomes a fabricated reference', () => {
@@ -292,6 +356,37 @@ test('identical companion-link content fails collision detection without a candi
   assert.equal(result.ok, false)
   assert.equal(result.sanityCandidate, null)
   assert.ok(codes(result).includes('BM_KEY_COLLISION'))
+})
+
+test('duplicate companion diagnostics locate both YAML entries despite repeated values elsewhere', () => {
+  const yaml = validYaml
+    .replace('title: "Synthetic Challenge"', 'title: "Duplicate"')
+    .replace('summary: null', 'summary: "https://example.com"')
+    .replace('companionLinks: []', `companionLinks:
+  - provider: other
+    label: "Other"
+    description: "Duplicate"
+    url: "https://example.com"
+  - provider: other
+    label: "Duplicate"
+    url: "https://example.com/shared"
+  - provider: other
+    label: "Duplicate"
+    url: "https://example.com/shared"`)
+  const source = wrap(screen(cb1()), yaml)
+  const result = compile(source)
+  assert.equal(result.ok, false)
+  assert.equal(result.sanityCandidate, null)
+  const diagnostic = result.diagnostics.find(item => item.code === 'BM_KEY_COLLISION')
+  const itemLines = source.split('\n').flatMap((line, index) => line === '  - provider: other' ? [index + 1] : [])
+  assert.equal(itemLines.length, 3)
+  assert.equal(diagnostic.path, 'companionLinks[2]')
+  assert.equal(diagnostic.line, itemLines[2])
+  assert.ok(diagnostic.column > 1)
+  assert.deepEqual(diagnostic.relatedLocations.map(location => [location.path, location.line]), [
+    ['companionLinks[1]', itemLines[1]],
+    ['companionLinks[2]', itemLines[2]]
+  ])
 })
 
 test('optional zero-choice studies and absent screen headers remain omitted rather than fabricated', () => {
@@ -421,7 +516,7 @@ test('Rejoice Always visible wording, order, statements, nested data, and prayer
         assert.equal(portableText(outputBlock.right.body), sourceBlock.right.body)
         assert.equal(outputBlock.footer, sourceBlock.footer)
       }
-      if (sourceBlock.type === 'CB5') assert.deepEqual(outputBlock.cards.map(card => [card._key, card.title, card.body]), sourceBlock.cards.map(card => [card.id, card.fields.Title, card.fields.Body]))
+      if (sourceBlock.type === 'CB5') assert.deepEqual(outputBlock.cards.map(card => [card._key, card.title, card.body]), sourceScreen.cards?.map?.(card => [card.id, card.fields.Title, card.fields.Body]) ?? sourceBlock.cards.map(card => [card.id, card.fields.Title, card.fields.Body]))
       if (sourceBlock.type === 'CB6') assert.deepEqual(outputBlock.steps.map(step => [step._key, step.title, step.body]), sourceBlock.steps.map(step => [step.id, step.fields.Title, step.fields.Body]))
       if (sourceBlock.type === 'CB7') {
         assert.equal(outputBlock.question, sourceBlock.fields.Question)
