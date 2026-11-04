@@ -13,7 +13,8 @@
     "compile": "node src/compiler-cli.js examples/compiler-all-blocks.berry.md",
     "compile:rejoice": "node src/compiler-cli.js examples/rejoice-always/rejoice-always.berry.md",
     "plan": "node src/import-plan-cli.js examples/compiler-all-blocks.compiled.json --source examples/compiler-all-blocks.berry.md",
-    "plan:artifact": "node src/import-plan-cli.js examples/compiler-all-blocks.compiled.json"
+    "plan:artifact": "node src/import-plan-cli.js examples/compiler-all-blocks.compiled.json",
+    "plan:online": "node src/online-import-plan-cli.js examples/rejoice-always/rejoice-always.berry.md"
   },
   "dependencies": {
     "marked": "18.1.3",
