@@ -4,7 +4,29 @@ import { readFile } from 'node:fs/promises'
 import { spawnSync } from 'node:child_process'
 import { parseBerryMark, formatStructuralPreview } from '../src/parser.js'
 
-const wrap=(body,yaml='berrymark: "0.1"')=>'---\n'+yaml+'\n---\n'+body
+const validYaml=`berrymark: "0.1"
+challenge:
+  title: "Test Challenge"
+  slug: test-challenge
+  type: teaching
+publishing:
+  series: null
+  sequence: null
+  releaseAt: null
+scripture:
+  reference: "John 11:35"
+  translation: NIV
+  textStatus: referenceOnly
+  usageRightsConfirmed: false
+  practiceStatus: notConfigured
+editorial:
+  sourceTitle: "Test Challenge"
+  sourceAuthor: "Test Author"
+  approvalStatus: pending
+  approvedBy: null
+  approvedAt: null
+companionLinks: []`
+const wrap=(body,yaml=validYaml)=>'---\n'+yaml+'\n---\n'+body
 const screen=(content,id='opening')=>'[[SCREEN id='+id+']]\nLabel: Encounter\n# Heading\n'+content+'\n[[/SCREEN]]'
 const cb1=(prose='Hello world.')=>'[[CB1 id=teaching]]\n'+prose+'\n[[/CB1]]'
 const check=source=>parseBerryMark(source,{filename:'test.berry.md'})
@@ -19,7 +41,8 @@ test('hello-world fixture has ordered CB1 and CB3',async()=>{
   assert.equal(r.document.screens.length,1)
   assert.deepEqual(r.document.screens[0].blocks.map(b=>b.type),['CB1','CB3'])
   assert.equal(r.document.screens[0].blocks[1].fields.Text,'BM-TEST-CB3-HELLO')
-  assert.equal(r.document.frontmatter.yamlValidated,false)
+  assert.equal(r.document.frontmatter.yamlValidated,true)
+  assert.equal(r.document.metadata.challenge.slug,'berry-hello-world')
   assert.match(formatStructuralPreview(r),/CB3 id=hello-callout/)
 })
 test('CB1 Title: and Text: lines are literal prose',()=>{
@@ -119,12 +142,17 @@ test('CB7 closing must follow choices when present',()=>{
 test('missing YAML frontmatter opening delimiter is rejected',()=>{
   assert.equal(has(check(screen(cb1())),'BM_FRONTMATTER_OPEN'),true)
 })
-test('frontmatter YAML meaning is deliberately not validated yet',()=>{
+test('malformed frontmatter YAML is rejected with a located diagnostic',()=>{
   const r=check(wrap(screen(cb1()),'this is not legal: : YAML'))
-  assert.equal(r.ok,true)
-  assert.equal(r.mode,'experimental-syntax-only')
+  const diagnostic=r.diagnostics.find(d=>d.code==='BM_YAML_SYNTAX')
+  assert.equal(r.ok,false)
+  assert.equal(r.mode,'experimental-read-only-validation')
   assert.equal(r.document.frontmatter.yamlValidated,false)
-  assert.ok(r.capabilities.notChecked.includes('YAML semantic validity'))
+  assert.equal(r.document.metadata,null)
+  assert.equal(diagnostic.filename,'test.berry.md')
+  assert.equal(diagnostic.line,2)
+  assert.ok(diagnostic.column>1)
+  assert.ok(r.capabilities.checked.includes('safe YAML 1.2 syntax and core types'))
 })
 test('CLI uses nonzero exit code on a duplicate-ID fixture',()=>{
   const src=new URL('../examples/invalid-duplicate-ids.berry.md',import.meta.url).pathname
