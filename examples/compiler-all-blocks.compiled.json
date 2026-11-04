@@ -306,13 +306,13 @@
                   "children": [
                     {
                       "_type": "span",
-                      "_key": "bmc1367073c2b85fd660b22be9",
+                      "_key": "bm6f9d89e6133d7871512f1ae8",
                       "marks": [],
                       "text": "Left body with "
                     },
                     {
                       "_type": "span",
-                      "_key": "bm1a5ea939a0c262f8af985d7a",
+                      "_key": "bm1bb07b3893ed8cb1035826c4",
                       "marks": [
                         "strong"
                       ],
@@ -320,14 +320,14 @@
                     },
                     {
                       "_type": "span",
-                      "_key": "bm30d0d5cd169a10cd4907c77d",
+                      "_key": "bm597c27b3474780102e516ed1",
                       "marks": [],
                       "text": " formatting."
                     }
                   ],
                   "markDefs": [],
                   "style": "normal",
-                  "_key": "bm34561e0f5026e99384ef419a"
+                  "_key": "bm3e2a895ce2067f58777e6b51"
                 }
               ]
             },
@@ -340,13 +340,13 @@
                   "children": [
                     {
                       "_type": "span",
-                      "_key": "bmf70126c58b1dd8b887761ec0",
+                      "_key": "bme4c6de830f0972cc26f0a8c7",
                       "marks": [],
                       "text": "Right body with "
                     },
                     {
                       "_type": "span",
-                      "_key": "bma8bdf07a3534d707d7706738",
+                      "_key": "bm1172c082ee1864f89f0a2f65",
                       "marks": [
                         "em"
                       ],
@@ -354,14 +354,14 @@
                     },
                     {
                       "_type": "span",
-                      "_key": "bm89489ec98f3f7a47e6eda13f",
+                      "_key": "bmedd189dbb3a00a228e1b6185",
                       "marks": [],
                       "text": "."
                     }
                   ],
                   "markDefs": [],
                   "style": "normal",
-                  "_key": "bmd46b0416e275457c08045677"
+                  "_key": "bm37d1bb3bb3a80c392b59359d"
                 }
               ]
             },
@@ -821,8 +821,8 @@
         "code": "BM_COMPANION_URL_UNRESOLVED",
         "message": "companionLinks[1].url remains null; no URL was inferred",
         "filename": "examples/compiler-all-blocks.berry.md",
-        "line": 1,
-        "column": 1,
+        "line": 34,
+        "column": 5,
         "path": "companionLinks[1].url",
         "state": "null",
         "companionKey": "bme21cc1bb96009fa4f3d600d3"
@@ -958,8 +958,8 @@
         "code": "BM_COMPANION_URL_UNRESOLVED",
         "message": "companionLinks[1].url remains null; no URL was inferred",
         "filename": "examples/compiler-all-blocks.berry.md",
-        "line": 1,
-        "column": 1,
+        "line": 34,
+        "column": 5,
         "path": "companionLinks[1].url",
         "state": "null",
         "companionKey": "bme21cc1bb96009fa4f3d600d3"
@@ -1003,8 +1003,8 @@
       "code": "BM_COMPANION_URL_UNRESOLVED",
       "message": "companionLinks[1].url remains null; no URL was inferred",
       "filename": "examples/compiler-all-blocks.berry.md",
-      "line": 1,
-      "column": 1,
+      "line": 34,
+      "column": 5,
       "path": "companionLinks[1].url",
       "state": "null",
       "companionKey": "bme21cc1bb96009fa4f3d600d3"
