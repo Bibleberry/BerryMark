@@ -1,7 +1,10 @@
+import { parseMetadata } from './metadata.js'
+import { blockScriptureValue, validateScriptureConsistency } from './scripture.js'
+
 /**
- * EXPERIMENTAL read-only BerryMark syntax parser.
- * Does not validate YAML meaning, convert Markdown to Portable Text,
- * authorize drafts, contact Sanity, or determine editorial readiness.
+ * EXPERIMENTAL read-only BerryMark syntax and metadata parser.
+ * Does not convert Markdown to Portable Text, authorize drafts, contact
+ * Sanity, verify licenses, or determine editorial/publication readiness.
  */
 const MARKER=/^\[\[(\/)?(SCREEN|CB[1-9]|LEFT|RIGHT|FOOTER|CARD|STEP|CHOICE|SCRIPTURE)(?: id=([a-z][a-z0-9]*(?:-[a-z0-9]+)*))?\]\]$/
 const MARKER_LIKE=/^\[\[.*\]\]$/
@@ -20,8 +23,8 @@ const SCHEMAS={
   CB7_PRE:{req:['Question'],opt:['Closing']},
   CB7_POST:{req:[],opt:['Closing']}
 }
-function error(ds,code,message,line,column=1){
-  ds.push({severity:'error',code,message,line,column})
+function error(ds,code,message,line,column=1,target){
+  ds.push({severity:'error',code,message,line,column,...(target?{target}:{})})
 }
 function hasText(s){return typeof s==='string'&&s.trim().length>0}
 function textOf(entries){
@@ -68,16 +71,9 @@ function named(entries,kind,ds){
     error(ds,'BM_FIELD_REQUIRED','Missing required '+kind+' field "'+key+'"',entries[0]?.line??1)
   return fields
 }
-function scripture(fields,ds,line){
-  if(fields['Text Status']==='referenceOnly'&&Object.hasOwn(fields,'Passage'))
-    error(ds,'BM_SCRIPTURE_RIGHTS','referenceOnly Scripture cannot contain Passage text',line)
-  if(fields['Text Status']==='provided'){
-    if(!hasText(fields.Passage))error(ds,'BM_SCRIPTURE_PASSAGE','provided Scripture requires Passage',line)
-    if(fields['Usage Rights Confirmed']!=='true')
-      error(ds,'BM_SCRIPTURE_RIGHTS','provided Scripture requires confirmed quotation rights',line)
-  }
-  if(fields['Practice Status']==='configured'&&(fields['Text Status']!=='provided'||fields['Usage Rights Confirmed']!=='true'))
-    error(ds,'BM_SCRIPTURE_PRACTICE','configured practice requires rights-confirmed provided passage',line)
+function scripture(fields,ds,line,target){
+  validateScriptureConsistency(blockScriptureValue(fields),(code,message)=>
+    error(ds,code,message,line,1,target))
 }
 function childAllowed(parent,child){
   if(!parent)return child==='SCREEN'
@@ -136,7 +132,7 @@ function nodeToAst(n,ds){
   }else if(SCHEMAS[n.kind]){
     requireShape(children.length===0,'BM_FIELD_NESTED',n.kind+' cannot contain nested sections')
     out.fields=named(lines,n.kind,ds)
-    if(n.kind==='CB2'||n.kind==='SCRIPTURE')scripture(out.fields,ds,n.startLine)
+    if(n.kind==='CB2'||n.kind==='SCRIPTURE')scripture(out.fields,ds,n.startLine,n.id)
   }else if(n.kind==='LEFT'||n.kind==='RIGHT'||n.kind==='CB8'){
     const {title,body}=headerBody(n,ds)
     out.title=title;out.body=body
@@ -186,6 +182,8 @@ export function parseBerryMark(input,{filename='<memory>'}={}){
     if(end<0){error(ds,'BM_FRONTMATTER_CLOSE','Missing closing YAML --- delimiter',1);start=lines.length}
     else{frontmatter={raw:lines.slice(1,end).join('\n'),startLine:1,endLine:end+1,yamlValidated:false};start=end+1}
   }
+  const metadata=parseMetadata(frontmatter,ds)
+  if(frontmatter)frontmatter.yamlValidated=metadata!==null
   const roots=[],stack=[],comments=[],seen=new Map()
   let comment=null
   for(let i=start;i<lines.length;i++){
@@ -237,19 +235,34 @@ export function parseBerryMark(input,{filename='<memory>'}={}){
   for(const n of stack)error(ds,'BM_MARKER_UNCLOSED','Unclosed '+n.kind+' marker',n.startLine)
   if(!roots.length)error(ds,'BM_SCREEN_REQUIRED','Document requires at least one SCREEN',start+1)
   const screens=roots.map(n=>nodeToAst(n,ds))
+  const annotations=comments.map(c=>({line:c.line,text:c.content.join('\n')}))
+  for(const annotation of annotations){
+    const match=annotation.text.match(/^<!--\s*(EDITORIAL NOTE|TODO|REVIEW REQUIRED)\s*:/)
+    if(!match)continue
+    const codes={'EDITORIAL NOTE':'BM_EDITORIAL_NOTE',TODO:'BM_EDITORIAL_TODO','REVIEW REQUIRED':'BM_EDITORIAL_REVIEW'}
+    ds.push({severity:'editorial',code:codes[match[1]],message:annotation.text,line:annotation.line,column:1})
+  }
+  const diagnostics=ds.map(d=>({filename,...d}))
+  const summary={
+    errors:diagnostics.filter(d=>d.severity==='error').length,
+    warnings:diagnostics.filter(d=>d.severity==='warning').length,
+    editorial:diagnostics.filter(d=>d.severity==='editorial').length,
+    info:diagnostics.filter(d=>d.severity==='info').length
+  }
   return{
-    ok:!ds.some(d=>d.severity==='error'),filename,mode:'experimental-syntax-only',
+    ok:summary.errors===0,filename,mode:'experimental-read-only-validation',
     capabilities:{
-      checked:['marker nesting','field declarations','structural IDs','block shapes','Scripture field status combinations'],
-      notChecked:['YAML semantic validity','Markdown/Portable Text mapping','Sanity import','editorial approval','publication readiness']
+      checked:['safe YAML 1.2 syntax and core types','supported metadata','marker nesting','field declarations','structural IDs','block shapes','shared Scripture status combinations','editorial annotations'],
+      notChecked:['Markdown/Portable Text mapping','Sanity import','external Scripture license evidence','editorial approval','publication readiness']
     },
-    document:{frontmatter,screens,annotations:comments.map(c=>({line:c.line,text:c.content.join('\n')}))},
-    diagnostics:ds
+    document:{frontmatter,metadata,screens,annotations},
+    summary,
+    diagnostics
   }
 }
 export function formatStructuralPreview(result){
   const lines=['BerryMark experimental structural preview — '+result.filename,
-    'Status: '+(result.ok?'syntax OK (not import-ready)':'syntax errors')]
+    'Status: '+(result.ok?'valid working document (not import-ready)':'validation errors')]
   for(const [index,screen] of result.document.screens.entries()){
     lines.push('SCREEN '+(index+1)+'/'+result.document.screens.length+' id='+screen.id+' · '+(screen.label??'')+' · '+(screen.heading??''))
     for(const block of screen.blocks){
@@ -260,7 +273,7 @@ export function formatStructuralPreview(result){
     }
   }
   for(const d of result.diagnostics)
-    lines.push(d.severity.toUpperCase()+' '+d.code+' '+result.filename+':'+d.line+':'+d.column+' '+d.message)
-  lines.push('Not validated: YAML meaning, Markdown conversion, Sanity import, editorial/publishing readiness')
+    lines.push(d.severity.toUpperCase()+' '+d.code+' '+result.filename+':'+d.line+':'+d.column+(d.path?' '+d.path:'')+' '+d.message)
+  lines.push('Not validated: Markdown conversion, Sanity import, external rights evidence, editorial/publishing readiness')
   return lines.join('\n')
 }
