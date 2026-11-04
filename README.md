@@ -22,6 +22,8 @@ The validator uses the exactly pinned `yaml` dependency for safe YAML 1.2 parsin
 - [Content Block registry](docs/block-registry.md)
 - [Validation and import requirements](docs/validation.md)
 - [Metadata validation contract and open decisions](docs/metadata-validation.md)
+- [Pure Sanity JSON compiler contract (review draft)](docs/compiler-contract-v0.1.md)
+- [Kimi Engineering Assignment 02: Pure compiler (after contract review)](docs/assignments/kimi-02-compiler.md)
 - [Manuscript editorial workshop](docs/manuscript-workshop.md)
 - [Experimental parser and safety boundaries](docs/parser-alpha.md)
 - [Kimi Engineering Assignment 01: Read-Only Validation](docs/assignments/kimi-01-validation.md)
