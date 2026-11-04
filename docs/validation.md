@@ -60,6 +60,9 @@ These examples are proposed classes of unoverridable error; the stable machine-r
 - Missing mandatory parts of a registered CB: e.g., a CB4 without RIGHT, CB6 with fewer than two STEP entries, or a CB7 with exactly one CHOICE.
 - A nested `[[SCRIPTURE id=...]]` outside CB8; an unclosed `[[/SCRIPTURE]]` marker; a missing, duplicate or unstable nested Scripture ID; or malformed nested Scripture data. CB8 may have zero such sections.
 - Undefined required CB field or incompatible field type.
+- **Approved field grammar violations:** unsupported/wrong-case field name or duplicate singular field; field declaration with leading indentation; stray text in a field-only zone; missing `Title:` followed by a blank-line header/body separator in CB4 LEFT/RIGHT or CB8; a would-be field in an unsupported phase of CB6 or CB7.
+- **Approved multiline scalar violations:** malformed `Name: |` indentation, missing required nonempty value, bad Boolean or enum token, or an attempt to absorb the closing structural marker as text. Strict field handling must never consume Alexis's prose silently.
+- **Literal marker ambiguity:** unescaped full reserved structural-marker line that would parse as syntax instead of intended prose, or unsupported marker escaping where the parser would drop the backslash or the line.
 - A `cycle: true` sequence without `returnCaption`.
 
 ### Mapping and fidelity errors
@@ -81,8 +84,12 @@ These examples are proposed classes of unoverridable error; the stable machine-r
 
 - **Missing `releaseAt`:** valid to express `null` in a BerryMark working draft; Sanity's current schema requires a datetime. Never invent a date. Determine whether a draft import may proceed with a clearly flagged incomplete field or whether import must wait for a real timestamp. Publishing requires resolution.
 - **Editorial review metadata:** BerryMark's proposed approval fields do not exactly match Sanity's existing review schema. Never synthesize an approved reviewer or review date. This mapping must be reconciled before adapter implementation.
-- **Unknown HTML comments and escapes:** decide when an unknown comment is an innocuous author note versus an unsupported construct; no reader-visible leakage.
+- **Unknown HTML comments and other escapes:** the one-backslash escape for a literal full reserved marker line in prose is **approved**. Decide how unknown comments and other, non-marker escape forms should be reported without reader-visible leakage.
 - **Source rights evidence:** define the provenance/confirmation procedure for `usageRightsConfirmed`; a Boolean assertion must be truthful, not automatically inferred.
+
+### Field-declaration decision is approved, not a warning
+
+A malformed or ambiguous field declaration is a **blocking error**, not a warning eligible for an override. Freeform manuscript prose that happens to begin with `Title:` or `Text:` is **valid prose** in an allowed freeform context. Do not issue a warning merely for that spelling. The grammar is normative in [language-spec.md](language-spec.md#field-declarations-and-literal-prose-approved-november-3-2026); stable machine-readable error codes remain to be implemented.
 
 ## 4. Proposed warnings
 
@@ -214,7 +221,7 @@ An Import request must surface or make available an inspectable summary *before 
 
 ## 10. Tests required before calling the implementation complete
 
-**Parser tests:** Valid YAML and nested markers; malformed closings; escaped/literal marker text; duplicate IDs; reordering; unsupported directives; CB8 with zero, one, or multiple stable-ID `SCRIPTURE` children; rejection of nested `SCRIPTURE` outside CB8; preserving array order and excluding Scripture directives from Portable Text.
+**Parser tests:** Valid YAML and nested markers; malformed closings; escaped/literal marker text; duplicate IDs; reordering; unsupported directives; CB8 with zero, one, or multiple stable-ID `SCRIPTURE` children; rejection of nested `SCRIPTURE` outside CB8; preserving array order and excluding Scripture directives from Portable Text. **Approved field grammar tests:** CB1/CB9 and CB4 FOOTER `Title:` as literal prose; strict field-only contexts, exact case-sensitive names, unknown/duplicate-field errors with source locations, CB4 LEFT/RIGHT and CB8 blank-line header separators, CB6 STEP and CB7 CHOICE phase detection, literal full marker line escaped with `\[[...]]`, scalar and two-space-indented multiline `Name: |` values, nested field-looking lines preserved in values, Boolean/enum validation, and no dropped or duplicated prose.
 
 **Formatting tests:** Rich Markdown to Portable Text; plain-text fields; block quotes, lists, links; unsupported images/tables/code fences fail visibly. For legacy `teachingText.pullQuote` cases, verify exact text, one CB3 per source highlight, stable instance ID, adjacency/order after the corresponding CB1, separate `statementBlock` output, and retention of any source-vs-prototype ordering discrepancy as an editorial review item.
 
@@ -229,7 +236,7 @@ An Import request must surface or make available an inspectable summary *before 
 ## 11. Open decisions (do not silently implement)
 
 1. Exact CLI syntax/output formats for Validate, preview mode, and Import.
-2. Exact grammar for remaining block-internal field labels and nested arrays; **CB8's nested `SCRIPTURE` section markers and stable-ID requirement are approved**.
+2. Remaining context-specific mapping/escaping details **outside the now-approved field syntax**; exact case-sensitive CB field names, one-blank-line CB4/CB8 headers, `Name: |` multiline text, literal full-marker `\[[...]]` escape, and CB8 nested `SCRIPTURE` markers are approved.
 3. Warning-override syntax and storage; editorial TODO disposition for draft import.
 4. Where Sanity stores visible per-warning review records.
 5. How truthful Aaron-or-Alexis approval maps into the Sanity schema.
