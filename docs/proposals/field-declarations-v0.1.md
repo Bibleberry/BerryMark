@@ -1,6 +1,6 @@
-# RFC: Field Declarations and Literal Prose in BerryMark v0.1
+# Approved RFC: Field Declarations and Literal Prose in BerryMark v0.1
 
-**Status:** PROPOSAL FOR AARON'S REVIEW. Not approved language syntax; not yet an implementation contract.  
+**Status:** APPROVED BY AARON, November 3, 2026. This document records the accepted BerryMark v0.1 field syntax. The compiler has not yet been implemented.  
 **Date:** 2026-11-03  
 **Related:** [Language specification](../language-spec.md), [Block registry](../block-registry.md), [Validation](../validation.md), [Rejoice Always working example](../../examples/rejoice-always/rejoice-always.berry.md)
 
@@ -10,7 +10,7 @@ BerryMark includes explicit structures like `[[CB8 id=...]]` and friendly lines 
 
 The goal is to retain the existing manuscript-friendly `Name: value` convention instead of inventing a second set of tags for every individual field.
 
-## 2. Proposed rule: field syntax is **context-sensitive**, not globally recognized
+## 2. Approved rule: field syntax is **context-sensitive**, not globally recognized
 
 A `Name: value` line is a BerryMark field **only inside a section whose registered grammar expects named fields at that position**. It is ordinary text anywhere else.
 
@@ -20,7 +20,7 @@ A `Name: value` line is a BerryMark field **only inside a section whose register
 - **SCREEN preamble:** `Label: ...` and `# Heading` are recognized only before the first content block. No raw prose is permitted directly in a SCREEN; prose belongs inside a CB.
 - **Nested SCRIPTURE in CB8:** It is a field-only section and maps to the metadata array. Its `Reference:` lines never leak into the body. Its approved opening/closing markers are unchanged.
 
-### Parser contexts and expected fields (proposal)
+### Parser contexts and expected fields (approved)
 
 | Section / zone | Field mode | Permitted named fields |
 | --- | --- | --- |
@@ -63,12 +63,12 @@ Conclusion: We respond in hope.
 [[/CB6]]
 ~~~
 
-## 3. Proposed exact spelling and value types
+## 3. Approved exact spelling and value types
 
 - **Field names are exact and case-sensitive**, including spaces (e.g. `Text Status`, not `textStatus` or `text status`). This prevents a typo silently becoming a second field.
 - Each field begins at the **start of a line** with no leading indentation and a colon, then optional single space, then its value: `Title: A world broken by sin`. Trailing whitespace on field lines is ignored; spaces inside the value are preserved.
 - A scalar `Name: value` is a **single logical line**. A long physical line can soft-wrap visually in an editor; no character cap is implied.
-- **Proposed multiline plain-text form:** `Name: |` followed by lines indented at least two spaces; strip exactly two indentation spaces and preserve the remaining line breaks and blank lines. Terminate when a nonblank line falls back to indentation less than two spaces, or when the containing section closes. This is **not YAML front matter**, but a familiar YAML-style block-scalar convention.
+- **Approved multiline plain-text form:** `Name: |` followed by lines indented at least two spaces; strip exactly two indentation spaces and preserve the remaining line breaks and blank lines. Terminate when a nonblank line falls back to indentation less than two spaces, or when the containing section closes. This is **not YAML front matter**, but a familiar YAML-style block-scalar convention.
 - Boolean values use exactly `true` or `false`; enumerations (e.g. `referenceOnly`) use the schema's exact option strings. Do not silently coerce `yes`, `no`, `1`, or unrelated spellings.
 - Values required by the registered type may not be empty, even if the field line appears.
 - When a text value itself starts with a reserved label, it remains text after `Text:`, `Prompt:`, `Body:`, or within an indented multiline value.
@@ -113,7 +113,7 @@ In field-only mode, `Unknown: value` is an error, not silently treated as prose 
 
 ## 5. Reserved structural markers and literal text
 
-The existing `[[SCREEN ...]]`, `[[CBn ...]]`, `[[SCRIPTURE ...]]`, and other registered marker lines retain their structural significance. A prose author who needs to display a **literal full marker at the start of a line** can propose `\[[SCREEN id=example]]` (backslash before the opening brackets), with the slash removed in rendered text. **This escaping form is proposed, not approved.** Other literal-marker and inline-Markdown escaping details remain to be tested.
+The existing `[[SCREEN ...]]`, `[[CBn ...]]`, `[[SCRIPTURE ...]]`, and other registered marker lines retain their structural significance. A prose author who needs to display a **literal full marker at the start of a line** uses `\[[SCREEN id=example]]` (backslash before the opening brackets), with the slash removed in rendered text. **This line-start full-marker escape is approved.** Other inline-Markdown escaping details remain governed by the supported Markdown subset and require tests.
 
 Standard `<!-- EDITORIAL NOTE: ... -->`, `<!-- TODO: ... -->`, and `<!-- REVIEW REQUIRED: ... -->` comments retain their existing non-reader-facing status; they are not confused with fields.
 
@@ -129,24 +129,22 @@ The existing `rejoice-always.berry.md` already follows this proposed convention:
 
 This is a **manual syntax fit check**, not compilation. No Scripture passage text, approvals, or publication metadata are fabricated.
 
-## 7. Validation cases to implement once approved
+## 7. Validation cases for implementation
 
 1. CB1 `Title:` or `Text:` at beginning of prose remains a literal sentence.
 2. CB8 title recognized only before blank-line header terminator; later `Title:` stays in Portable Text.
 3. CB4 LEFT/RIGHT require title and rich body; no title-like content is stripped.
-4. CB3 `Text:` is required, may contain literal `Title:` within its value, and permits a multiline `|` form if approved.
+4. CB3 `Text:` is required, may contain literal `Title:` within its value, and permits the approved multiline `|` form.
 5. CB5 CARD and CB6 STEP reject unknown fields and duplicate `Title:` or `Body:` declarations.
 6. CB6 preamble and trailing `Conclusion:` map to proper Sanity fields, not to STEP body.
 7. CB7 question/choice/closing parse without turning a choice prompt into a new field.
 8. CB2 and CB8 SCRIPTURE apply identical validity and rights checks.
 9. Unknown labels and malformed fields yield a source-location error, never data loss.
 10. Closing markers are never absorbed into a multiline text value.
-11. Literal full structural markers can appear in body text only through an approved escape (if agreed).
+11. Literal full structural markers at the beginning of a prose line must use the approved one-backslash escape.
 
-## 8. Decision required
+## 8. Decision and implementation boundary
 
-**Proposal:** Keep familiar, context-sensitive `Title: value` lines; adopt a blank-line boundary in rich-text header sections, strict named fields in field-only sections, and the optional two-space-indented `|` multiline plain-text form.
+**Approved November 3, 2026 by Aaron:** Keep readable, context-sensitive `Title: value` declarations; use one blank line to separate rich-text headers, strict named-field contexts, the optional two-space-indented `|` multiline plain-text form, and a one-backslash escape for a literal full structural marker at the start of a prose line. The canonical [language specification](../language-spec.md) and [block registry](../block-registry.md) document the accepted behavior.
 
-**Not being decided here:** Actual parser implementation, user-provided Scripture rights, Sanity draft preview, unresolved editorial approvals, or the other open v0.1 grammar rules.
-
-If accepted, promote this RFC to approved language behavior in the main specification, block registry and validation documents. Then convert the examples into parser fixtures without changing Alexis's prose.
+**Not approved or implemented by this decision:** A parser/compiler, automated import, claims of app Scripture quotation rights, Sanity draft-preview access, content approval by Alexis, or the other unresolved v0.1 integration questions. Parser/adapter tests must implement these cases without silently rewriting manuscript prose.
