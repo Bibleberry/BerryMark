@@ -1,0 +1,29 @@
+name: BerryMark Parser Tests
+
+on:
+  push:
+    branches:
+      - main
+      - docs/berrymark-v0.1-specification
+      - feature/**
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  parser:
+    name: Node.js syntax and regression tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: ''
+      - name: Run parser tests
+        run: npm test
+      - name: Validate hello-world fixture
+        run: npm run check
+      - name: Validate seven-screen Rejoice Always working sample
+        run: node src/cli.js check examples/rejoice-always/rejoice-always.berry.md
