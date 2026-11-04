@@ -6,6 +6,15 @@ const hasOwn = (value, key) => Object.hasOwn(value, key)
 const same = (left, right) => stableStringify(left) === stableStringify(right)
 const clone = value => JSON.parse(JSON.stringify(value))
 
+function sourceComparisonResult(compilation) {
+  const comparable = clone(compilation)
+  for (const item of comparable.reviewReport?.editorialItems ?? []) {
+    delete item.classification
+    delete item.reviewHistory
+  }
+  return comparable
+}
+
 function issue(code, message, path, extra = {}) {
   return { severity: 'error', code, message, ...(path ? { path } : {}), ...extra }
 }
@@ -114,7 +123,9 @@ export function planBerryMarkImport({ compilation, source, schemaSnapshot } = {}
       }))
     } else {
       const recompiled = compileBerryMark(source, { filename: sourceFilename })
-      verified = same(recompiled, compilation)
+      // Human classification/history are review overlays, not compiler output.
+      // Every compiler-produced candidate and report field is still compared.
+      verified = same(recompiled, sourceComparisonResult(compilation))
       if (!verified) {
         errors.push(issue('BM_IMPORT_ARTIFACT_MISMATCH', 'Recompilation does not match the supplied candidate or review report', 'result', {
           filename: sourceFilename
@@ -138,6 +149,9 @@ export function planBerryMarkImport({ compilation, source, schemaSnapshot } = {}
       reference: requirement.reference,
       translation: requirement.translation
     })
+  }
+  for (const item of compilation?.reviewReport?.unresolved ?? []) {
+    warnings.push({ ...clone(item), severity: 'warning' })
   }
 
   const identityLookup = {
