@@ -1,6 +1,6 @@
 # BerryMark Experimental Parser and Validator (alpha)
 
-**Status:** Read-only executable syntax and metadata validation, not the full v0.1 compiler or Import implementation.  
+**Status:** Read-only executable syntax and metadata validation. The separate experimental compiler is documented in [Pure Sanity JSON Compiler](sanity-compiler.md); neither component imports or publishes.  
 **Implementation:** [`src/parser.js`](../src/parser.js), [`src/metadata.js`](../src/metadata.js), [`src/scripture.js`](../src/scripture.js), [`src/cli.js`](../src/cli.js)  
 **Metadata contract:** [Metadata Validation](metadata-validation.md)  
 **Reference grammar:** [Language Specification](language-spec.md), [Content Block Registry](block-registry.md), [Validation and Import](validation.md)
@@ -36,16 +36,15 @@ node src/cli.js json examples/rejoice-always/rejoice-always.berry.md
 
 See [metadata-validation.md](metadata-validation.md) for the exact AST contract, required/optional fields, and unresolved design decisions.
 
-## What deliberately does NOT exist
+## What validation success does NOT certify
 
-The `ok: true` result means **only that the experimental syntax and supported metadata checks passed**. It does not certify:
+The validator's `ok: true` result means **only that the experimental syntax and supported metadata checks passed**. It does not certify:
 
-- Markdown conversion to Sanity Portable Text, text-formatting fidelity or all Sanity schema requirements.
+- Markdown conversion to Sanity Portable Text, text-formatting fidelity or all Sanity schema requirements. Those are separate compiler concerns; see [sanity-compiler.md](sanity-compiler.md).
 - External Scripture license evidence or permission to quote a passage.
 - Human review, theological approval, scoped warning override workflow, or publication approval.
 - Sanity API access, importer, draft creation, publishing, series resolution, or duplicate-document detection.
 - Protected developer draft preview, on-screen TEST badges or block-label overlays.
-- Deterministic Sanity `_key` generation from semantic IDs.
 - A future readiness gate for unresolved publishing values or editorial annotations.
 
 **Never use the experimental `check` result to publish a Challenge, assert license rights, or bypass a Sanity editorial gate.**
@@ -76,16 +75,15 @@ On malformed input, the CLI returns diagnostics and a **partial AST for inspecti
 - [`examples/hello-world.berry.md`](../examples/hello-world.berry.md) is a deliberately obvious **synthetic** test with complete safe metadata and `BM-TEST-CB3-HELLO` text. It is **not Alexis's teaching**.
 - [`examples/invalid-duplicate-ids.berry.md`](../examples/invalid-duplicate-ids.berry.md) is intentionally invalid, ensuring a nonzero CLI exit code.
 - [`examples/rejoice-always/rejoice-always.berry.md`](../examples/rejoice-always/rejoice-always.berry.md) is the complete seven-screen **existing Local Prototype reverse-mapping**; its content remains editorially unapproved. Its null publishing fields, reference-only Scripture, pending review, and null companion URLs are intentionally preserved.
-- The automated suite retains the original 23 syntax tests and adds 20 focused metadata/CLI regressions. [GitHub Actions](../.github/workflows/parser-tests.yml) installs the lockfile dependencies, runs the tests, and checks both the synthetic Hello World and real seven-screen sample.
+- The automated suite retains the original 43 validator tests and adds 31 compiler, schema-compatibility, and golden-demonstration regressions (74 total). [GitHub Actions](../.github/workflows/parser-tests.yml) installs the lockfile dependencies, runs the tests, and checks both the synthetic Hello World and real seven-screen sample.
 
 **Important test distinction:** Successful validation of the real manuscript example confirms 7 screens, 16 top-level CB instances, and no errors within the current experimental validator scope. It does **not** mean the content has been imported into Sanity, approved, licensed, or displayed with developer TEST banners.
 
 ## Next engineering slices
 
-1. **Portable Text encoder + complete Sanity schema mapping**, with source-fidelity checks and deterministic keys; establish the target shape before write access.
-2. **Machine-readable advisory warnings and editorial review overrides**, only after their syntax, revision scope, and disposition are approved.
-3. **Protected, rights-safe draft preview**, not the current published-only CMS query or a browser write token.
-4. **Draft-only import** after the read-only pipeline is proven; never publish or overwrite automatically.
+1. **Machine-readable advisory warnings and editorial review overrides**, only after their syntax, revision scope, and disposition are approved.
+2. **Protected, rights-safe draft preview**, not the current published-only CMS query or a browser write token.
+3. **Draft-only import** after the read-only pipeline is proven; never publish or overwrite automatically.
 
 ## Repository boundary
 
