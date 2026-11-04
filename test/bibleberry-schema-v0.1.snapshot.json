@@ -1,0 +1,79 @@
+{
+  "repository": "ContraPhilosophy/Bibleberry",
+  "revision": "c43b53146f3b4f6c1d5154e1ce0409a5aa3e4d3d",
+  "sourceDirectory": "studio/schemaTypes",
+  "objects": {
+    "challenge": {
+      "fields": ["_type", "title", "slug", "challengeType", "series", "sequence", "releaseAt", "summary", "primaryScripture", "screens", "companionLinks", "editorialReview"],
+      "required": ["_type", "title", "slug", "challengeType", "series", "sequence", "releaseAt", "primaryScripture", "screens", "editorialReview"]
+    },
+    "challengeScreen": {
+      "fields": ["_type", "_key", "screenLabel", "heading", "blocks"],
+      "required": ["_type", "_key", "blocks"]
+    },
+    "richTextBlock": {
+      "fields": ["_type", "_key", "body"],
+      "required": ["_type", "_key", "body"]
+    },
+    "scriptureBlock": {
+      "fields": ["_type", "_key", "scripture"],
+      "required": ["_type", "_key", "scripture"]
+    },
+    "statementBlock": {
+      "fields": ["_type", "_key", "text", "label"],
+      "required": ["_type", "_key", "text"]
+    },
+    "comparisonBlock": {
+      "fields": ["_type", "_key", "left", "right", "footer", "reviewStatus"],
+      "required": ["_type", "_key", "left", "right", "reviewStatus"]
+    },
+    "comparisonSide": {
+      "fields": ["_type", "title", "body"],
+      "required": ["_type", "title", "body"]
+    },
+    "visualCardsBlock": {
+      "fields": ["_type", "_key", "cards", "reviewStatus"],
+      "required": ["_type", "_key", "cards", "reviewStatus"]
+    },
+    "visualCard": {
+      "fields": ["_type", "_key", "title", "body"],
+      "required": ["_type", "_key", "title"]
+    },
+    "connectedSequenceBlock": {
+      "fields": ["_type", "_key", "steps", "cycle", "returnCaption", "conclusion", "reviewStatus"],
+      "required": ["_type", "_key", "steps", "reviewStatus"]
+    },
+    "sequenceStep": {
+      "fields": ["_type", "_key", "title", "body"],
+      "required": ["_type", "_key", "title", "body"]
+    },
+    "reflectionBlock": {
+      "fields": ["_type", "_key", "question", "choices", "closing", "reviewStatus"],
+      "required": ["_type", "_key", "question", "reviewStatus"]
+    },
+    "reflectionChoice": {
+      "fields": ["_type", "_key", "label", "prompt"],
+      "required": ["_type", "_key", "label", "prompt"]
+    },
+    "optionalStudyBlock": {
+      "fields": ["_type", "_key", "title", "body", "scriptures", "reviewStatus"],
+      "required": ["_type", "_key", "title", "body", "reviewStatus"]
+    },
+    "prayerBlock": {
+      "fields": ["_type", "_key", "paragraphs"],
+      "required": ["_type", "_key", "paragraphs"]
+    },
+    "scriptureReference": {
+      "fields": ["_type", "_key", "reference", "translation", "textStatus", "passage", "usageRightsConfirmed", "practiceStatus"],
+      "required": ["_type", "reference", "translation", "textStatus", "practiceStatus"]
+    },
+    "companionLink": {
+      "fields": ["_type", "_key", "provider", "label", "description", "url", "availability"],
+      "required": ["_type", "_key", "provider", "label"]
+    },
+    "editorialReview": {
+      "fields": ["_type", "sourceTitle", "sourceRevision", "adaptationReviewed", "reviewedBy", "reviewedAt", "reviewNotes"],
+      "required": ["_type", "sourceTitle", "adaptationReviewed"]
+    }
+  }
+}
