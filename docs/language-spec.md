@@ -60,7 +60,7 @@ This paragraph can include **emphasis** and *italics*.
 [[/SCREEN]]
 ~~~
 
-The opening/closing markers and stable `id` concept are approved. **The exact spelling of internal field lines** such as `Reference:` and `Text Status:` is provisional until tested against real manuscripts and frozen in the grammar.
+The opening/closing markers, stable `id` concept, and **context-sensitive named-field spelling** (including `Reference:` and `Text Status:`) are approved. Other parser details and end-to-end implementation still require testing.
 
 ### Screens
 
@@ -78,7 +78,7 @@ The opening/closing markers and stable `id` concept are approved. **The exact sp
 - Content Block IDs must be stable across ordinary editorial rearrangements.
 - For repeated nested items: `[[CARD id=...]]`, `[[STEP id=...]]`, `[[CHOICE id=...]]`, and **within CB8** `[[SCRIPTURE id=...]]`.
 - For singular nested areas: `[[LEFT]]`, `[[RIGHT]]`, `[[FOOTER]]`; these do not need individual IDs.
-- The exact content/field grammar *inside* most blocks is a **v0.1 design item**, not yet implementation-ready. The CB8 nested `SCRIPTURE` section form is approved; its internal field-label spellings are still provisional.
+- The context-sensitive field syntax in [Field declarations and literal prose](#field-declarations-and-literal-prose-approved-november-3-2026) is approved, including the CB8 nested `SCRIPTURE` form and its field names. Remaining parser/adapter design questions and implementation tests are tracked separately.
 
 ### CB8 nested Scripture references (approved November 3, 2026)
 
@@ -104,7 +104,7 @@ Practice Status: notConfigured
 - Each nested Scripture occurrence has a unique, stable ID; its order in the CB8 determines the resulting `optionalStudyBlock.scriptures[]` order.
 - A nested `SCRIPTURE` maps to one existing Sanity `scriptureReference`, with the same reference, translation, text-availability, quotation-rights, and memorization-practice rules used by CB2.
 - The nested section is **structured metadata**, not part of CB8's rich-text study body; its markers and field lines do not appear in reader prose. Ordinary prose surrounding a reference remains in the CB8 body.
-- The **section markers and ID requirement are now approved**. The exact spellings of field labels (such as `Text Status:`), literal-marker escaping and other unfinalized parser rules remain open; examples do not declare them implementation-ready.
+- The **section markers, ID requirement, and field names** (such as `Text Status:`) are approved. The line-start literal-marker escape is defined below; other unfinished parser details remain open. These documents do not establish that a compiler exists.
 
 ### Legacy pull quotes as CB3 (approved November 3, 2026)
 
@@ -122,10 +122,61 @@ Text: So how can we rejoice in a world filled with so much pain and difficulty?
 ~~~
 
 - Preserve the statement's authored wording, punctuation, emphasis-by-placement, and relative order; do not silently duplicate it inside CB1.
-- Preserve the CB3 `label` intentionally (plain text). The working `Label:`/`Text:` field-line spelling remains part of the **not-yet-frozen** internal-field grammar.
+- Preserve the CB3 `label` intentionally (plain text). The `Label:`/`Text:` field spellings and optional `Text: |` multiline form are approved.
 - Existing prototype highlights are mapped to `statementBlock` in Sanity. A CB3 is also available for other intentional key statements, but converting arbitrary prose into a new callout requires an explicit editorial choice.
 - Structural mapping approval is **not** approval of any underlying editorial adaptation or a guarantee of pixel-identical rendering. Compare actual visual emphasis and layout in the protected draft preview.
 - If the prototype placed a highlight differently from Alexis's original manuscript, record that discrepancy and let Aaron/Alexis decide whether to preserve or change the ordering; the migration does **not** silently correct it.
+
+### Field declarations and literal prose (approved November 3, 2026)
+
+**Canonical decision record:** [Field Declarations RFC](proposals/field-declarations-v0.1.md), approved by Aaron November 3, 2026. This section is normative for BerryMark v0.1. A parser must **never silently interpret or discard manuscript prose as metadata**.
+
+**Field detection depends on the containing block and phase.** A line beginning `Title:` or `Text:` is a named field only in a grammar zone that expects that name at that position. In ordinary CB1 rich teaching, CB9 prayer, CB4 FOOTER, and other freeform text regions it remains literal prose. No global `Name: value` heuristic.
+
+**Field lexical rules:**
+
+- Names are **case-sensitive exact strings**, including spaces: `Text Status`, not `textStatus`. Each field starts in column 1 with `Name:` and an optional single space before its value. Strip trailing whitespace on the declaration line, not meaningful internal value spacing. A field value occupies one logical line unless the multiline form is used; editor soft wrapping is not a length limit.
+- Field-only sections reject unknown names, repeated singular names, stray prose and wrong-phase declarations with a **located validation error**, never a silent fallback to text. Registered required fields must be present with nonempty type-correct values.
+- Approved multiline plain-text scalar: `Text: |` (or another registered plain-text field name followed by `: |`) with continuation lines indented by **at least two spaces**. Remove exactly two spaces per continuation line; preserve additional indentation, newlines and internal blank lines. Terminate at a nonblank line with less than two spaces of indentation or at the enclosing section's closing marker. A closing structural marker is never swallowed as prose. Multiline scalar text is not Markdown. The front-matter YAML parser is separate.
+- Boolean field values are exactly `true` or `false`; enum values must match their documented schema spellings, such as `referenceOnly`. No coercion from `yes`, `1`, or alternate casing.
+- A literal field-looking phrase inside a value remains part of its value, not another declaration. Example: `Text: Title: God's goodness`.
+- **Full structural marker at line start, shown literally in freeform content:** prefix the opening `[[` with one backslash, for example `\[[SCREEN id=example]]`; render the marker without that backslash. The exact escape is intended only for a literal full reserved marker line, not a license to bypass other reserved syntax. More general inline Markdown escaping follows the separately supported Markdown subset.
+
+**Context table (approved):**
+
+| Container and zone | Interpretation |
+| --- | --- |
+| YAML front matter | YAML parser, separate grammar |
+| SCREEN before first CB | Optional `Label:` and `# Heading` only; unwrapped manuscript prose not permitted |
+| CB1, CB9, CB4 FOOTER | Freeform text; field-looking lines are prose |
+| CB2 and CB8 SCRIPTURE | Strict field-only: `Reference`, `Translation`, `Text Status`, `Passage`, `Usage Rights Confirmed`, `Practice Status` |
+| CB3 | Strict field-only: required `Text`, optional `Label` |
+| CB4 LEFT / RIGHT | Required initial `Title: ...` then **one blank line** ending header; following content is rich Markdown |
+| CB5 CARD | Strict field-only: required `Title`, optional `Body` |
+| CB6 before STEP | Strict field-only: `Cycle`, optional `Return Caption` |
+| CB6 STEP | Strict field-only: `Title`, `Body` |
+| CB6 after STEP sections | Strict field-only: optional `Conclusion` |
+| CB7 before CHOICE | Strict field-only: required `Question`; optional `Closing` if no CHOICE |
+| CB7 CHOICE | Strict field-only: required `Label`, `Prompt` |
+| CB7 after CHOICE sections | Strict field-only: optional `Closing` |
+| CB8 | Required initial `Title: ...` then **one blank line** ending header; following content is rich Markdown up to the first nested SCRIPTURE (if any); nested Scripture sections are structured fields, not body prose |
+
+Within field-only zones field declarations may appear in any order permitted by the registered schema; for mixed CB6 and CB7 blocks the **STEP/CHOICE markers** separate field phases. Rich-body `Title:` after the required header blank line is **prose**, not a second title. A missing required header/body separator is an error.
+
+~~~text
+[[CB1 id=literal-field-example]]
+Title: This sentence is manuscript prose and is not a field.
+[[/CB1]]
+
+[[CB3 id=multiline-example]]
+Label: Alexis’s teaching
+Text: |
+  Text: This is literal statement text.
+  The following line belongs to the same statement.
+[[/CB3]]
+~~~
+
+**Limit of approval:** This settles field syntax, not outstanding Sanity metadata mapping, import authorization, an actual parser, or editorial approval of the example manuscript. See [validation.md](validation.md) for errors and implementation tests.
 
 ### Editorial comments
 
@@ -258,8 +309,8 @@ Before importer implementation:
 
 Use Alexis's original **November 2, 2026 “Rejoice Always”** manuscript as the first serious exercise, after preserving the source unchanged. Collaboratively adapt each screen, verify the theological argument, and inspect the full result for gaps in the grammar. A ceremonial `hello-world.berry.md` can later test end-to-end import, but illustrative samples are not evidence that an importer already exists.
 
-### Pending field-declaration RFC
+### Approved field-declaration decision
 
-The [field-declaration proposal](proposals/field-declarations-v0.1.md) explores **context-sensitive `Name: value` lines**, a blank-line boundary for the rich-body headers of CB8 and CB4 LEFT/RIGHT, strict fields in field-only contexts, and a possible indented `|` multiline plain-text form. It was manually checked against the current *Rejoice Always* example. **This is not yet an approved rule**; do not silently implement it in the compiler or claim its escaping conventions are settled.
+Aaron approved the [field-declaration RFC](proposals/field-declarations-v0.1.md) on November 3, 2026. Its context-sensitive fields, strict named-field zones, header/body separator, two-space-indented `|` multiline form, and line-start literal-marker escape are incorporated above. A focused **manual** check of the existing *Rejoice Always* example found 45 field declarations and five rich headers without discrepancies. This is **not a compiler run**.
 
 **Working draft, not compiler-ready.** No parser or importer is claimed to exist as of this document.
