@@ -5,7 +5,7 @@
   "type": "module",
   "engines": { "node": ">=20" },
   "scripts": {
-    "test": "node --test",
+    "test": "npm ci && node --test",
     "check": "node src/cli.js check examples/hello-world.berry.md",
     "preview": "node src/cli.js preview examples/hello-world.berry.md"
   },
