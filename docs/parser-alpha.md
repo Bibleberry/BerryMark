@@ -1,14 +1,16 @@
-# BerryMark Experimental Syntax Parser (alpha)
+# BerryMark Experimental Parser and Validator (alpha)
 
-**Status:** Read-only executable parser and structural preview, not the full v0.1 Validate or Import implementation.  
-**Implementation:** [`src/parser.js`](../src/parser.js), [`src/cli.js`](../src/cli.js), [`test/parser.test.js`](../test/parser.test.js)  
+**Status:** Read-only executable syntax and metadata validation, not the full v0.1 compiler or Import implementation.  
+**Implementation:** [`src/parser.js`](../src/parser.js), [`src/metadata.js`](../src/metadata.js), [`src/scripture.js`](../src/scripture.js), [`src/cli.js`](../src/cli.js)  
+**Metadata contract:** [Metadata Validation](metadata-validation.md)  
 **Reference grammar:** [Language Specification](language-spec.md), [Content Block Registry](block-registry.md), [Validation and Import](validation.md)
 
 ## What exists now
 
-A dependency-free Node.js 20+ experimental syntax parser with a terminal interface:
+A Node.js 20+ experimental parser with safe YAML 1.2 front-matter parsing, typed metadata validation, structural checks, and a terminal interface:
 
 ~~~sh
+npm ci
 npm test
 npm run check
 npm run preview
@@ -17,76 +19,73 @@ node src/cli.js preview examples/rejoice-always/rejoice-always.berry.md
 node src/cli.js json examples/rejoice-always/rejoice-always.berry.md
 ~~~
 
-**Commands:** `check` returns exit code 0 on syntax success, 1 for syntax errors, 2 for wrong arguments/read failures. `preview` prints ordered screen/CB identities; `json` prints an experimental structural AST. Neither is a separate product workflow beyond the planned read-only Validate; they are **alpha developer modes**, not an import authorization.
+**Commands:** `check`, `preview`, and `json` return exit code 0 when there are no blocking errors, 1 for validation errors, and 2 for wrong arguments/read failures. Editorial and informational diagnostics do not fail a working document. Preview remains a structural interpretation, not a renderer or import authorization.
 
 **Implemented checks:**
 
-- YAML `---` front-matter *boundaries*, but **not YAML contents or semantics**.
+- Real YAML front-matter parsing with the YAML 1.2 core schema, strict duplicate-key rejection, safe supported types, and original source locations.
+- Rejection of malformed YAML, non-mapping roots, unsupported tags, anchors/aliases, and non-finite numbers. No YAML code execution or timestamp coercion.
+- Typed validation for the documented Challenge, publishing, Scripture, editorial, and companion-link metadata subset. Unknown recognized-path fields fail rather than disappearing.
+- Explicit null versus absent values; unresolved publishing fields and pending approval remain informational/deferred, never silently populated.
 - SCREEN, CB1–CB9 and nested marker balance, parent/child relationships and stable ID collisions.
 - Context-sensitive fields, exact spelling, required/duplicate fields, two-space `Name: |` multiline plain text, blank-line rich-body title boundaries and backslash-escaped literal marker lines.
 - CB4 LEFT/RIGHT/FOOTER, CB5 CARD, CB6 STEP/cycle, CB7 CHOICE and CB8 nested SCRIPTURE structures.
-- Selected Scripture *field consistency* checks (referenceOnly versus provided, passage presence, claimed rights status and practice configuration). **This is not external evidence of quotation rights.**
-- Editorial comments are captured as non-reader-facing AST annotations; they are **not** resolved or allowed through a final publication gate.
-- Line-numbered error diagnostics such as `BM_ID_DUPLICATE`, `BM_HEADER_SEPARATOR`, `BM_FIELD_UNKNOWN`, `BM_SCRIPTURE_RIGHTS`.
+- One shared pure Scripture consistency implementation for front matter, CB2, and nested CB8 SCRIPTURE. A rights Boolean is not external evidence of quotation rights.
+- Editorial comments retained as AST annotations and nonblocking `editorial` diagnostics. TODO and REVIEW REQUIRED items do not disappear after structural success.
+- Machine-readable diagnostics with severity, rule code, filename, line/column, and metadata path or block target where applicable.
 
-### What deliberately does NOT exist
+See [metadata-validation.md](metadata-validation.md) for the exact AST contract, required/optional fields, and unresolved design decisions.
 
-The `ok: true` result means **only that this experimental syntax stage passed**. It does not certify:
+## What deliberately does NOT exist
 
-- YAML parser validity, data typing or publishing metadata.
+The `ok: true` result means **only that the experimental syntax and supported metadata checks passed**. It does not certify:
+
 - Markdown conversion to Sanity Portable Text, text-formatting fidelity or all Sanity schema requirements.
-- Editorial warnings, human review, scoped warning override workflow, or theological approval.
-- Sanity API access, importer, draft creation, publishing or duplicate-document detection.
+- External Scripture license evidence or permission to quote a passage.
+- Human review, theological approval, scoped warning override workflow, or publication approval.
+- Sanity API access, importer, draft creation, publishing, series resolution, or duplicate-document detection.
 - Protected developer draft preview, on-screen TEST badges or block-label overlays.
 - Deterministic Sanity `_key` generation from semantic IDs.
+- A future readiness gate for unresolved publishing values or editorial annotations.
 
-**Never use the alpha `check` result to publish a Challenge, assert license rights, or bypass a Sanity editorial gate.**
+**Never use the experimental `check` result to publish a Challenge, assert license rights, or bypass a Sanity editorial gate.**
 
-## AST and errors (experimental output contract)
+## AST and diagnostics (experimental output contract)
 
-The current `json` response is a debugging representation, **not a stable public SDK or Sanity document schema**:
+The `json` response is a debugging representation, **not a stable public SDK or Sanity document schema**. The parsed typed value is exposed as `document.metadata`, separately from `document.frontmatter.raw` and its source span:
 
 ~~~json
 {
   "ok": true,
-  "mode": "experimental-syntax-only",
+  "mode": "experimental-read-only-validation",
   "document": {
-    "frontmatter": { "raw": "...", "yamlValidated": false },
-    "screens": [
-      {
-        "type": "SCREEN",
-        "id": "encounter",
-        "label": "Encounter",
-        "heading": "Hello, BerryMark",
-        "blocks": [
-          { "type": "CB1", "id": "hello-text", "text": "Hello, world!" }
-        ]
-      }
-    ],
+    "frontmatter": { "raw": "...", "yamlValidated": true },
+    "metadata": { "berrymark": "0.1", "challenge": { "title": "..." } },
+    "screens": [],
     "annotations": []
   },
+  "summary": { "errors": 0, "warnings": 0, "editorial": 0, "info": 0 },
   "diagnostics": []
 }
 ~~~
 
-Actual output also includes file names, line numbers and checked/un-checked capability lists. On malformed input, it returns diagnostics and a **partial AST for inspection only**. Treat a partial AST as invalid and never import it. The exact AST shape and machine-readable rule codes may evolve as parser implementation continues.
+On malformed input, the CLI returns diagnostics and a **partial AST for inspection only**. Treat a partial AST as invalid and never import it. The exact AST shape and machine-readable rule codes may evolve as parser implementation continues.
 
 ## Validation fixtures and workflow
 
-- [`examples/hello-world.berry.md`](../examples/hello-world.berry.md) is a deliberately obvious **synthetic** test with `BM-TEST-CB3-HELLO` text. It is **not Alexis's teaching**.
+- [`examples/hello-world.berry.md`](../examples/hello-world.berry.md) is a deliberately obvious **synthetic** test with complete safe metadata and `BM-TEST-CB3-HELLO` text. It is **not Alexis's teaching**.
 - [`examples/invalid-duplicate-ids.berry.md`](../examples/invalid-duplicate-ids.berry.md) is intentionally invalid, ensuring a nonzero CLI exit code.
-- [`examples/rejoice-always/rejoice-always.berry.md`](../examples/rejoice-always/rejoice-always.berry.md) is the complete seven-screen **existing Local Prototype reverse-mapping**; its content remains editorially unapproved.
-- The 23 automated Node.js tests check positive and negative syntax cases. [GitHub Actions](../.github/workflows/parser-tests.yml) runs them on pushes and pull requests, then checks the Hello World and real seven-screen sample.
+- [`examples/rejoice-always/rejoice-always.berry.md`](../examples/rejoice-always/rejoice-always.berry.md) is the complete seven-screen **existing Local Prototype reverse-mapping**; its content remains editorially unapproved. Its null publishing fields, reference-only Scripture, pending review, and null companion URLs are intentionally preserved.
+- The automated suite retains the original 23 syntax tests and adds 20 focused metadata/CLI regressions. [GitHub Actions](../.github/workflows/parser-tests.yml) installs the lockfile dependencies, runs the tests, and checks both the synthetic Hello World and real seven-screen sample.
 
-**Important test distinction:** Successful syntax parsing of the real manuscript example confirms 7 screens, 16 top-level CB instances, and no errors within the current *limited parser scope*. It does **not** mean the content has been imported into Sanity or displayed with developer TEST banners.
+**Important test distinction:** Successful validation of the real manuscript example confirms 7 screens, 16 top-level CB instances, and no errors within the current experimental validator scope. It does **not** mean the content has been imported into Sanity, approved, licensed, or displayed with developer TEST banners.
 
 ## Next engineering slices
 
-1. **YAML semantic parser and typed metadata validation**, including null publication fields and missing references without fabricated values. Choose and pin a YAML library or explicitly scope a safe accepted subset; do not pretend delimiter detection is YAML parsing.
-2. **Portable Text encoder + complete Sanity schema mapping**, with source-fidelity checks and deterministic keys; establish the target shape before write access.
-3. **Machine-readable diagnostics and editorial warning review** (unoverridable errors, revision-scoped warning overrides) with representative acceptance fixtures.
-4. **Protected, rights-safe draft preview**, not the current published-only CMS query or a browser write token.
-5. **Draft-only import** after the read-only pipeline is proven; never publish or overwrite automatically.
+1. **Portable Text encoder + complete Sanity schema mapping**, with source-fidelity checks and deterministic keys; establish the target shape before write access.
+2. **Machine-readable advisory warnings and editorial review overrides**, only after their syntax, revision scope, and disposition are approved.
+3. **Protected, rights-safe draft preview**, not the current published-only CMS query or a browser write token.
+4. **Draft-only import** after the read-only pipeline is proven; never publish or overwrite automatically.
 
 ## Repository boundary
 
