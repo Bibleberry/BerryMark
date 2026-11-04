@@ -93,6 +93,19 @@ test('a matching deterministic draft with verified unchanged provenance is a no-
   assert.equal(report.onlineResolution.contentVerification, 'verified-unchanged')
 })
 
+test('a failed required series lookup prevents an otherwise eligible no-op', () => {
+  const draft = provenanceDraft({ contentVerification: { status: 'verified-unchanged', currentContentSha256: 'imported-content-hash' } })
+  const report = resolve(lookup({
+    series: failed('BM_IMPORT_LOOKUP_TIMEOUT'),
+    challenges: complete([draft]),
+    sequence: { status: 'not-required' }
+  }))
+  assert.equal(report.proposedAction, 'unknown')
+  assert.equal(report.importEligible, false)
+  assert.equal(report.lookup.status, 'failed')
+  assert.ok(report.errors.some(item => item.code === 'BM_IMPORT_LOOKUP_TIMEOUT' && item.path === 'lookup.series'))
+})
+
 test('same-source deterministic draft without current-content evidence remains unknown', () => {
   const report = resolve(lookup({ challenges: complete([provenanceDraft()]) }))
   assert.equal(report.proposedAction, 'unknown')
@@ -157,6 +170,29 @@ test('approved or reviewed drafts cannot be revised through the online plan', ()
   const report = resolve(lookup({ challenges: complete([draft]) }), offlineReport, 'previous-source')
   assert.equal(report.proposedAction, 'reject')
   assert.ok(report.conflicts.some(item => item.code === 'BM_IMPORT_APPROVED_DRAFT_CONFLICT'))
+})
+
+test('missing or incomplete editorial review evidence cannot permit update', () => {
+  const draft = provenanceDraft({
+    importProvenance: {
+      sourceSystem: 'berrymark', canonicalId: offlineReport.proposedIdentity.canonicalId,
+      sourceSha256: 'previous-source', lastImportedContentSha256: 'imported-content-hash'
+    },
+    contentVerification: { status: 'verified-unchanged', currentContentSha256: 'imported-content-hash' }
+  })
+  const missingEditorialReview = clone(draft)
+  delete missingEditorialReview.editorialReview
+  const incompleteReviewEvidence = [
+    missingEditorialReview,
+    { ...draft, editorialReview: {} },
+    { ...draft, blockReviewStates: [{ _type: 'comparisonBlock' }] }
+  ]
+  for (const candidate of incompleteReviewEvidence) {
+    const report = resolve(lookup({ challenges: complete([candidate]) }), offlineReport, 'previous-source')
+    assert.equal(report.proposedAction, 'reject')
+    assert.equal(report.importEligible, false)
+    assert.ok(report.conflicts.some(item => item.code === 'BM_IMPORT_APPROVED_DRAFT_CONFLICT'))
+  }
 })
 
 test('authentication failure and incomplete lookups return unknown, never create', () => {

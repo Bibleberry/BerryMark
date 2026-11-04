@@ -98,11 +98,13 @@ function trustworthyContentVerification(document) {
 }
 
 function reviewIsUnapproved(document) {
-  if (document?.editorialReview?.adaptationReviewed === true) return false
-  if (document.editorialReview?.reviewedAt || document.editorialReview?.reviewedBy) return false
+  if (document?.editorialReview?.adaptationReviewed !== false) return false
+  if (document.editorialReview.reviewedAt || document.editorialReview.reviewedBy) return false
   if (!Array.isArray(document.blockReviewStates)) return false
   const structuredTypes = ['comparisonBlock', 'visualCardsBlock', 'connectedSequenceBlock', 'reflectionBlock', 'optionalStudyBlock']
-  return document.blockReviewStates.every(item => !structuredTypes.includes(item._type) || item.reviewStatus === 'proposed')
+  return document.blockReviewStates.every(item => isRecord(item)
+    && typeof item._type === 'string'
+    && (!structuredTypes.includes(item._type) || item.reviewStatus === 'proposed'))
 }
 
 /**
@@ -240,8 +242,7 @@ export function resolveBerryMarkOnlineImport({ offlineReport, lookupResults, exp
   }
 
   if (conflicts.length) action = 'reject'
-  if (lookupErrors.length && action === 'create') action = 'unknown'
-  if (series.state === 'lookup-failed' && action === 'create') action = 'unknown'
+  if (lookupErrors.length && ['create', 'update', 'none'].includes(action)) action = 'unknown'
   errors.push(...conflicts)
   report.lookup = {
     status: lookupErrors.length ? 'failed' : 'complete',
