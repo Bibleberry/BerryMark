@@ -1,0 +1,1013 @@
+{
+  "ok": true,
+  "mode": "experimental-pure-sanity-compilation",
+  "sanityCandidate": {
+    "_type": "challenge",
+    "title": "BM-TEST Complete Compiler Fixture",
+    "slug": {
+      "_type": "slug",
+      "current": "bm-test-compiler-all-blocks"
+    },
+    "challengeType": "teaching",
+    "summary": "Synthetic rights-safe compiler demonstration",
+    "primaryScripture": {
+      "_type": "scriptureReference",
+      "reference": "John 11:35",
+      "translation": "BM-TEST",
+      "textStatus": "referenceOnly",
+      "practiceStatus": "notConfigured",
+      "usageRightsConfirmed": false
+    },
+    "screens": [
+      {
+        "_type": "challengeScreen",
+        "_key": "compiler-fixture-screen",
+        "screenLabel": "Test",
+        "heading": "BM-TEST all Content Blocks",
+        "blocks": [
+          {
+            "_key": "compiler-rich-teaching",
+            "_type": "richTextBlock",
+            "body": [
+              {
+                "_type": "block",
+                "children": [
+                  {
+                    "_type": "span",
+                    "_key": "bmb1cfa144a9394caa4b779e7d",
+                    "marks": [],
+                    "text": "BM-TEST rich heading"
+                  }
+                ],
+                "markDefs": [],
+                "style": "h2",
+                "_key": "bmf9d165bb49023b2d9d58a4c0"
+              },
+              {
+                "_type": "block",
+                "children": [
+                  {
+                    "_type": "span",
+                    "_key": "bma342f4b27ebd060779c57c5e",
+                    "marks": [],
+                    "text": "Unicode 🌿 中文 and "
+                  },
+                  {
+                    "_type": "span",
+                    "_key": "bm2a20df5eedc6951b5ba26aec",
+                    "marks": [
+                      "strong"
+                    ],
+                    "text": "strong"
+                  },
+                  {
+                    "_type": "span",
+                    "_key": "bme7977b43ba6cff22e223a4bc",
+                    "marks": [],
+                    "text": ", "
+                  },
+                  {
+                    "_type": "span",
+                    "_key": "bm8785c44552c8f2286d61505e",
+                    "marks": [
+                      "em"
+                    ],
+                    "text": "emphasis"
+                  },
+                  {
+                    "_type": "span",
+                    "_key": "bmd2e2eae4ee85826f167ef1d9",
+                    "marks": [],
+                    "text": ", and "
+                  },
+                  {
+                    "_type": "span",
+                    "_key": "bmb92146bd698fa88763af36d7",
+                    "marks": [
+                      "em",
+                      "strong"
+                    ],
+                    "text": "combined emphasis"
+                  },
+                  {
+                    "_type": "span",
+                    "_key": "bm6c3db88cff8827af0ed76d95",
+                    "marks": [],
+                    "text": " with "
+                  },
+                  {
+                    "_type": "span",
+                    "_key": "bm0550cb668a8b65005105d454",
+                    "marks": [
+                      "bm1a1e70c181bab11bc9d2a984"
+                    ],
+                    "text": "an HTTPS link"
+                  },
+                  {
+                    "_type": "span",
+                    "_key": "bmf95960d4edeb7b54ee64e0d9",
+                    "marks": [],
+                    "text": "."
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_type": "link",
+                    "_key": "bm1a1e70c181bab11bc9d2a984",
+                    "href": "https://example.com/teaching"
+                  }
+                ],
+                "style": "normal",
+                "_key": "bmea54e06a25b507501f407a76"
+              },
+              {
+                "_type": "block",
+                "children": [
+                  {
+                    "_type": "span",
+                    "_key": "bm5bcbe26fda623c4716e8ea70",
+                    "marks": [],
+                    "text": "A line with a representable break."
+                  },
+                  {
+                    "_type": "span",
+                    "_key": "bmfd865b0d9df8a71db04e7f97",
+                    "marks": [],
+                    "text": "\n"
+                  },
+                  {
+                    "_type": "span",
+                    "_key": "bm53430c79e468090185bdb35c",
+                    "marks": [],
+                    "text": "The next line remains in the same paragraph."
+                  }
+                ],
+                "markDefs": [],
+                "style": "normal",
+                "_key": "bm3a1bd671c8245f708ff24efd"
+              },
+              {
+                "_type": "block",
+                "children": [
+                  {
+                    "_type": "span",
+                    "_key": "bmd1020114f9cc4f0f360be11e",
+                    "marks": [],
+                    "text": "BM-TEST block quotation with "
+                  },
+                  {
+                    "_type": "span",
+                    "_key": "bm72d5e127d049be3beab612c7",
+                    "marks": [
+                      "strong"
+                    ],
+                    "text": "strong text"
+                  },
+                  {
+                    "_type": "span",
+                    "_key": "bmbd177023df4a84f018a12ae6",
+                    "marks": [],
+                    "text": "."
+                  }
+                ],
+                "markDefs": [],
+                "style": "blockquote",
+                "_key": "bm99ef400038edb9eb9589c6b0"
+              },
+              {
+                "_type": "block",
+                "children": [
+                  {
+                    "_type": "span",
+                    "_key": "bm62969d7b31f7aeb8036064e9",
+                    "marks": [],
+                    "text": "Bullet one"
+                  }
+                ],
+                "markDefs": [],
+                "style": "normal",
+                "listItem": "bullet",
+                "level": 1,
+                "_key": "bm3571ff4e5c40f7a68ce55a3b"
+              },
+              {
+                "_type": "block",
+                "children": [
+                  {
+                    "_type": "span",
+                    "_key": "bmb3b8cdb76f8ee1881ba33634",
+                    "marks": [],
+                    "text": "Bullet two with "
+                  },
+                  {
+                    "_type": "span",
+                    "_key": "bmbd8e905d806d3dd81b74af1f",
+                    "marks": [
+                      "em"
+                    ],
+                    "text": "emphasis"
+                  }
+                ],
+                "markDefs": [],
+                "style": "normal",
+                "listItem": "bullet",
+                "level": 1,
+                "_key": "bm63be063add84680249dfd24f"
+              },
+              {
+                "_type": "block",
+                "children": [
+                  {
+                    "_type": "span",
+                    "_key": "bmf17bf91ecc2f797894125181",
+                    "marks": [],
+                    "text": "Numbered one"
+                  }
+                ],
+                "markDefs": [],
+                "style": "normal",
+                "listItem": "number",
+                "level": 1,
+                "_key": "bm2963e8cbe65dd2d5673d1f33"
+              },
+              {
+                "_type": "block",
+                "children": [
+                  {
+                    "_type": "span",
+                    "_key": "bm2e75f01dfd202582ab9b11c7",
+                    "marks": [],
+                    "text": "Numbered two"
+                  }
+                ],
+                "markDefs": [],
+                "style": "normal",
+                "listItem": "number",
+                "level": 1,
+                "_key": "bmfe428b74b9e4e3c0ae263da2"
+              },
+              {
+                "_type": "block",
+                "children": [
+                  {
+                    "_type": "span",
+                    "_key": "bm1600a391c15bee544654ad3a",
+                    "marks": [],
+                    "text": "BM-TEST lower heading"
+                  }
+                ],
+                "markDefs": [],
+                "style": "h3",
+                "_key": "bmd964e6c8a55594d95a9f602f"
+              },
+              {
+                "_type": "block",
+                "children": [
+                  {
+                    "_type": "span",
+                    "_key": "bma4a7c87005ac131151f45b2f",
+                    "marks": [],
+                    "text": "Title: This field-looking sentence remains literal prose."
+                  }
+                ],
+                "markDefs": [],
+                "style": "normal",
+                "_key": "bm6d8e3b3bfcb0ae303324cf96"
+              }
+            ]
+          },
+          {
+            "_key": "compiler-scripture",
+            "_type": "scriptureBlock",
+            "scripture": {
+              "_type": "scriptureReference",
+              "reference": "John 11:35",
+              "translation": "BM-TEST",
+              "textStatus": "referenceOnly",
+              "practiceStatus": "notConfigured",
+              "usageRightsConfirmed": false
+            }
+          },
+          {
+            "_key": "compiler-statement",
+            "_type": "statementBlock",
+            "text": "Preserve **literal marker characters** as plain statement text.",
+            "label": "BM-TEST statement"
+          },
+          {
+            "_key": "compiler-comparison",
+            "_type": "comparisonBlock",
+            "left": {
+              "_type": "comparisonSide",
+              "title": "BM-TEST left",
+              "body": [
+                {
+                  "_type": "block",
+                  "children": [
+                    {
+                      "_type": "span",
+                      "_key": "bm6f9d89e6133d7871512f1ae8",
+                      "marks": [],
+                      "text": "Left body with "
+                    },
+                    {
+                      "_type": "span",
+                      "_key": "bm1bb07b3893ed8cb1035826c4",
+                      "marks": [
+                        "strong"
+                      ],
+                      "text": "strong"
+                    },
+                    {
+                      "_type": "span",
+                      "_key": "bm597c27b3474780102e516ed1",
+                      "marks": [],
+                      "text": " formatting."
+                    }
+                  ],
+                  "markDefs": [],
+                  "style": "normal",
+                  "_key": "bm3e2a895ce2067f58777e6b51"
+                }
+              ]
+            },
+            "right": {
+              "_type": "comparisonSide",
+              "title": "BM-TEST right",
+              "body": [
+                {
+                  "_type": "block",
+                  "children": [
+                    {
+                      "_type": "span",
+                      "_key": "bme4c6de830f0972cc26f0a8c7",
+                      "marks": [],
+                      "text": "Right body with "
+                    },
+                    {
+                      "_type": "span",
+                      "_key": "bm1172c082ee1864f89f0a2f65",
+                      "marks": [
+                        "em"
+                      ],
+                      "text": "emphasis"
+                    },
+                    {
+                      "_type": "span",
+                      "_key": "bmedd189dbb3a00a228e1b6185",
+                      "marks": [],
+                      "text": "."
+                    }
+                  ],
+                  "markDefs": [],
+                  "style": "normal",
+                  "_key": "bm37d1bb3bb3a80c392b59359d"
+                }
+              ]
+            },
+            "footer": "Footer remains exact plain text, including *literal asterisks*.",
+            "reviewStatus": "proposed"
+          },
+          {
+            "_key": "compiler-cards",
+            "_type": "visualCardsBlock",
+            "cards": [
+              {
+                "_type": "visualCard",
+                "_key": "compiler-card-full",
+                "title": "BM-TEST full card",
+                "body": "Card body remains plain text."
+              },
+              {
+                "_type": "visualCard",
+                "_key": "compiler-card-title-only",
+                "title": "BM-TEST title-only card"
+              }
+            ],
+            "reviewStatus": "proposed"
+          },
+          {
+            "_key": "compiler-sequence",
+            "_type": "connectedSequenceBlock",
+            "steps": [
+              {
+                "_type": "sequenceStep",
+                "_key": "compiler-step-one",
+                "title": "BM-TEST step one",
+                "body": "First plain-text explanation."
+              },
+              {
+                "_type": "sequenceStep",
+                "_key": "compiler-step-two",
+                "title": "BM-TEST step two",
+                "body": "Second plain-text explanation."
+              }
+            ],
+            "cycle": true,
+            "returnCaption": "Return to the synthetic first step",
+            "conclusion": "Synthetic sequence conclusion.",
+            "reviewStatus": "proposed"
+          },
+          {
+            "_key": "compiler-reflection",
+            "_type": "reflectionBlock",
+            "question": "BM-TEST optional reflection?",
+            "choices": [
+              {
+                "_type": "reflectionChoice",
+                "_key": "compiler-choice-one",
+                "label": "First choice",
+                "prompt": "First optional prompt."
+              },
+              {
+                "_type": "reflectionChoice",
+                "_key": "compiler-choice-two",
+                "label": "Second choice",
+                "prompt": "Second optional prompt."
+              }
+            ],
+            "closing": "Optional reflection closing.",
+            "reviewStatus": "proposed"
+          },
+          {
+            "_key": "compiler-study",
+            "_type": "optionalStudyBlock",
+            "title": "BM-TEST optional study",
+            "body": [
+              {
+                "_type": "block",
+                "children": [
+                  {
+                    "_type": "span",
+                    "_key": "bmb5512218ec6017e38c024bda",
+                    "marks": [],
+                    "text": "Study body with "
+                  },
+                  {
+                    "_type": "span",
+                    "_key": "bm464d563464a9b6f9f68bc350",
+                    "marks": [
+                      "bm0804e63463e597156e2d0ffd"
+                    ],
+                    "text": "HTTPS reference"
+                  },
+                  {
+                    "_type": "span",
+                    "_key": "bm3a0a2784b0fd2f89146f08e5",
+                    "marks": [],
+                    "text": " and "
+                  },
+                  {
+                    "_type": "span",
+                    "_key": "bme0ec989fb0dcf7165edfd4f3",
+                    "marks": [
+                      "strong"
+                    ],
+                    "text": "strong text"
+                  },
+                  {
+                    "_type": "span",
+                    "_key": "bm9905e5fc764818f8226c2045",
+                    "marks": [],
+                    "text": "."
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_type": "link",
+                    "_key": "bm0804e63463e597156e2d0ffd",
+                    "href": "https://example.com/study"
+                  }
+                ],
+                "style": "normal",
+                "_key": "bm3baf4aded28e190f7d573aa6"
+              }
+            ],
+            "scriptures": [
+              {
+                "_type": "scriptureReference",
+                "_key": "compiler-study-reference-only",
+                "reference": "John 11:35",
+                "translation": "BM-TEST",
+                "textStatus": "referenceOnly",
+                "practiceStatus": "notConfigured",
+                "usageRightsConfirmed": false
+              },
+              {
+                "_type": "scriptureReference",
+                "_key": "compiler-study-provided",
+                "reference": "Synthetic 1:1",
+                "translation": "BM-TEST",
+                "textStatus": "provided",
+                "practiceStatus": "configured",
+                "passage": "Rights-safe synthetic passage written only for this fixture.",
+                "usageRightsConfirmed": true
+              }
+            ],
+            "reviewStatus": "proposed"
+          },
+          {
+            "_key": "compiler-prayer",
+            "_type": "prayerBlock",
+            "paragraphs": [
+              "BM-TEST first authored prayer paragraph with *literal plain-text markers*.",
+              "BM-TEST second authored prayer paragraph, preserved exactly."
+            ]
+          }
+        ]
+      }
+    ],
+    "editorialReview": {
+      "_type": "editorialReview",
+      "sourceTitle": "BM-TEST Compiler Fixture",
+      "sourceRevision": "bm-test-revision-1",
+      "adaptationReviewed": false
+    },
+    "sequence": 1,
+    "releaseAt": "2026-11-04T12:00:00Z",
+    "companionLinks": [
+      {
+        "_type": "companionLink",
+        "_key": "bm77ae0f80d2a24b5331851000",
+        "provider": "other",
+        "label": "BM-TEST HTTPS companion",
+        "description": "Synthetic companion metadata",
+        "url": "https://example.com/berrymark",
+        "availability": "Development fixture only"
+      },
+      {
+        "_type": "companionLink",
+        "_key": "bme21cc1bb96009fa4f3d600d3",
+        "provider": "social",
+        "label": "BM-TEST unresolved companion",
+        "availability": "No link supplied"
+      }
+    ]
+  },
+  "reviewReport": {
+    "schemaComplete": false,
+    "importReady": false,
+    "publicationReady": false,
+    "source": {
+      "filename": "examples/compiler-all-blocks.berry.md",
+      "sha256": "1994edb4bb4f5062eeba6e9e522c533b56837154bc68f077a1fa06660efd84e2",
+      "revisionState": "value",
+      "revision": "bm-test-revision-1"
+    },
+    "challenge": {
+      "title": "BM-TEST Complete Compiler Fixture",
+      "slug": "bm-test-compiler-all-blocks",
+      "type": "teaching"
+    },
+    "validatorSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "editorial": 1,
+      "info": 2
+    },
+    "compilerSummary": {
+      "errors": 0,
+      "warnings": 0,
+      "editorial": 0,
+      "info": 4
+    },
+    "counts": {
+      "screens": 1,
+      "contentBlocks": 9,
+      "optionalStudies": 1,
+      "nestedScriptures": 2,
+      "editorialAnnotations": 1
+    },
+    "structure": [
+      {
+        "id": "compiler-fixture-screen",
+        "type": "SCREEN",
+        "line": 39,
+        "blocks": [
+          {
+            "id": "compiler-rich-teaching",
+            "type": "CB1",
+            "line": 43
+          },
+          {
+            "id": "compiler-scripture",
+            "type": "CB2",
+            "line": 64
+          },
+          {
+            "id": "compiler-statement",
+            "type": "CB3",
+            "line": 72
+          },
+          {
+            "id": "compiler-comparison",
+            "type": "CB4",
+            "line": 77
+          },
+          {
+            "id": "compiler-cards",
+            "type": "CB5",
+            "line": 93,
+            "cards": [
+              {
+                "id": "compiler-card-full",
+                "line": 94
+              },
+              {
+                "id": "compiler-card-title-only",
+                "line": 98
+              }
+            ]
+          },
+          {
+            "id": "compiler-sequence",
+            "type": "CB6",
+            "line": 103,
+            "steps": [
+              {
+                "id": "compiler-step-one",
+                "line": 106
+              },
+              {
+                "id": "compiler-step-two",
+                "line": 110
+              }
+            ]
+          },
+          {
+            "id": "compiler-reflection",
+            "type": "CB7",
+            "line": 117,
+            "choices": [
+              {
+                "id": "compiler-choice-one",
+                "line": 119
+              },
+              {
+                "id": "compiler-choice-two",
+                "line": 123
+              }
+            ]
+          },
+          {
+            "id": "compiler-study",
+            "type": "CB8",
+            "line": 130,
+            "scriptures": [
+              {
+                "id": "compiler-study-reference-only",
+                "line": 135
+              },
+              {
+                "id": "compiler-study-provided",
+                "line": 142
+              }
+            ]
+          },
+          {
+            "id": "compiler-prayer",
+            "type": "CB9",
+            "line": 152
+          }
+        ]
+      }
+    ],
+    "authoredMetadata": {
+      "berrymark": "0.1",
+      "challenge": {
+        "title": "BM-TEST Complete Compiler Fixture",
+        "slug": "bm-test-compiler-all-blocks",
+        "type": "teaching",
+        "summary": "Synthetic rights-safe compiler demonstration"
+      },
+      "publishing": {
+        "series": "bm-test-series",
+        "sequence": 1,
+        "releaseAt": "2026-11-04T12:00:00Z"
+      },
+      "scripture": {
+        "reference": "John 11:35",
+        "translation": "BM-TEST",
+        "textStatus": "referenceOnly",
+        "usageRightsConfirmed": false,
+        "practiceStatus": "notConfigured"
+      },
+      "editorial": {
+        "sourceTitle": "BM-TEST Compiler Fixture",
+        "sourceAuthor": "BerryMark test fixture",
+        "sourceRevision": "bm-test-revision-1",
+        "approvalStatus": "pending",
+        "approvedBy": null,
+        "approvedAt": null
+      },
+      "companionLinks": [
+        {
+          "provider": "other",
+          "label": "BM-TEST HTTPS companion",
+          "description": "Synthetic companion metadata",
+          "url": "https://example.com/berrymark",
+          "availability": "Development fixture only"
+        },
+        {
+          "provider": "social",
+          "label": "BM-TEST unresolved companion",
+          "description": null,
+          "url": null,
+          "availability": "No link supplied"
+        }
+      ]
+    },
+    "metadataStates": {
+      "challenge.summary": {
+        "state": "value",
+        "value": "Synthetic rights-safe compiler demonstration"
+      },
+      "publishing.series": {
+        "state": "value",
+        "value": "bm-test-series"
+      },
+      "publishing.sequence": {
+        "state": "value",
+        "value": 1
+      },
+      "publishing.releaseAt": {
+        "state": "value",
+        "value": "2026-11-04T12:00:00Z"
+      },
+      "scripture.passage": {
+        "state": "absent"
+      },
+      "scripture.usageRightsConfirmed": {
+        "state": "value",
+        "value": false
+      },
+      "editorial.sourceRevision": {
+        "state": "value",
+        "value": "bm-test-revision-1"
+      },
+      "editorial.approvedBy": {
+        "state": "null"
+      },
+      "editorial.approvedAt": {
+        "state": "null"
+      },
+      "companionLinks": {
+        "state": "value",
+        "value": [
+          {
+            "provider": "other",
+            "label": "BM-TEST HTTPS companion",
+            "description": "Synthetic companion metadata",
+            "url": "https://example.com/berrymark",
+            "availability": "Development fixture only"
+          },
+          {
+            "provider": "social",
+            "label": "BM-TEST unresolved companion",
+            "description": null,
+            "url": null,
+            "availability": "No link supplied"
+          }
+        ]
+      },
+      "companionLinks[0].description": {
+        "state": "value",
+        "value": "Synthetic companion metadata"
+      },
+      "companionLinks[0].url": {
+        "state": "value",
+        "value": "https://example.com/berrymark"
+      },
+      "companionLinks[0].availability": {
+        "state": "value",
+        "value": "Development fixture only"
+      },
+      "companionLinks[1].description": {
+        "state": "null"
+      },
+      "companionLinks[1].url": {
+        "state": "null"
+      },
+      "companionLinks[1].availability": {
+        "state": "value",
+        "value": "No link supplied"
+      }
+    },
+    "unresolved": [
+      {
+        "severity": "info",
+        "code": "BM_SERIES_LOOKUP_REQUIRED",
+        "message": "Series slug \"bm-test-series\" requires later authorized lookup; no _ref was generated",
+        "filename": "examples/compiler-all-blocks.berry.md",
+        "line": 9,
+        "column": 3,
+        "path": "publishing.series",
+        "state": "value",
+        "value": "bm-test-series"
+      },
+      {
+        "severity": "info",
+        "code": "BM_EDITORIAL_PENDING",
+        "message": "Source editorial approval remains pending",
+        "filename": "examples/compiler-all-blocks.berry.md",
+        "line": 22,
+        "column": 3,
+        "path": "editorial.approvalStatus",
+        "state": "value",
+        "value": "pending"
+      },
+      {
+        "severity": "info",
+        "code": "BM_COMPANION_URL_UNRESOLVED",
+        "message": "companionLinks[1].url remains null; no URL was inferred",
+        "filename": "examples/compiler-all-blocks.berry.md",
+        "line": 34,
+        "column": 5,
+        "path": "companionLinks[1].url",
+        "state": "null",
+        "companionKey": "bme21cc1bb96009fa4f3d600d3"
+      }
+    ],
+    "editorialItems": [
+      {
+        "kind": "EDITORIAL NOTE",
+        "status": "unresolved",
+        "line": 38,
+        "column": 1,
+        "text": "<!-- EDITORIAL NOTE: BM-TEST synthetic fixture; every word is development-only. -->"
+      }
+    ],
+    "controlledMappings": [
+      {
+        "code": "BM_ADAPTATION_REVIEW_NOT_TRANSFERRED",
+        "path": "editorialReview.adaptationReviewed",
+        "value": false,
+        "reason": "Source approval is preserved only in the sidecar until an approval-transfer contract exists"
+      },
+      {
+        "code": "BM_REVIEW_STATE_PROPOSED",
+        "path": "screens.compiler-fixture-screen.blocks.compiler-comparison.reviewStatus",
+        "target": "compiler-comparison",
+        "value": "proposed",
+        "reason": "Structured CB4–CB8 adaptations always remain proposed during pure compilation"
+      },
+      {
+        "code": "BM_REVIEW_STATE_PROPOSED",
+        "path": "screens.compiler-fixture-screen.blocks.compiler-cards.reviewStatus",
+        "target": "compiler-cards",
+        "value": "proposed",
+        "reason": "Structured CB4–CB8 adaptations always remain proposed during pure compilation"
+      },
+      {
+        "code": "BM_REVIEW_STATE_PROPOSED",
+        "path": "screens.compiler-fixture-screen.blocks.compiler-sequence.reviewStatus",
+        "target": "compiler-sequence",
+        "value": "proposed",
+        "reason": "Structured CB4–CB8 adaptations always remain proposed during pure compilation"
+      },
+      {
+        "code": "BM_REVIEW_STATE_PROPOSED",
+        "path": "screens.compiler-fixture-screen.blocks.compiler-reflection.reviewStatus",
+        "target": "compiler-reflection",
+        "value": "proposed",
+        "reason": "Structured CB4–CB8 adaptations always remain proposed during pure compilation"
+      },
+      {
+        "code": "BM_REVIEW_STATE_PROPOSED",
+        "path": "screens.compiler-fixture-screen.blocks.compiler-study.reviewStatus",
+        "target": "compiler-study",
+        "value": "proposed",
+        "reason": "Structured CB4–CB8 adaptations always remain proposed during pure compilation"
+      }
+    ],
+    "pendingLookups": [
+      {
+        "type": "challengeSeriesSlug",
+        "slug": "bm-test-series",
+        "sourcePath": "publishing.series",
+        "destinationPath": "series",
+        "status": "unresolved",
+        "reason": "A series slug is not a Sanity document ID; offline compilation cannot create a truthful _ref"
+      }
+    ],
+    "skippedDestinationFields": [
+      {
+        "sourcePath": "editorial.sourceAuthor",
+        "reason": "Current Sanity editorialReview has no sourceAuthor field; exact value remains in authoredMetadata"
+      },
+      {
+        "sourcePath": "editorial.approvalStatus",
+        "reason": "Source approval vocabulary is not equivalent to adaptationReviewed"
+      },
+      {
+        "sourcePath": "editorial.approvedBy",
+        "reason": "No approved transfer policy for Sanity reviewedBy"
+      },
+      {
+        "sourcePath": "editorial.approvedAt",
+        "reason": "No approved transfer policy for Sanity reviewedAt"
+      },
+      {
+        "sourcePath": "publishing.series",
+        "reason": "Series slug requires an authorized lookup before a reference can be emitted"
+      }
+    ],
+    "compatibility": {
+      "targetRepository": "ContraPhilosophy/Bibleberry",
+      "targetRevision": "c43b53146f3b4f6c1d5154e1ce0409a5aa3e4d3d",
+      "schemaComplete": false,
+      "missingRequiredFields": [
+        "series"
+      ],
+      "note": "Schema-compatible local candidate only; Studio validation, reference resolution and import gates were not executed"
+    },
+    "diagnostics": [
+      {
+        "severity": "info",
+        "code": "BM_SERIES_LOOKUP_REQUIRED",
+        "message": "Series slug \"bm-test-series\" requires later authorized lookup; no _ref was generated",
+        "filename": "examples/compiler-all-blocks.berry.md",
+        "line": 9,
+        "column": 3,
+        "path": "publishing.series",
+        "state": "value",
+        "value": "bm-test-series"
+      },
+      {
+        "severity": "info",
+        "code": "BM_ADAPTATION_REVIEW_NOT_TRANSFERRED",
+        "message": "Sanity adaptationReviewed is conservatively false; source approval was not promoted",
+        "filename": "examples/compiler-all-blocks.berry.md",
+        "line": 22,
+        "column": 3,
+        "path": "editorialReview.adaptationReviewed"
+      },
+      {
+        "severity": "info",
+        "code": "BM_EDITORIAL_PENDING",
+        "message": "Source editorial approval remains pending",
+        "filename": "examples/compiler-all-blocks.berry.md",
+        "line": 22,
+        "column": 3,
+        "path": "editorial.approvalStatus",
+        "state": "value",
+        "value": "pending"
+      },
+      {
+        "severity": "info",
+        "code": "BM_COMPANION_URL_UNRESOLVED",
+        "message": "companionLinks[1].url remains null; no URL was inferred",
+        "filename": "examples/compiler-all-blocks.berry.md",
+        "line": 34,
+        "column": 5,
+        "path": "companionLinks[1].url",
+        "state": "null",
+        "companionKey": "bme21cc1bb96009fa4f3d600d3"
+      }
+    ]
+  },
+  "diagnostics": [
+    {
+      "severity": "info",
+      "code": "BM_SERIES_LOOKUP_REQUIRED",
+      "message": "Series slug \"bm-test-series\" requires later authorized lookup; no _ref was generated",
+      "filename": "examples/compiler-all-blocks.berry.md",
+      "line": 9,
+      "column": 3,
+      "path": "publishing.series",
+      "state": "value",
+      "value": "bm-test-series"
+    },
+    {
+      "severity": "info",
+      "code": "BM_ADAPTATION_REVIEW_NOT_TRANSFERRED",
+      "message": "Sanity adaptationReviewed is conservatively false; source approval was not promoted",
+      "filename": "examples/compiler-all-blocks.berry.md",
+      "line": 22,
+      "column": 3,
+      "path": "editorialReview.adaptationReviewed"
+    },
+    {
+      "severity": "info",
+      "code": "BM_EDITORIAL_PENDING",
+      "message": "Source editorial approval remains pending",
+      "filename": "examples/compiler-all-blocks.berry.md",
+      "line": 22,
+      "column": 3,
+      "path": "editorial.approvalStatus",
+      "state": "value",
+      "value": "pending"
+    },
+    {
+      "severity": "info",
+      "code": "BM_COMPANION_URL_UNRESOLVED",
+      "message": "companionLinks[1].url remains null; no URL was inferred",
+      "filename": "examples/compiler-all-blocks.berry.md",
+      "line": 34,
+      "column": 5,
+      "path": "companionLinks[1].url",
+      "state": "null",
+      "companionKey": "bme21cc1bb96009fa4f3d600d3"
+    }
+  ]
+}
