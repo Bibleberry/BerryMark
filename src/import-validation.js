@@ -33,6 +33,9 @@ const LINK_FIELDS = ['_type', '_key', 'href']
 const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value)
 const same = (left, right) => stableStringify(left) === stableStringify(right)
 const hasOwn = (value, key) => Object.hasOwn(value, key)
+const valueState = (value, key) => !hasOwn(value ?? {}, key)
+  ? { state: 'absent' }
+  : value[key] === null ? { state: 'null' } : { state: 'value', value: value[key] }
 
 function httpUrl(value) {
   if (typeof value !== 'string') return false
@@ -48,7 +51,14 @@ export function validateImportCompilation(compilation, schemaSnapshot) {
   const errors = []
   const warnings = []
   const add = (code, message, path, extra = {}) => {
-    errors.push({ severity: 'error', code, message, ...(path ? { path } : {}), ...extra })
+    errors.push({
+      severity: 'error',
+      code,
+      message,
+      filename: compilation?.reviewReport?.source?.filename ?? '<input>',
+      ...(path ? { path } : {}),
+      ...extra
+    })
   }
   const object = (value, path, allowed, required = [], optionalMissing = []) => {
     if (!isObject(value)) {
@@ -397,6 +407,23 @@ export function validateImportCompilation(compilation, schemaSnapshot) {
         if (value.state !== 'value' && hasOwn(value, 'value')) add('BM_IMPORT_RESULT_INVALID', 'Absent/null state cannot contain a value', `reviewReport.metadataStates.${key}.value`)
       }
     }
+    const metadata = report.authoredMetadata ?? {}
+    const expectedStates = {}
+    for (const [section, fields] of Object.entries({
+      challenge: ['summary'],
+      publishing: ['series', 'sequence', 'releaseAt'],
+      scripture: ['passage', 'usageRightsConfirmed'],
+      editorial: ['sourceRevision', 'approvedBy', 'approvedAt']
+    })) {
+      for (const field of fields) expectedStates[`${section}.${field}`] = valueState(metadata[section], field)
+    }
+    expectedStates.companionLinks = valueState(metadata, 'companionLinks')
+    for (const [index, link] of (metadata.companionLinks ?? []).entries()) {
+      for (const field of ['description', 'url', 'availability']) {
+        expectedStates[`companionLinks[${index}].${field}`] = valueState(link, field)
+      }
+    }
+    if (!same(report.metadataStates, expectedStates)) add('BM_IMPORT_RESULT_INVALID', 'metadataStates do not match authoredMetadata', 'reviewReport.metadataStates')
   }
 
   const diagnostic = (value, path) => {
@@ -427,7 +454,12 @@ export function validateImportCompilation(compilation, schemaSnapshot) {
   for (const name of ['unresolved', 'controlledMappings', 'pendingLookups', 'skippedDestinationFields', 'editorialItems']) {
     if (!array(report[name], `reviewReport.${name}`)) continue
   }
-  report.unresolved?.forEach((item, index) => diagnostic(item, `reviewReport.unresolved[${index}]`))
+  report.unresolved?.forEach((item, index) => {
+    diagnostic(item, `reviewReport.unresolved[${index}]`)
+    if (!compilation.diagnostics.some(candidateDiagnostic => same(candidateDiagnostic, item))) {
+      add('BM_IMPORT_RESULT_INVALID', 'Unresolved item is absent from compiler diagnostics', `reviewReport.unresolved[${index}]`)
+    }
+  })
   report.controlledMappings?.forEach((item, index) => {
     const path = `reviewReport.controlledMappings[${index}]`
     if (object(item, path, ['code', 'path', 'target', 'value', 'reason'], ['code', 'path', 'value', 'reason'])) {
