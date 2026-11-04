@@ -32,6 +32,14 @@
 5. **Scripture differs intentionally from the prototype:** `referenceOnly` and `notConfigured` are used because this exercise does not establish app quotation rights. Do not assume a text-present local prototype grants permission.
 6. **No TEST text was inserted into reader-facing prose.** Identification belongs to a developer-only screen banner and block IDs, as defined in the test plan.
 
+## Experimental parser milestone (November 3, 2026)
+
+- **Executable code now exists** in BerryMark's `src/parser.js` and `src/cli.js`. It supports read-only `check`, `preview`, and `json` development modes; see [parser alpha notes](../../docs/parser-alpha.md).
+- **GitHub Actions CI** successfully ran 23 parser regression tests, the synthetic Hello World fixture and the complete seven-screen `rejoice-always.berry.md` check. First passing run: [BerryMark Parser Tests](https://github.com/ContraPhilosophy/BerryMark/actions/runs/41752794547).
+- **Real document parser result:** `ok: true` for **experimental structural syntax only**, **7 SCREEN nodes and 16 top-level CBs**, with zero syntax errors; 17 editorial annotations were extracted, not resolved.
+- **Important limitation:** YAML content/metadata, Portable Text mapping, Sanity adapter/import, actual draft preview, Scripture licensing, and editorial approval remain **unimplemented**. This is not permission to publish or a claim of complete validation.
+- **Next technical action:** implement safe YAML semantic validation and metadata checks. **Next editorial action:** source-fidelity review against the original manuscript, beginning with legacy screen `b1`, still pending.
+
 ## Source inventory
 
 - **Title:** November 2: Rejoice Always
@@ -106,6 +114,8 @@ Beyond required screens: existing `relatedResources` array stores social follow-
 - **2026-11-03 (mapping approval):** Aaron approved mapping Local Prototype `teachingText.pullQuote` to a standalone CB3 immediately after its CB1. Both existing highlights retain their exact text and prototype placement. Actual rendered appearance and one legacy source-order discrepancy remain review items.
 - **2026-11-03 (field grammar approved):** Aaron approved [`docs/proposals/field-declarations-v0.1.md`](../../docs/proposals/field-declarations-v0.1.md): context-sensitive, exact case-sensitive named fields, rich-body header ending at a blank line, strict field-only contexts, two-space-indented `Name: |` multiline plain text, and a backslash escape for literal full structural-marker lines. The focused manual inspection of `rejoice-always.berry.md` counted 45 recognized field declarations and five rich-body `Title:` headers with no discrepancies. **Not a compiler run.**
 - **Next action:** Start implementing focused parser acceptance tests for the approved field grammar or resolve the next remaining parser-interface decision with Aaron; separately resume source-fidelity review beginning with legacy screen `b1`. Do not infer Alexis's editorial approval.
+
+- **2026-11-03 (first executable parser):** Added and tested dependency-free Node.js experimental parser, 23 regression tests and a successful GitHub Actions workflow. The full Rejoice Always BerryMark file parses structurally with seven screens, 16 CB instances and zero syntax errors. **Do not confuse syntax success with YAML or Sanity-ready validation.**
 
 ## Future-chat resume instruction
 
