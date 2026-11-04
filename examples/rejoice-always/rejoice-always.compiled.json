@@ -104,14 +104,14 @@
                   "children": [
                     {
                       "_type": "span",
-                      "_key": "bm35480b55f46eba023ee00423",
+                      "_key": "bm0f562cb533c9470bd798bac1",
                       "marks": [],
                       "text": "An emotion that can arise unexpectedly or in anticipated enjoyable experiences."
                     }
                   ],
                   "markDefs": [],
                   "style": "normal",
-                  "_key": "bm6aacf51182632b58e811daaa"
+                  "_key": "bm49de6df15d395fb93ebfa890"
                 }
               ]
             },
@@ -124,14 +124,14 @@
                   "children": [
                     {
                       "_type": "span",
-                      "_key": "bm9ad4367978fd258f2dcf0b32",
+                      "_key": "bmcdacd34332d81abfc2965b46",
                       "marks": [],
                       "text": "Rejoicing isn't dependent on feeling joyful. It's a position of the heart and mind. It's choosing to recognize God's goodness even when our circumstances are difficult or far from ideal."
                     }
                   ],
                   "markDefs": [],
                   "style": "normal",
-                  "_key": "bmf566195069f45927cd77658e"
+                  "_key": "bm5f7c8f4a673ab60dc6f726f5"
                 }
               ]
             },
@@ -902,8 +902,8 @@
         "code": "BM_COMPANION_URL_UNRESOLVED",
         "message": "companionLinks[0].url remains null; no URL was inferred",
         "filename": "examples/rejoice-always/rejoice-always.berry.md",
-        "line": 1,
-        "column": 1,
+        "line": 34,
+        "column": 5,
         "path": "companionLinks[0].url",
         "state": "null",
         "companionKey": "bmffdf3600cdfafbabb412945e"
@@ -913,8 +913,8 @@
         "code": "BM_COMPANION_URL_UNRESOLVED",
         "message": "companionLinks[1].url remains null; no URL was inferred",
         "filename": "examples/rejoice-always/rejoice-always.berry.md",
-        "line": 1,
-        "column": 1,
+        "line": 39,
+        "column": 5,
         "path": "companionLinks[1].url",
         "state": "null",
         "companionKey": "bmc3d288d305b825e40b6e57f3"
@@ -1188,8 +1188,8 @@
         "code": "BM_COMPANION_URL_UNRESOLVED",
         "message": "companionLinks[0].url remains null; no URL was inferred",
         "filename": "examples/rejoice-always/rejoice-always.berry.md",
-        "line": 1,
-        "column": 1,
+        "line": 34,
+        "column": 5,
         "path": "companionLinks[0].url",
         "state": "null",
         "companionKey": "bmffdf3600cdfafbabb412945e"
@@ -1199,8 +1199,8 @@
         "code": "BM_COMPANION_URL_UNRESOLVED",
         "message": "companionLinks[1].url remains null; no URL was inferred",
         "filename": "examples/rejoice-always/rejoice-always.berry.md",
-        "line": 1,
-        "column": 1,
+        "line": 39,
+        "column": 5,
         "path": "companionLinks[1].url",
         "state": "null",
         "companionKey": "bmc3d288d305b825e40b6e57f3"
@@ -1263,8 +1263,8 @@
       "code": "BM_COMPANION_URL_UNRESOLVED",
       "message": "companionLinks[0].url remains null; no URL was inferred",
       "filename": "examples/rejoice-always/rejoice-always.berry.md",
-      "line": 1,
-      "column": 1,
+      "line": 34,
+      "column": 5,
       "path": "companionLinks[0].url",
       "state": "null",
       "companionKey": "bmffdf3600cdfafbabb412945e"
@@ -1274,8 +1274,8 @@
       "code": "BM_COMPANION_URL_UNRESOLVED",
       "message": "companionLinks[1].url remains null; no URL was inferred",
       "filename": "examples/rejoice-always/rejoice-always.berry.md",
-      "line": 1,
-      "column": 1,
+      "line": 39,
+      "column": 5,
       "path": "companionLinks[1].url",
       "state": "null",
       "companionKey": "bmc3d288d305b825e40b6e57f3"
