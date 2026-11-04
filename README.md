@@ -22,6 +22,7 @@ The parser has no runtime dependencies. Its `check` success only verifies **expe
 - [Validation and import requirements](docs/validation.md)
 - [Manuscript editorial workshop](docs/manuscript-workshop.md)
 - [Experimental parser and safety boundaries](docs/parser-alpha.md)
+- [Kimi Engineering Assignment 01: Read-Only Validation](docs/assignments/kimi-01-validation.md)
 - [Rejoice Always working example](examples/rejoice-always/rejoice-always.berry.md)
 - [Developer test plan](examples/rejoice-always/test-plan.md)
 
