@@ -516,7 +516,7 @@ test('Rejoice Always visible wording, order, statements, nested data, and prayer
         assert.equal(portableText(outputBlock.right.body), sourceBlock.right.body)
         assert.equal(outputBlock.footer, sourceBlock.footer)
       }
-      if (sourceBlock.type === 'CB5') assert.deepEqual(outputBlock.cards.map(card => [card._key, card.title, card.body]), sourceScreen.cards?.map?.(card => [card.id, card.fields.Title, card.fields.Body]) ?? sourceBlock.cards.map(card => [card.id, card.fields.Title, card.fields.Body]))
+      if (sourceBlock.type === 'CB5') assert.deepEqual(outputBlock.cards.map(card => [card._key, card.title, card.body]), sourceBlock.cards.map(card => [card.id, card.fields.Title, card.fields.Body]))
       if (sourceBlock.type === 'CB6') assert.deepEqual(outputBlock.steps.map(step => [step._key, step.title, step.body]), sourceBlock.steps.map(step => [step.id, step.fields.Title, step.fields.Body]))
       if (sourceBlock.type === 'CB7') {
         assert.equal(outputBlock.question, sourceBlock.fields.Question)
