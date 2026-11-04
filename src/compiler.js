@@ -2,6 +2,7 @@ import { parseBerryMark } from './parser.js'
 import { blockScriptureValue } from './scripture.js'
 import { generatedKey, sha256 } from './keys.js'
 import { markdownToPortableText } from './portable-text.js'
+import { formatMetadataPath } from './metadata.js'
 
 const hasOwn = (object, key) => Object.hasOwn(object, key)
 const hasValue = (object, key) => hasOwn(object, key) && object[key] !== null && object[key] !== undefined
@@ -19,6 +20,14 @@ function sourceLine(source, expression, fallback = 1) {
   const index = lines.findIndex(line => expression.test(line))
   if (index < 0) return { line: fallback, column: 1 }
   return { line: index + 1, column: lines[index].search(/\S/) + 1 }
+}
+
+function metadataLocation(validation, path) {
+  for (let length = path.length; length >= 0; length--) {
+    const location = validation.metadataLocations?.get(JSON.stringify(path.slice(0, length)))
+    if (location) return { ...location, path: formatMetadataPath(path) }
+  }
+  return { line: 1, column: 1, path: formatMetadataPath(path) }
 }
 
 function scriptureReference(value, key) {
@@ -52,7 +61,9 @@ function richText(body, block, context, diagnostics, lineOffset = 1) {
     filename: context.filename,
     line: block.line + lineOffset,
     path: context.path,
-    target: block.id
+    parentIdentity: context.parentIdentity ?? block.id,
+    target: context.target ?? block.id,
+    ...(context.side ? { side: context.side } : {})
   }, diagnostics)
 }
 
@@ -89,7 +100,9 @@ function compileBlock(block, screen, context, diagnostics, controlledMappings) {
         body: richText(block.left.body, block.left, {
           ...context,
           path: `screens.${screen.id}.blocks.${block.id}.left.body`,
-          target: block.id
+          parentIdentity: `${block.id}:left`,
+          target: block.id,
+          side: 'left'
         }, diagnostics, 3)
       },
       right: {
@@ -98,7 +111,9 @@ function compileBlock(block, screen, context, diagnostics, controlledMappings) {
         body: richText(block.right.body, block.right, {
           ...context,
           path: `screens.${screen.id}.blocks.${block.id}.right.body`,
-          target: block.id
+          parentIdentity: `${block.id}:right`,
+          target: block.id,
+          side: 'right'
         }, diagnostics, 3)
       },
       ...(block.footer !== null ? { footer: block.footer } : {}),
@@ -236,7 +251,9 @@ function invalidResult(validation, source, code, message) {
       publicationReady: false,
       source: {
         filename: validation?.filename ?? '<memory>',
-        ...(typeof source === 'string' ? { sha256: sha256(source) } : {})
+        ...(typeof validation?.sourceSha256 === 'string'
+          ? { sha256: validation.sourceSha256 }
+          : typeof source === 'string' ? { sha256: sha256(source) } : {})
       },
       diagnostics: [diagnostic]
     },
@@ -254,6 +271,12 @@ export function compileValidatedBerryMark(validation, { source } = {}) {
   }
   if (!validation.ok) {
     return invalidResult(validation, source, 'BM_COMPILER_INVALID_INPUT', 'Compilation requires a validator result with no blocking errors')
+  }
+  if (typeof validation.sourceSha256 !== 'string') {
+    return invalidResult(validation, source, 'BM_COMPILER_SOURCE_BINDING_REQUIRED', 'The validator result is not bound to an exact source digest; parse the source with the current parser before compilation')
+  }
+  if (validation.sourceSha256 !== sha256(source)) {
+    return invalidResult(validation, source, 'BM_COMPILER_SOURCE_MISMATCH', 'The supplied source does not match the source digest bound to the validated AST; compilation was not performed')
   }
 
   const filename = validation.filename
@@ -353,21 +376,18 @@ export function compileValidatedBerryMark(validation, { source } = {}) {
       const originalState = Object.fromEntries(['provider', 'label', 'description', 'url', 'availability'].map(field => [field, valueState(link, field)]))
       const key = generatedKey(metadata.challenge.slug, 'companionLink', originalState)
       if (companionKeys.has(key)) {
-        reportDiagnostic('error', 'BM_KEY_COLLISION', `Companion links at indexes ${companionKeys.get(key)} and ${index} have identical deterministic key content`, {
-          line: 1,
-          column: 1,
-          path: `companionLinks[${index}]`
+        const firstIndex = companionKeys.get(key)
+        const firstLocation = metadataLocation(validation, ['companionLinks', firstIndex])
+        const conflictLocation = metadataLocation(validation, ['companionLinks', index])
+        reportDiagnostic('error', 'BM_KEY_COLLISION', `Companion links at indexes ${firstIndex} and ${index} have identical deterministic key content`, conflictLocation, {
+          relatedLocations: [firstLocation, conflictLocation]
         })
       } else {
         companionKeys.set(key, index)
       }
       if (!hasValue(link, 'url')) {
         const state = valueState(link, 'url')
-        reportUnresolved('BM_COMPANION_URL_UNRESOLVED', `companionLinks[${index}].url remains ${state.state}; no URL was inferred`, {
-          line: 1,
-          column: 1,
-          path: `companionLinks[${index}].url`
-        }, { state: state.state, companionKey: key })
+        reportUnresolved('BM_COMPANION_URL_UNRESOLVED', `companionLinks[${index}].url remains ${state.state}; no URL was inferred`, metadataLocation(validation, ['companionLinks', index, 'url']), { state: state.state, companionKey: key })
       }
       return {
         _type: 'companionLink',
@@ -432,7 +452,7 @@ export function compileValidatedBerryMark(validation, { source } = {}) {
     publicationReady: false,
     source: {
       filename,
-      sha256: sha256(source),
+      sha256: validation.sourceSha256,
       revisionState: valueState(metadata.editorial, 'sourceRevision').state,
       ...(hasValue(metadata.editorial, 'sourceRevision') ? { revision: metadata.editorial.sourceRevision } : {})
     },

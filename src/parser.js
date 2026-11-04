@@ -1,5 +1,6 @@
 import { parseMetadata } from './metadata.js'
 import { blockScriptureValue, validateScriptureConsistency } from './scripture.js'
+import { sha256 } from './keys.js'
 
 /**
  * EXPERIMENTAL read-only BerryMark syntax and metadata parser.
@@ -182,7 +183,8 @@ export function parseBerryMark(input,{filename='<memory>'}={}){
     if(end<0){error(ds,'BM_FRONTMATTER_CLOSE','Missing closing YAML --- delimiter',1);start=lines.length}
     else{frontmatter={raw:lines.slice(1,end).join('\n'),startLine:1,endLine:end+1,yamlValidated:false};start=end+1}
   }
-  const metadata=parseMetadata(frontmatter,ds)
+  const metadataLocations=new Map()
+  const metadata=parseMetadata(frontmatter,ds,metadataLocations)
   if(frontmatter)frontmatter.yamlValidated=metadata!==null
   const roots=[],stack=[],comments=[],seen=new Map()
   let comment=null
@@ -249,7 +251,7 @@ export function parseBerryMark(input,{filename='<memory>'}={}){
     editorial:diagnostics.filter(d=>d.severity==='editorial').length,
     info:diagnostics.filter(d=>d.severity==='info').length
   }
-  return{
+  const result={
     ok:summary.errors===0,filename,mode:'experimental-read-only-validation',
     capabilities:{
       checked:['safe YAML 1.2 syntax and core types','supported metadata','marker nesting','field declarations','structural IDs','block shapes','shared Scripture status combinations','editorial annotations'],
@@ -259,6 +261,12 @@ export function parseBerryMark(input,{filename='<memory>'}={}){
     summary,
     diagnostics
   }
+  // Non-enumerable compiler bindings preserve the existing validator JSON shape.
+  Object.defineProperties(result,{
+    sourceSha256:{value:sha256(input)},
+    metadataLocations:{value:metadataLocations}
+  })
+  return result
 }
 export function formatStructuralPreview(result){
   const lines=['BerryMark experimental structural preview — '+result.filename,
