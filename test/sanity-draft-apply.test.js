@@ -257,6 +257,23 @@ test('create race uses createIfNotExists semantics and verifies a concurrent ide
   assert.equal(fake.calls.create, 1)
 })
 
+test('unverifiable mutation response triggers one readback but remains an unverified outcome', async () => {
+  const { report, fake } = await run(rejoiceSource, {
+    mutation: () => ({
+      status: 'unverified',
+      error: { severity: 'error', code: 'BM_IMPORT_MUTATION_UNVERIFIED', message: 'Synthetic malformed mutation result' }
+    })
+  })
+  assert.equal(fake.calls.create, 1)
+  assert.equal(fake.calls.read, 1)
+  assert.equal(report.writesAttempted, 1)
+  assert.equal(report.apply.status, 'mutation-unverified')
+  assert.equal(report.apply.readbackStatus, 'candidate-present')
+  assert.equal(report.appliedAction, undefined)
+  assert.equal(report.draftId, undefined)
+  assert.equal(report.errors.at(-1).code, 'BM_IMPORT_MUTATION_UNVERIFIED')
+})
+
 test('mutation failure, readback failure, and readback mismatch are reported truthfully without retry or repair writes', async () => {
   const scenarios = [
     { mutation: () => failed('BM_IMPORT_PERMISSION_DENIED'), status: 'mutation-failed', code: 'BM_IMPORT_PERMISSION_DENIED', reads: 0 },

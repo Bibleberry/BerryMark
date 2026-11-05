@@ -280,6 +280,24 @@ export async function runBerryMarkDraftApply({
   } catch {
     mutation = { status: 'failed', error: issue('BM_IMPORT_APPLY_FAILED', 'The create-only Sanity mutation could not be completed') }
   }
+  if (mutation?.status === 'unverified') {
+    let readback
+    try { readback = await transport.readDraft({ draftId: document._id, target, token }) } catch {
+      readback = { status: 'failed' }
+    }
+    report.apply.status = 'mutation-unverified'
+    report.apply.readbackStatus = readback?.status === 'complete' && verifyCreatedDraft({
+      document: readback.document,
+      expected: document,
+      contentDigest: document.importProvenance.lastImportedContentSha256,
+      allowConcurrentCreator: true
+    }) ? 'candidate-present' : 'manual-investigation-required'
+    const error = mutation?.error
+    return failedApply(report,
+      typeof error?.code === 'string' ? error.code : 'BM_IMPORT_MUTATION_UNVERIFIED',
+      typeof error?.message === 'string' ? error.message : 'The mutation outcome is unverified; read back the draft and investigate before taking further action',
+      'mutation')
+  }
   if (mutation?.status !== 'complete' || typeof mutation.created !== 'boolean') {
     report.apply.status = 'mutation-failed'
     const error = mutation?.error

@@ -27,6 +27,10 @@ const DRAFT_QUERY = `*[_type == "challenge" && _id == $draftId]{
 
 const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value)
 const failure = (code, message) => ({ status: 'failed', documents: [], error: { severity: 'error', code, message } })
+const unverifiedMutation = (message, code = 'BM_IMPORT_MUTATION_UNVERIFIED') => ({
+  status: 'unverified',
+  error: { severity: 'error', code, message }
+})
 const validDraftId = value => {
   if (typeof value !== 'string') return false
   const match = DRAFT_ID_PATTERN.exec(value)
@@ -83,6 +87,7 @@ async function request({ target, operation, method, query, parameters = {}, docu
     if (Buffer.byteLength(body, 'utf8') > MAX_REQUEST_BYTES) {
       return failure('BM_IMPORT_REQUEST_TOO_LARGE', 'The draft creation request exceeded the administrative size limit')
     }
+    if (operation === 'mutate') url.searchParams.set('returnIds', 'true')
   }
 
   try {
@@ -101,13 +106,28 @@ async function request({ target, operation, method, query, parameters = {}, docu
     if (response.status === 409) return failure('BM_IMPORT_ID_CONFLICT', 'Sanity reported a create-only identity conflict')
     if (response.status < 200 || response.status >= 300) return failure('BM_IMPORT_APPLY_FAILED', `Sanity administrative request returned HTTP ${response.status}`)
     const length = Number(response.headers?.get?.('content-length') ?? 0)
-    if (length > MAX_RESPONSE_BYTES) return failure('BM_IMPORT_MALFORMED_RESPONSE', 'Sanity response exceeded the administrative size limit')
+    if (length > MAX_RESPONSE_BYTES) {
+      return operation === 'mutate'
+        ? unverifiedMutation('Sanity may have applied the mutation, but its response exceeded the administrative size limit; read back the draft and investigate before taking further action')
+        : failure('BM_IMPORT_MALFORMED_RESPONSE', 'Sanity response exceeded the administrative size limit')
+    }
     const text = await response.text()
-    if (text.length > MAX_RESPONSE_BYTES) return failure('BM_IMPORT_MALFORMED_RESPONSE', 'Sanity response exceeded the administrative size limit')
+    if (text.length > MAX_RESPONSE_BYTES) {
+      return operation === 'mutate'
+        ? unverifiedMutation('Sanity may have applied the mutation, but its response exceeded the administrative size limit; read back the draft and investigate before taking further action')
+        : failure('BM_IMPORT_MALFORMED_RESPONSE', 'Sanity response exceeded the administrative size limit')
+    }
     let parsed
-    try { parsed = JSON.parse(text) } catch { return failure('BM_IMPORT_MALFORMED_RESPONSE', 'Sanity returned invalid JSON') }
+    try { parsed = JSON.parse(text) } catch {
+      return operation === 'mutate'
+        ? unverifiedMutation('Sanity may have applied the mutation, but returned invalid JSON; read back the draft and investigate before taking further action')
+        : failure('BM_IMPORT_MALFORMED_RESPONSE', 'Sanity returned invalid JSON')
+    }
     return { status: 'complete', body: parsed }
   } catch (error) {
+    if (operation === 'mutate') {
+      return unverifiedMutation('Sanity may have applied the mutation, but its response could not be verified; read back the draft and investigate before taking further action')
+    }
     if (error?.name === 'TimeoutError' || error?.name === 'AbortError') return failure('BM_IMPORT_LOOKUP_TIMEOUT', 'Sanity administrative request timed out')
     return failure('BM_IMPORT_APPLY_TRANSPORT_FAILED', 'Sanity administrative request could not be completed')
   }
@@ -171,15 +191,19 @@ export async function createSanityDraftIfNotExists({ document, target, token, fe
   if (typeof fetchImpl !== 'function') throw new TypeError('A fetch implementation is required')
   const response = await request({ target, operation: 'mutate', method: 'POST', document, token, fetchImpl, timeoutMs })
   if (response.status !== 'complete') return response
+  const transactionId = response.body?.transactionId
   const results = response.body?.results
-  if (!Array.isArray(results) || results.some(item => !isRecord(item) || typeof item.id !== 'string' || typeof item.operation !== 'string')) {
-    return failure('BM_IMPORT_MALFORMED_RESPONSE', 'Sanity mutation response did not contain a valid results array')
+  if (typeof transactionId !== 'string' || !transactionId || !Array.isArray(results)) {
+    return unverifiedMutation('The mutation may have succeeded, but its response was unverifiable; read back the draft and investigate before taking further action')
   }
-  if (results.some(item => item.id !== document._id || !['create', 'update'].includes(item.operation))) {
-    return failure('BM_IMPORT_MALFORMED_RESPONSE', 'Sanity mutation response contained an unexpected document or operation')
+  if (results.length > 1 || results.some(item => !isRecord(item) || typeof item.id !== 'string' || typeof item.operation !== 'string')) {
+    return unverifiedMutation('The mutation may have succeeded, but its response was unverifiable; read back the draft and investigate before taking further action')
   }
   if (results.some(item => item.operation === 'update')) {
-    return failure('BM_IMPORT_CREATE_ONLY_VIOLATION', 'Sanity reported an update where createIfNotExists was required')
+    return unverifiedMutation('Sanity reported an update where createIfNotExists was required; read back the draft and investigate before taking further action', 'BM_IMPORT_CREATE_ONLY_VIOLATION')
+  }
+  if (results.some(item => item.id !== document._id || item.operation !== 'create')) {
+    return unverifiedMutation('The mutation may have succeeded, but its response was unverifiable; read back the draft and investigate before taking further action')
   }
   return { status: 'complete', created: results.some(item => item.id === document._id && item.operation === 'create') }
 }

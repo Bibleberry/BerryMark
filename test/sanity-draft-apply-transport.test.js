@@ -73,7 +73,7 @@ test('missing token and unsafe targets perform no fetch in every transport opera
   }
 })
 
-test('the only mutation request is one atomic createIfNotExists for the exact deterministic draft', async () => {
+test('the only mutation request asks for result IDs and creates the exact deterministic draft', async () => {
   const { calls, fetchImpl } = recorder([{ transactionId: 'synthetic-transaction', results: [{ id: draftId, operation: 'create' }] }])
   const result = await createSanityDraftIfNotExists({ document, target, token, fetchImpl })
   assert.deepEqual(result, { status: 'complete', created: true })
@@ -82,13 +82,14 @@ test('the only mutation request is one atomic createIfNotExists for the exact de
   const url = new URL(call.url)
   assert.equal(url.pathname, '/v2026-11-01/data/mutate/berrymark-development')
   assert.equal(call.options.method, 'POST')
+  assert.equal(url.searchParams.get('returnIds'), 'true')
   assert.deepEqual(JSON.parse(call.options.body), { mutations: [{ createIfNotExists: document }] })
   assert.equal(call.options.body.includes('patch'), false)
   assert.equal(call.options.body.includes('delete'), false)
   assert.equal(call.options.body.includes('publish'), false)
 })
 
-test('an empty createIfNotExists result supports verified race handling; a reported update fails closed', async () => {
+test('an empty createIfNotExists result supports readback-verified race handling; a reported update fails closed', async () => {
   const noCreate = await createSanityDraftIfNotExists({
     document, target, token, fetchImpl: async () => response({ transactionId: 'synthetic', results: [] })
   })
@@ -96,18 +97,30 @@ test('an empty createIfNotExists result supports verified race handling; a repor
   const update = await createSanityDraftIfNotExists({
     document, target, token, fetchImpl: async () => response({ transactionId: 'synthetic', results: [{ id: draftId, operation: 'update' }] })
   })
-  assert.equal(update.status, 'failed')
+  assert.equal(update.status, 'unverified')
   assert.equal(update.error.code, 'BM_IMPORT_CREATE_ONLY_VIOLATION')
 })
 
-test('mutation rejects non-draft IDs and unexpected response documents without another request', async () => {
+test('mutation rejects non-draft IDs and marks unexpected or unverifiable result IDs and operations unverified', async () => {
   for (const _id of ['berrymark-challenge-synthetic-test', 'drafts.berrymark-challenge-INVALID', `drafts.berrymark-challenge-${'a'.repeat(97)}`]) {
     await assert.rejects(() => createSanityDraftIfNotExists({ document: { ...document, _id }, target, token }))
   }
   const result = await createSanityDraftIfNotExists({
     document, target, token, fetchImpl: async () => response({ results: [{ id: 'another-id', operation: 'create' }] })
   })
-  assert.equal(result.error.code, 'BM_IMPORT_MALFORMED_RESPONSE')
+  assert.equal(result.status, 'unverified')
+  assert.equal(result.error.code, 'BM_IMPORT_MUTATION_UNVERIFIED')
+  for (const body of [
+    { transactionId: 'synthetic', results: [{ documentId: draftId, operation: 'create' }] },
+    { transactionId: 'synthetic', results: [{ id: draftId, operation: 'delete' }] },
+    { transactionId: 'synthetic', results: [{ id: draftId, operation: 'create' }, { id: draftId, operation: 'create' }] },
+    { results: [{ id: draftId, operation: 'create' }] },
+    'not-json'
+  ]) {
+    const unverifiable = await createSanityDraftIfNotExists({ document, target, token, fetchImpl: async () => response(body) })
+    assert.equal(unverifiable.status, 'unverified')
+    assert.equal(unverifiable.error.code, 'BM_IMPORT_MUTATION_UNVERIFIED')
+  }
 })
 
 test('readback accepts exactly the requested raw draft and rejects absence or ambiguous identities', async () => {
@@ -138,8 +151,7 @@ test('HTTP, timeout, malformed JSON, and oversized responses remain safe structu
   for (const [responseValue, code] of [
     [response({}, 401), 'BM_IMPORT_AUTH_FAILED'],
     [response({}, 403), 'BM_IMPORT_PERMISSION_DENIED'],
-    [response({}, 409), 'BM_IMPORT_ID_CONFLICT'],
-    [response('{not-json'), 'BM_IMPORT_MALFORMED_RESPONSE']
+    [response({}, 409), 'BM_IMPORT_ID_CONFLICT']
   ]) {
     const result = await createSanityDraftIfNotExists({ document, target, token, fetchImpl: async () => responseValue })
     assert.equal(result.status, 'failed')
@@ -147,15 +159,22 @@ test('HTTP, timeout, malformed JSON, and oversized responses remain safe structu
     assert.equal(JSON.stringify(result).includes(token), false)
     assert.equal(JSON.stringify(result).includes('Authorization'), false)
   }
+  const malformed = await createSanityDraftIfNotExists({
+    document, target, token, fetchImpl: async () => response('{not-json')
+  })
+  assert.equal(malformed.status, 'unverified')
+  assert.equal(malformed.error.code, 'BM_IMPORT_MUTATION_UNVERIFIED')
   const oversized = await createSanityDraftIfNotExists({
     document, target, token,
     fetchImpl: async () => ({ status: 200, headers: { get: () => '250001' }, text: async () => { throw new Error('must not read') } })
   })
-  assert.equal(oversized.error.code, 'BM_IMPORT_MALFORMED_RESPONSE')
+  assert.equal(oversized.status, 'unverified')
+  assert.equal(oversized.error.code, 'BM_IMPORT_MUTATION_UNVERIFIED')
   const timeout = await createSanityDraftIfNotExists({
     document, target, token,
     fetchImpl: async () => { throw Object.assign(new Error(`Bearer ${token}`), { name: 'TimeoutError' }) }
   })
-  assert.equal(timeout.error.code, 'BM_IMPORT_LOOKUP_TIMEOUT')
+  assert.equal(timeout.status, 'unverified')
+  assert.equal(timeout.error.code, 'BM_IMPORT_MUTATION_UNVERIFIED')
   assert.equal(JSON.stringify(timeout).includes(token), false)
 })
