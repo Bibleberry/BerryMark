@@ -18,9 +18,11 @@ npm run plan
 npm run plan:artifact
 # Administrative read-only online dry run; requires a separately configured server token
 npm run plan:online
+# Administrative create-only draft dry run; apply requires separate explicit setup
+npm run apply:draft
 ```
 
-The validator uses the exactly pinned `yaml` dependency for safe YAML 1.2 parsing. Its `check` success verifies **experimental structure, field syntax, and supported metadata** only. The separate compiler uses the exactly pinned `marked` dependency to convert supported rich text into Sanity Portable Text without changing the parser API or validator commands. Compilation is deterministic and side-effect free; unresolved references, publishing values, rights evidence, approval, and editorial TODO/REVIEW REQUIRED annotations remain visible in the review report. A successful partial candidate is not schema-complete, import-ready, or publication-ready. The offline planner validates complete artifacts and produces zero-write dry-run reports; **no import apply or publish command exists.**
+The validator uses the exactly pinned `yaml` dependency for safe YAML 1.2 parsing. Its `check` success verifies **experimental structure, field syntax, and supported metadata** only. The separate compiler uses the exactly pinned `marked` dependency to convert supported rich text into Sanity Portable Text without changing the parser API or validator commands. Compilation is deterministic and side-effect free; unresolved references, publishing values, rights evidence, approval, and editorial TODO/REVIEW REQUIRED annotations remain visible in the review report. A successful partial candidate is not schema-complete, import-ready, or publication-ready. The offline planner validates complete artifacts and produces zero-write dry-run reports. A separate experimental administrative CLI supports source-verified dry runs and explicitly configured create-only development-draft apply; it never updates, deletes, publishes, or targets production.
 
 ## Project references
 
@@ -34,6 +36,7 @@ The validator uses the exactly pinned `yaml` dependency for safe YAML 1.2 parsin
 - [Compiler contract](docs/compiler-contract-v0.1.md)
 - [Offline import planner and dry-run CLI](docs/offline-import-planner.md)
 - [Authenticated read-only online dry-run planner](docs/online-import-planner.md)
+- [Controlled create-only Sanity draft apply](docs/controlled-draft-apply.md)
 - [Kimi Engineering Assignment 01: Read-Only Validation](docs/assignments/kimi-01-validation.md)
 - [Kimi Engineering Assignment 02: Pure Sanity JSON Compiler](docs/assignments/kimi-02-compiler.md)
 - [Synthetic all-block compiler example](examples/compiler-all-blocks.berry.md)
