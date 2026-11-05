@@ -47,7 +47,7 @@ Immediately before any mutation, the apply transport uses the restricted credent
 2. Retrieve the exact canonical ID, deterministic draft ID, and every same-slug Challenge variant. For the deterministic draft, include the full importer-owned content and provenance needed for independent fingerprint verification.
 3. When applicable, check the authored positive sequence within the resolved published series.
 
-Failed, denied, incomplete, oversized, malformed, duplicate-ID, or timed-out lookups fail closed. Published canonical identities, foreign same-slug identities, manual drafts without matching BerryMark provenance, edited/malformed imported content, sequence collisions, and revision/approval conflicts produce no mutation.
+Failed, denied, incomplete, oversized, malformed, duplicate-ID, or timed-out lookups fail closed. Mutation requests and responses have a 250,000-byte administrative limit. Published canonical identities, foreign same-slug identities, manual drafts without matching BerryMark provenance, edited/malformed imported content, sequence collisions, and revision/approval conflicts produce no mutation.
 
 Only two successful apply outcomes exist:
 
