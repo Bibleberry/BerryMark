@@ -7,6 +7,8 @@ export const SANITY_AUTHORIZED_WRITE_DATASET_ENV = 'BERRYMARK_SANITY_AUTHORIZED_
 export const SANITY_WRITE_API_VERSION_ENV = 'BERRYMARK_SANITY_WRITE_API_VERSION'
 
 const MAX_RESPONSE_BYTES = 250_000
+const MAX_REQUEST_BYTES = 250_000
+const DRAFT_ID_PATTERN = /^drafts\.berrymark-challenge-([a-z0-9]+(?:-[a-z0-9]+)*)$/
 const SERIES_QUERY = `*[_type == "challengeSeries" && slug.current == $slug]{
   _id,_rev,_updatedAt,title,"slug":slug.current
 }`
@@ -25,6 +27,11 @@ const DRAFT_QUERY = `*[_type == "challenge" && _id == $draftId]{
 
 const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value)
 const failure = (code, message) => ({ status: 'failed', documents: [], error: { severity: 'error', code, message } })
+const validDraftId = value => {
+  if (typeof value !== 'string') return false
+  const match = DRAFT_ID_PATTERN.exec(value)
+  return Boolean(match && match[1].length <= 96)
+}
 
 export function resolveSanityDraftApplyConfig(env = process.env) {
   const token = env[SANITY_WRITE_TOKEN_ENV]
@@ -73,6 +80,9 @@ async function request({ target, operation, method, query, parameters = {}, docu
     for (const [key, value] of Object.entries(parameters)) url.searchParams.set(`$${key}`, JSON.stringify(value))
   } else {
     body = JSON.stringify({ mutations: [{ createIfNotExists: document }] })
+    if (Buffer.byteLength(body, 'utf8') > MAX_REQUEST_BYTES) {
+      return failure('BM_IMPORT_REQUEST_TOO_LARGE', 'The draft creation request exceeded the administrative size limit')
+    }
   }
 
   try {
@@ -154,7 +164,7 @@ export async function lookupSanityDraftApplyState({
 
 export async function createSanityDraftIfNotExists({ document, target, token, fetchImpl = globalThis.fetch, timeoutMs = 10_000 } = {}) {
   assertSanityDraftApplyTarget(target)
-  if (!isRecord(document) || typeof document._id !== 'string' || !document._id.startsWith('drafts.berrymark-challenge-')) {
+  if (!isRecord(document) || !validDraftId(document._id)) {
     throw new TypeError('Only a deterministic BerryMark Challenge draft can be created')
   }
   if (typeof token !== 'string' || !token.trim()) return failure('BM_IMPORT_AUTH_REQUIRED', 'Set the separate restricted Sanity write credential before apply')
@@ -176,7 +186,7 @@ export async function createSanityDraftIfNotExists({ document, target, token, fe
 
 export async function readSanityDraftAfterApply({ draftId, target, token, fetchImpl = globalThis.fetch, timeoutMs = 10_000 } = {}) {
   assertSanityDraftApplyTarget(target)
-  if (typeof draftId !== 'string' || !draftId.startsWith('drafts.berrymark-challenge-')) throw new TypeError('A deterministic BerryMark draft ID is required')
+  if (!validDraftId(draftId)) throw new TypeError('A deterministic BerryMark draft ID is required')
   if (typeof token !== 'string' || !token.trim()) return failure('BM_IMPORT_AUTH_REQUIRED', 'Set the separate restricted Sanity write credential before readback')
   const result = await query({ target, query: DRAFT_QUERY, parameters: { draftId }, token, fetchImpl, timeoutMs })
   if (result.status !== 'complete') return result

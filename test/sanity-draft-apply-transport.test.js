@@ -101,7 +101,9 @@ test('an empty createIfNotExists result supports verified race handling; a repor
 })
 
 test('mutation rejects non-draft IDs and unexpected response documents without another request', async () => {
-  await assert.rejects(() => createSanityDraftIfNotExists({ document: { ...document, _id: 'berrymark-challenge-synthetic-test' }, target, token }))
+  for (const _id of ['berrymark-challenge-synthetic-test', 'drafts.berrymark-challenge-INVALID', `drafts.berrymark-challenge-${'a'.repeat(97)}`]) {
+    await assert.rejects(() => createSanityDraftIfNotExists({ document: { ...document, _id }, target, token }))
+  }
   const result = await createSanityDraftIfNotExists({
     document, target, token, fetchImpl: async () => response({ results: [{ id: 'another-id', operation: 'create' }] })
   })
@@ -117,6 +119,19 @@ test('readback accepts exactly the requested raw draft and rejects absence or am
     assert.equal(readback.status, 'failed')
     assert.ok(['BM_IMPORT_READBACK_FAILED', 'BM_IMPORT_MALFORMED_RESPONSE'].includes(readback.error.code))
   }
+})
+
+test('oversized mutation requests fail before any network call', async () => {
+  let calls = 0
+  const result = await createSanityDraftIfNotExists({
+    document: { ...document, title: 'x'.repeat(250_000) },
+    target,
+    token,
+    fetchImpl: async () => { calls += 1 }
+  })
+  assert.equal(calls, 0)
+  assert.equal(result.status, 'failed')
+  assert.equal(result.error.code, 'BM_IMPORT_REQUEST_TOO_LARGE')
 })
 
 test('HTTP, timeout, malformed JSON, and oversized responses remain safe structured failures', async () => {
