@@ -138,7 +138,16 @@ export function buildBerryMarkDraftCreateDocument({ compilation, onlineReport, o
 }
 
 function verifyPublishingFields(document, expected) {
-  for (const field of ['series', 'sequence', 'releaseAt']) {
+  const expectedSeries = hasOwn(expected, 'series') && expected.series !== null ? expected.series : null
+  const documentSeries = hasOwn(document, 'series') && document.series !== null ? document.series : null
+
+  if (expectedSeries === null) {
+    if (documentSeries !== null) return false
+  } else {
+    if (documentSeries === null || !same(documentSeries, expectedSeries)) return false
+  }
+
+  for (const field of ['sequence', 'releaseAt']) {
     if (hasOwn(expected, field) !== hasOwn(document, field)) return false
     if (hasOwn(expected, field) && !same(document[field], expected[field])) return false
   }
