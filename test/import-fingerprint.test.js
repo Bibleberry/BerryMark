@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { compileBerryMark } from '../src/compiler.js'
+import { sha256, stableStringify } from '../src/keys.js'
 import {
   IMPORT_CONTENT_FINGERPRINT_VERSION,
   candidateSha256,
@@ -49,6 +50,8 @@ test('fingerprint version and projections are deterministic and normalize object
   assert.deepEqual(projectCandidateImportContent(reordered, schemaSnapshot), first)
   assert.equal(candidateSha256(allBlocks, schemaSnapshot), candidateSha256(allBlocks, schemaSnapshot))
   assert.equal(candidateSha256(reordered, schemaSnapshot), candidateSha256(allBlocks, schemaSnapshot))
+  assert.equal(candidateSha256(allBlocks, schemaSnapshot), sha256(`${IMPORT_CONTENT_FINGERPRINT_VERSION}\n${stableStringify(first)}`))
+  assert.equal(stableStringify({ z: -0, a: 1.0 }), '{"a":1,"z":0}')
 })
 
 test('all CB1–CB9 content, keys, and primary/nested Scripture are projected', () => {
@@ -118,11 +121,14 @@ test('reordering ordered content changes the digest', () => {
 test('source title and reader-facing body edits change the candidate fingerprint', () => {
   const baseline = compileBerryMark(allBlocksSource)
   const titleEdit = compileBerryMark(allBlocksSource.replace('BM-TEST Complete Compiler Fixture', 'BM-TEST Edited Compiler Fixture'))
+  const sourceTitleEdit = compileBerryMark(allBlocksSource.replace('BM-TEST Compiler Fixture', 'BM-TEST Changed Source Title'))
   const bodyEdit = compileBerryMark(allBlocksSource.replace('Unicode 🌿 中文', 'Unicode 🌿 中文 edited'))
   assert.equal(baseline.ok, true)
   assert.equal(titleEdit.ok, true)
+  assert.equal(sourceTitleEdit.ok, true)
   assert.equal(bodyEdit.ok, true)
   assert.notEqual(candidateSha256(baseline, schemaSnapshot), candidateSha256(titleEdit, schemaSnapshot))
+  assert.notEqual(candidateSha256(baseline, schemaSnapshot), candidateSha256(sourceTitleEdit, schemaSnapshot))
   assert.notEqual(candidateSha256(baseline, schemaSnapshot), candidateSha256(bodyEdit, schemaSnapshot))
 })
 
