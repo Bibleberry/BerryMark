@@ -73,8 +73,8 @@ test('missing token and unsafe targets perform no fetch in every transport opera
   }
 })
 
-test('the only mutation request asks for result IDs and creates the exact deterministic draft', async () => {
-  const { calls, fetchImpl } = recorder([{ transactionId: 'synthetic-transaction', results: [{ id: draftId, operation: 'create' }] }])
+test('the only mutation request asks for result IDs and accepts the documented Content Lake result shape', async () => {
+  const { calls, fetchImpl } = recorder([{ transactionId: 'synthetic-transaction', results: [{ documentId: draftId, operation: 'create' }] }])
   const result = await createSanityDraftIfNotExists({ document, target, token, fetchImpl })
   assert.deepEqual(result, { status: 'complete', created: true })
   assert.equal(calls.length, 1)
@@ -87,6 +87,14 @@ test('the only mutation request asks for result IDs and creates the exact determ
   assert.equal(call.options.body.includes('patch'), false)
   assert.equal(call.options.body.includes('delete'), false)
   assert.equal(call.options.body.includes('publish'), false)
+})
+
+test('mutation also accepts the result ID shape used by the official Sanity client wire fixtures', async () => {
+  const result = await createSanityDraftIfNotExists({
+    document, target, token,
+    fetchImpl: async () => response({ transactionId: 'synthetic', results: [{ id: draftId, operation: 'create' }] })
+  })
+  assert.deepEqual(result, { status: 'complete', created: true })
 })
 
 test('an empty createIfNotExists result supports readback-verified race handling; a reported update fails closed', async () => {
@@ -111,7 +119,9 @@ test('mutation rejects non-draft IDs and marks unexpected or unverifiable result
   assert.equal(result.status, 'unverified')
   assert.equal(result.error.code, 'BM_IMPORT_MUTATION_UNVERIFIED')
   for (const body of [
-    { transactionId: 'synthetic', results: [{ documentId: draftId, operation: 'create' }] },
+    { transactionId: 'synthetic', results: [{ id: draftId, documentId: draftId, operation: 'create' }] },
+    { transactionId: 'synthetic', results: [{ id: draftId, documentId: 'another-id', operation: 'create' }] },
+    { transactionId: 'synthetic', results: [{ id: null, documentId: draftId, operation: 'create' }] },
     { transactionId: 'synthetic', results: [{ id: draftId, operation: 'delete' }] },
     { transactionId: 'synthetic', results: [{ id: draftId, operation: 'create' }, { id: draftId, operation: 'create' }] },
     { results: [{ id: draftId, operation: 'create' }] },
@@ -159,6 +169,11 @@ test('HTTP, timeout, malformed JSON, and oversized responses remain safe structu
     assert.equal(JSON.stringify(result).includes(token), false)
     assert.equal(JSON.stringify(result).includes('Authorization'), false)
   }
+  const serverError = await createSanityDraftIfNotExists({
+    document, target, token, fetchImpl: async () => response({}, 500)
+  })
+  assert.equal(serverError.status, 'unverified')
+  assert.equal(serverError.error.code, 'BM_IMPORT_MUTATION_UNVERIFIED')
   const malformed = await createSanityDraftIfNotExists({
     document, target, token, fetchImpl: async () => response('{not-json')
   })

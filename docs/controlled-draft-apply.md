@@ -66,7 +66,11 @@ A resolved series becomes a weak reference to its actual published document ID. 
 - Distinct source, candidate, and last-imported-content digest semantics. On initial creation, the 04E-B candidate and expected imported-content digests are equal; readback independently recomputes the latter.
 - `lastImportAction: "create"`, the supplied non-sensitive operator identity, and the administrative apply timestamp. `previousSourceSha256` is absent.
 
-After mutation, an exact raw draft readback must match the importer-owned projection, recomputed content digest, publishing metadata, and create provenance. Server metadata is excluded. A failed or mismatched readback is reported as unverified; the importer does not attempt a patch or delete to conceal it.
+The Content Lake mutation reference documents result IDs as `documentId`; Sanity's official `@sanity/client` request fixtures use the wire field `id`. The transport requests `returnIds=true` and accepts exactly one of these fields per result, only when it identifies the requested draft and the operation is `create`. Empty results are treated as a possible `createIfNotExists` no-op and still require readback verification.
+
+If a mutation may have succeeded but its response is ambiguous (including transport failure, malformed response, or server error), the importer records the attempted write and performs one read-only raw readback. The report remains `mutation-unverified` regardless of whether a matching candidate is present; it does not claim that this run created or did not create the draft. If readback cannot establish the candidate's presence, `manual-investigation-required` is reported. The operator must investigate before taking further action. The importer never retries a write or attempts a patch or delete to conceal uncertainty.
+
+After an interpretable create/no-op response, an exact raw draft readback must match the importer-owned projection, recomputed content digest, publishing metadata, and create provenance. Server metadata is excluded. A failed or mismatched readback is reported as unverified.
 
 ## Safe audit output and exit statuses
 

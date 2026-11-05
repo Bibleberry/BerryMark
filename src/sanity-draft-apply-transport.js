@@ -104,6 +104,11 @@ async function request({ target, operation, method, query, parameters = {}, docu
     if (response.status === 401) return failure('BM_IMPORT_AUTH_FAILED', 'Sanity rejected the restricted apply credential')
     if (response.status === 403) return failure('BM_IMPORT_PERMISSION_DENIED', 'Sanity credential lacks permission for the administrative apply operation')
     if (response.status === 409) return failure('BM_IMPORT_ID_CONFLICT', 'Sanity reported a create-only identity conflict')
+    if (response.status >= 500) {
+      return operation === 'mutate'
+        ? unverifiedMutation(`Sanity may have applied the mutation before returning HTTP ${response.status}; read back the draft and investigate before taking further action`)
+        : failure('BM_IMPORT_APPLY_FAILED', `Sanity administrative request returned HTTP ${response.status}`)
+    }
     if (response.status < 200 || response.status >= 300) return failure('BM_IMPORT_APPLY_FAILED', `Sanity administrative request returned HTTP ${response.status}`)
     const length = Number(response.headers?.get?.('content-length') ?? 0)
     if (length > MAX_RESPONSE_BYTES) {
@@ -196,16 +201,23 @@ export async function createSanityDraftIfNotExists({ document, target, token, fe
   if (typeof transactionId !== 'string' || !transactionId || !Array.isArray(results)) {
     return unverifiedMutation('The mutation may have succeeded, but its response was unverifiable; read back the draft and investigate before taking further action')
   }
-  if (results.length > 1 || results.some(item => !isRecord(item) || typeof item.id !== 'string' || typeof item.operation !== 'string')) {
+  const resultId = item => {
+    const hasId = Object.hasOwn(item, 'id')
+    const hasDocumentId = Object.hasOwn(item, 'documentId')
+    if (hasId === hasDocumentId) return null
+    const value = hasId ? item.id : item.documentId
+    return typeof value === 'string' ? value : null
+  }
+  if (results.length > 1 || results.some(item => !isRecord(item) || resultId(item) === null || typeof item.operation !== 'string')) {
     return unverifiedMutation('The mutation may have succeeded, but its response was unverifiable; read back the draft and investigate before taking further action')
   }
   if (results.some(item => item.operation === 'update')) {
     return unverifiedMutation('Sanity reported an update where createIfNotExists was required; read back the draft and investigate before taking further action', 'BM_IMPORT_CREATE_ONLY_VIOLATION')
   }
-  if (results.some(item => item.id !== document._id || item.operation !== 'create')) {
+  if (results.some(item => resultId(item) !== document._id || item.operation !== 'create')) {
     return unverifiedMutation('The mutation may have succeeded, but its response was unverifiable; read back the draft and investigate before taking further action')
   }
-  return { status: 'complete', created: results.some(item => item.id === document._id && item.operation === 'create') }
+  return { status: 'complete', created: results.some(item => resultId(item) === document._id && item.operation === 'create') }
 }
 
 export async function readSanityDraftAfterApply({ draftId, target, token, fetchImpl = globalThis.fetch, timeoutMs = 10_000 } = {}) {

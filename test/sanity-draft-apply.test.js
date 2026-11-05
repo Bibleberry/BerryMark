@@ -272,6 +272,21 @@ test('unverifiable mutation response triggers one readback but remains an unveri
   assert.equal(report.appliedAction, undefined)
   assert.equal(report.draftId, undefined)
   assert.equal(report.errors.at(-1).code, 'BM_IMPORT_MUTATION_UNVERIFIED')
+
+  const { report: unreadable, fake: unreadableFake } = await run(rejoiceSource, {
+    mutation: () => ({
+      status: 'unverified',
+      error: { severity: 'error', code: 'BM_IMPORT_MUTATION_UNVERIFIED', message: 'Synthetic malformed mutation result' }
+    }),
+    readback: () => failed('BM_IMPORT_READBACK_FAILED')
+  })
+  assert.equal(unreadableFake.calls.create, 1)
+  assert.equal(unreadableFake.calls.read, 1)
+  assert.equal(unreadable.writesAttempted, 1)
+  assert.equal(unreadable.apply.status, 'mutation-unverified')
+  assert.equal(unreadable.apply.readbackStatus, 'manual-investigation-required')
+  assert.equal(unreadable.appliedAction, undefined)
+  assert.equal(unreadable.draftId, undefined)
 })
 
 test('mutation failure, readback failure, and readback mismatch are reported truthfully without retry or repair writes', async () => {
