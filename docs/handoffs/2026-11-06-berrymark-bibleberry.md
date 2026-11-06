@@ -58,18 +58,30 @@ See [decision and deferred-work record](../product/2026-11-06-future-work-decisi
 - Strengthen automated regression/readback/visual/accessible tests and cross-repo compatibility enforcement, especially for new CB types.
 - BigMac `examples/milestone-2-*.berry.md`, `examples/milestone-3-all-blocks.berry.md`, and `examples/milestone-3-all-blocks.compiled.json` were untracked at stopping point; avoid `git clean`/overwrites and indiscriminate reimports.
 
-## Tomorrow's prioritized engineering sequence
+## November 6 final acceptance and development pivot
 
-**0. Read this handoff plus acceptance and decisions; verify docs PR state and merge as Aaron directs.** Do not assume documentation is on `main` until merged.
+**Update after morning BigMac verification (supersedes the old assumption that next session must begin with Sanity draft-reader integration):**
 
-**1. Safely inspect repository status** on BigMac (`git status -sb`, relevant branches). Do not discard local fixtures. Avoid running live create-only apply against an existing identity: an identical source will be a no-op, modified source may conflict, and these are expected safeguards.
+- **PASS:** `node --test` returned **185 tests passed, zero failures, zero skipped**.
+- **PASS:** Recompiling the Milestone 3 nine-block fixture reproduced its previous JSON **byte-for-byte**.
+- **PASS:** Repeating the same-source authorized `--apply` against the development draft returned `proposedAction: none`, `writesAttempted: 0`, `apply.status: verified-noop`, `readbackVerified: true`, and no errors.
+- **PASS:** `examples/rejoice-always/rejoice-always.berry.md` compiled to **7 screens / 16 Content Blocks**; Aaron reported matching compiler counts and confirmed the resulting multi-screen local preview separated the content into distinct, visually satisfactory screens.
+- **Not yet tested:** A seven-screen manuscript imported into Sanity with independent multi-screen readback. Nor has the actual previously imported development draft been fetched through the Bibleberry CMS reader. Separate, exhaustive Back/progress-indicator/a11y checks were not recorded. Keep these as future integration acceptance checks rather than completed work.
+- **Current-scope verdict:** BerryMark v0.1 is **accepted for the behavior actually exercised**. Aaron is satisfied with its architecture and Sanity relationship, and explicitly chose to **defer further BerryMark/Sanity tests** in favor of broader Bibleberry development. Confidence in likely multi-screen Sanity compatibility is an inference from independently successful compiler, renderer, and one-screen live storage tests, **not** an observed seven-screen Sanity import.
+- **Architecture:** BerryMark (source language and compilation), Sanity (editorial storage), and Bibleberry (reader and product features) have separable responsibilities, with shared contracts requiring careful coordination for any changes.
 
-**2. Decide and scope the next milestone:** development-dataset **read-only draft rendering in the Bibleberry CMS reader path**, with explicit authorization strategy and no browser-embedded write tokens, plus clear separation from published production catalog. Review current `src/cms/sanity/readPublishedChallenges.ts`, `mapChallenge.ts`, `SanityChallengeLab.tsx` and `BerryMarkLocalPreview.tsx` before proposing code; confirm which endpoints are publicly readable. Write a narrowly scoped Kimi assignment/issue/PR after Aaron approves design.
+**PR status:** BerryMark documentation PR [#17](https://github.com/ContraPhilosophy/BerryMark/pull/17) and final regression/no-op PR [#18](https://github.com/ContraPhilosophy/BerryMark/pull/18) are **merged**. This latest acceptance/handoff update has a separate PR until Aaron merges it.
 
-**3. Run practical acceptance:** load the imported Milestone 3 draft (or securely obtained read-only representation) through appropriate CMS adapter and UI; check every block, both CB8 Scriptures, link, optional behaviors, stable IDs, prayer paragraph spacing, responsive and keyboard use; document evidence separately from local compiled JSON preview.
+## Next-chat working priorities (revised)
 
-**4. Schedule follow-on design**, not necessarily in the same coding PR: WEBP source/versioned text and source-based rights authorization; automated end-to-end fidelity harness; Content Block extension procedure approval and eventual CB10 pilot; ChatGPT Project for faithful Alexis-manuscript conversion.
+**1. Shift to Bibleberry product development.** Ask Aaron what application feature or planning priority he wants to tackle; do not reflexively reopen BerryMark/Sanity testing. Relevant directions include the broader seven-Challenge-type experience, navigation and reader journey, reader progress/completion, and interactions. Do not invent new decisions or assume all these are prioritized equally.
 
-**5. Documentation:** keep BerryMark and Bibleberry roadmap/status accurate; write real results and decisions into GitHub via reviewed PRs. Aaron merges, ChatGPT does not silently merge.
+**2. Work from the existing repositories and approved product decisions.** Use the linked documentation on `main` as current state after merge. Review impacted code before assignments, and coordinate Kimi/Gemini work through scoped GitHub issues/PRs. Keep one practical step at a time when Aaron is at BigMac.
 
-The separate **existing chat** remains available for further planning later; new chat should focus on tomorrow's engineering execution, using this document as shared state. No promises of background or automatic work.
+**3. Return to Sanity integration when there is a concrete need.** Eventually run (a) a safe development-dataset **multi-screen** importer/readback acceptance and (b) read-only rendering of the previously imported draft through the Bibleberry CMS adapter and reader, without browser-embedded write credentials or exposing private development content. Neither requires delaying unrelated app development.
+
+**4. Continue future design separately:** WEBP public-domain edition source pinning and text/rights workflow, automated fidelity/visual tests, Content Block expansion checklist and eventual first CB10 pilot, and a faithful Alexis-manuscript-to-BerryMark ChatGPT Project. These remain scheduled planning work, not automatically authorized implementation.
+
+**5. Preserve GitHub discipline:** Review PRs and merge only under Aaron's direction; keep local untracked BigMac files safe. No additional BerryMark terminal testing is required merely to start the next Bibleberry workstream.
+
+The new chat should treat this as a completed BerryMark acceptance checkpoint and a transition to the wider Bibleberry build. The existing chat may continue architectural/product planning independently.
