@@ -11,6 +11,7 @@ import { buildBerryMarkDraftCreateDocument, runBerryMarkDraftApply } from '../sr
 
 const schemaSnapshot = JSON.parse(readFileSync(new URL('./bibleberry-schema-v0.1.snapshot.json', import.meta.url), 'utf8'))
 const rejoiceSource = readFileSync(new URL('../examples/rejoice-always/rejoice-always.berry.md', import.meta.url), 'utf8')
+const helloWorldSource = readFileSync(new URL('../examples/hello-world.berry.md', import.meta.url), 'utf8')
 const allBlocksSource = readFileSync(new URL('../examples/compiler-all-blocks.berry.md', import.meta.url), 'utf8')
 const eligibleAllBlocksSource = allBlocksSource
   .replace('Text Status: provided\nPassage: Rights-safe synthetic passage written only for this fixture.\nUsage Rights Confirmed: true\nPractice Status: configured', 'Text Status: referenceOnly\nUsage Rights Confirmed: false\nPractice Status: notConfigured')
@@ -29,15 +30,43 @@ function eligibleSource(source) {
     .replace('sequence: null', 'sequence: 2')
 }
 
-function existingDraft(source = rejoiceSource, sourceFilename = 'existing.berry.md') {
+function existingDraft(source = rejoiceSource, sourceFilename = 'existing.berry.md', { seriesDocuments = [] } = {}) {
   const compilation = compileBerryMark(source, { filename: sourceFilename })
   const offline = planBerryMarkImport({ compilation, source, schemaSnapshot })
   const challenges = complete()
+  const seriesSlug = compilation.reviewReport.pendingLookups.find(item => item.type === 'challengeSeriesSlug')?.slug ?? null
+  const series = { status: seriesSlug ? 'complete' : 'not-required', documents: seriesDocuments }
   const online = resolveBerryMarkOnlineImport({
     offlineReport: offline,
-    lookupResults: { series: { status: 'not-required', documents: [] }, challenges, sequence: { status: 'not-required', documents: [] }, candidateSequence: null }
+    lookupResults: {
+      series,
+      challenges,
+      sequence: { status: 'not-required', documents: [] },
+      candidateSequence: compilation.sanityCandidate.sequence ?? null
+    }
   })
   return buildBerryMarkDraftCreateDocument({ compilation, onlineReport: online, operator, importedAt, schemaSnapshot })
+}
+
+function sanityDraftReadbackProjection(document) {
+  return {
+    _id: document._id,
+    _rev: 'sanity-readback-rev',
+    _updatedAt: importedAt,
+    _type: document._type,
+    title: document.title,
+    slug: document.slug,
+    challengeType: document.challengeType,
+    series: document.series ?? null,
+    sequence: document.sequence ?? null,
+    releaseAt: document.releaseAt ?? null,
+    summary: document.summary ?? null,
+    primaryScripture: document.primaryScripture,
+    screens: document.screens,
+    companionLinks: document.companionLinks,
+    editorialReview: document.editorialReview,
+    importProvenance: document.importProvenance
+  }
 }
 
 function fakeTransport({ documents = [], series, sequence, mutation, readback } = {}) {
@@ -305,6 +334,159 @@ test('mutation failure, readback failure, and readback mismatch are reported tru
     assert.equal(report.apply.updateAttempted, false)
     assert.equal(report.apply.deleteAttempted, false)
   }
+})
+
+test('Test A: Missing optional series represented as null passes readback verification', async () => {
+  const fake = fakeTransport({
+    series: complete([]),
+    readback: createdDoc => ({
+      status: 'complete',
+      document: sanityDraftReadbackProjection(createdDoc)
+    })
+  })
+  const { report } = await run(helloWorldSource, {
+    sourceFilename: 'examples/hello-world.berry.md',
+    fake
+  })
+  assert.equal(report.apply.status, 'created-and-verified', JSON.stringify(report.errors))
+  assert.equal(report.apply.readbackVerified, true)
+  assert.equal(report.appliedAction, 'create')
+  assert.equal(report.writesAttempted, 1)
+  assert.equal(fake.calls.create, 1)
+  assert.equal(fake.calls.read, 1)
+  assert.equal(fake.createdDocument.series, undefined)
+})
+
+test('Test B: Same-source repeat produces verified-noop with zero writes when draft has series: null', async () => {
+  const draft = sanityDraftReadbackProjection(existingDraft(helloWorldSource, 'examples/hello-world.berry.md', { seriesDocuments: [] }))
+  assert.equal(draft.series, null)
+  assert.equal(draft.sequence, 1)
+  assert.equal(draft.releaseAt, '2026-01-01T00:00:00Z')
+
+  const { report, fake } = await run(helloWorldSource, {
+    sourceFilename: 'examples/hello-world.berry.md',
+    documents: [draft],
+    series: complete([])
+  })
+
+  assert.equal(report.proposedAction, 'none')
+  assert.equal(report.appliedAction, 'none')
+  assert.equal(report.apply.status, 'verified-noop')
+  assert.equal(report.apply.readbackVerified, true)
+  assert.equal(report.writesAttempted, 0)
+  assert.equal(fake.calls.create + fake.calls.read, 0)
+})
+
+test('Test C: Genuine series mismatch fails verification when unexpected series reference is returned', async () => {
+  const unexpectedSeriesRef = { _type: 'reference', _ref: 'unexpected-published-series-id', _weak: true }
+  const fake = fakeTransport({
+    series: complete([]),
+    readback: createdDoc => ({
+      status: 'complete',
+      document: {
+        ...sanityDraftReadbackProjection(createdDoc),
+        series: unexpectedSeriesRef
+      }
+    })
+  })
+  const { report } = await run(helloWorldSource, {
+    sourceFilename: 'examples/hello-world.berry.md',
+    fake
+  })
+  assert.equal(report.apply.status, 'readback-mismatch')
+  assert.equal(report.apply.readbackVerified, false)
+  assert.equal(report.writesAttempted, 1)
+  assert.ok(report.errors.some(err => err.code === 'BM_IMPORT_READBACK_MISMATCH'))
+})
+
+test('Test D: Publishing metadata mismatch fails verification when sequence or releaseAt differs', async () => {
+  // Subtest 1: sequence mismatch
+  const seqFake = fakeTransport({
+    series: complete([]),
+    readback: createdDoc => ({
+      status: 'complete',
+      document: {
+        ...sanityDraftReadbackProjection(createdDoc),
+        sequence: 99
+      }
+    })
+  })
+  const seqResult = await run(helloWorldSource, {
+    sourceFilename: 'examples/hello-world.berry.md',
+    fake: seqFake
+  })
+  assert.equal(seqResult.report.apply.status, 'readback-mismatch')
+  assert.ok(seqResult.report.errors.some(err => err.code === 'BM_IMPORT_READBACK_MISMATCH'))
+
+  // Subtest 2: releaseAt mismatch
+  const relFake = fakeTransport({
+    series: complete([]),
+    readback: createdDoc => ({
+      status: 'complete',
+      document: {
+        ...sanityDraftReadbackProjection(createdDoc),
+        releaseAt: '2099-12-31T23:59:59Z'
+      }
+    })
+  })
+  const relResult = await run(helloWorldSource, {
+    sourceFilename: 'examples/hello-world.berry.md',
+    fake: relFake
+  })
+  assert.equal(relResult.report.apply.status, 'readback-mismatch')
+  assert.ok(relResult.report.errors.some(err => err.code === 'BM_IMPORT_READBACK_MISMATCH'))
+})
+
+test('Test E: Content or provenance mismatch fails verification in simulated readback', async () => {
+  // Subtest 1: Content alteration in readback
+  const contentFake = fakeTransport({
+    series: complete([]),
+    readback: createdDoc => ({
+      status: 'complete',
+      document: {
+        ...sanityDraftReadbackProjection(createdDoc),
+        title: 'Tampered Title In Readback'
+      }
+    })
+  })
+  const contentResult = await run(helloWorldSource, {
+    sourceFilename: 'examples/hello-world.berry.md',
+    fake: contentFake
+  })
+  assert.equal(contentResult.report.apply.status, 'readback-mismatch')
+  assert.ok(contentResult.report.errors.some(err => err.code === 'BM_IMPORT_READBACK_MISMATCH'))
+
+  // Subtest 2: Provenance lineage alteration in readback
+  const provFake = fakeTransport({
+    series: complete([]),
+    readback: createdDoc => {
+      const doc = sanityDraftReadbackProjection(createdDoc)
+      doc.importProvenance = { ...clone(doc.importProvenance), sourceSha256: 'f'.repeat(64) }
+      return { status: 'complete', document: doc }
+    }
+  })
+  const provResult = await run(helloWorldSource, {
+    sourceFilename: 'examples/hello-world.berry.md',
+    fake: provFake
+  })
+  assert.equal(provResult.report.apply.status, 'readback-mismatch')
+  assert.ok(provResult.report.errors.some(err => err.code === 'BM_IMPORT_READBACK_MISMATCH'))
+
+  // Subtest 3: Content digest mismatch in provenance
+  const digestFake = fakeTransport({
+    series: complete([]),
+    readback: createdDoc => {
+      const doc = sanityDraftReadbackProjection(createdDoc)
+      doc.importProvenance = { ...clone(doc.importProvenance), lastImportedContentSha256: '0'.repeat(64) }
+      return { status: 'complete', document: doc }
+    }
+  })
+  const digestResult = await run(helloWorldSource, {
+    sourceFilename: 'examples/hello-world.berry.md',
+    fake: digestFake
+  })
+  assert.equal(digestResult.report.apply.status, 'readback-mismatch')
+  assert.ok(digestResult.report.errors.some(err => err.code === 'BM_IMPORT_READBACK_MISMATCH'))
 })
 
 const cliPath = fileURLToPath(new URL('../src/sanity-draft-apply-cli.js', import.meta.url))
