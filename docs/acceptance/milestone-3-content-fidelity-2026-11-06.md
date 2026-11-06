@@ -123,3 +123,28 @@ Observed:
 `proposedAction: none` is consistent with a verified no-op; it is **not** a failure. Importer did not write to Sanity, and existing draft content passed verification. No token is included in the evidence.
 
 **Verdict:** BerryMark v0.1's **currently implemented, scoped** syntax, nine-block compilation, deterministic output, and controlled create-only development-draft importer passed this acceptance sweep, in addition to the November 5 storage and local-visual tests described above. Remaining integration work (direct live dev draft -> Bibleberry reader, actual WEBP supplied text/source authorization, broader accessibility and automated fidelity coverage) is explicitly outside this acceptance claim.
+
+
+## November 6 follow-up: multi-screen compiler and local reader preview
+
+**Fixture:** The existing authored `examples/rejoice-always/rejoice-always.berry.md`, not the one-screen Milestone 3 synthetic fixture.
+
+**Compiler verification: PASS.** Aaron executed:
+
+```bash
+cd /home/aaron/BerryMark
+node src/compiler-cli.js examples/rejoice-always/rejoice-always.berry.md > /tmp/berrymark-multiscreen.json
+jq '{ok, screens: (.sanityCandidate.screens | length), blocks: ([.sanityCandidate.screens[].blocks[]] | length)}' /tmp/berrymark-multiscreen.json
+```
+
+The reported result matched the expected **`ok: true`, `screens: 7`, `blocks: 16`**. The 185-test suite also includes existing seven-screen/sixteen-block fixture coverage.
+
+**Browser presentation: PASS (manual visual check).** Aaron loaded `/tmp/berrymark-multiscreen.json` into **Bibleberry -> More -> Developer Studio -> Interactive Challenge Lab -> BerryMark Local Preview** and confirmed that the manuscript was separated into distinct screens that looked correct. This confirms multi-screen local preview presentation in practice. The conversation did **not** separately record systematic proof of every Back-button transition, individual progress indicator value, or exhaustive accessibility coverage; those must not be marked as independently verified.
+
+**Live Sanity multi-screen write/readback: DEFERRED by decision.** This test was **not performed**. The planned evidence consists of known successful Sanity create/readback for a one-screen nine-block fixture, compiled source for a seven-screen fixture, and working multi-screen local reader presentation. This gives reasonable confidence in the architecture, but does **not** establish that multi-screen content has passed an actual Sanity import and independent live readback.
+
+**Acceptance decision:** BerryMark v0.1's currently implemented parsing, validation, deterministic compilation, and controlled one-screen development-draft import are accepted for their proven scope. The multi-screen **compiler + reader presentation** is also accepted. A **multi-screen live Sanity import/readback** and a **direct Sanity-development-draft-to-Bibleberry reader** remain targeted integration tests when that workflow is resumed; they are **not prerequisites for moving to broader Bibleberry application development now**.
+
+**Development focus:** Aaron considers BerryMark and Sanity sufficiently stable to build on and is moving focus to Bibleberry's wider product experience, navigation, Challenge interactions, reader progress, and other app functionality. BerryMark/Sanity are maintained as largely separable subsystems with explicit contracts at their integration boundaries; future issues can be resolved with focused cross-repository changes rather than general repeated acceptance testing.
+
+**Documentation:** Earlier planning/handoff PR #17 and the November 6 185-test/no-op acceptance PR #18 are both merged into `main`. This update records the newly completed multi-screen check and the resulting scope decision.
