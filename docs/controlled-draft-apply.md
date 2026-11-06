@@ -1,6 +1,6 @@
 # Controlled BerryMark → Sanity Draft Creation
 
-**Status:** Experimental administrative implementation; review and live acceptance are separate  
+**Status:** Experimental administrative implementation; first development-dataset live creation and zero-write repeat verified on November 5, 2026 (see acceptance record below)  
 **Scope:** Source-verified dry run, authenticated development-dataset preflight, create-only draft mutation, and readback verification  
 **Not included:** Draft updates, publication, deletion, automatic synchronization, browser UI, reader changes, or production writes
 
@@ -84,4 +84,20 @@ Output includes safe target identity, source-verification state, deterministic i
 
 ## Verification boundary
 
-Tests use injected fake transports and synthetic HTTP responses. They cover dry-run zero I/O, credential/target failures, all preflight conflicts, all-block payload fidelity, same-source no-op, edited/approved drafts, create races, mutation/readback failures, safe output, and the single fixed mutation body. No real credential, Sanity request, dataset write, live acceptance, publication, merge, or deployment is part of this implementation assignment.
+Automated tests use injected fake transports and synthetic HTTP responses. They cover dry-run zero I/O, credential/target failures, all preflight conflicts, all-block payload fidelity, same-source no-op, edited/approved drafts, create races, mutation/readback failures, safe output, and the single fixed mutation body. These tests do not themselves exercise a real Sanity dataset. The first separately authorized live development-dataset acceptance exercise is recorded below. It did not include publication, production writes, or deployment.
+
+## Live development-dataset acceptance record: November 5, 2026
+
+**Environment:** Sanity project `80016lrq`; isolated `berrymark-development` dataset; API version `2026-11-01`. The existing `production` dataset was not the write target. Testing used a temporary Contributor credential loaded in a local terminal session, with no token included in repository files or test output. The operator subsequently unset `BERRYMARK_SANITY_WRITE_TOKEN` locally; token revocation in Sanity Manage is a separate administrative action.
+
+**Source:** The development-only, Scripture-reference-only `examples/hello-world.berry.md` fixture, with source SHA-256 `f061be7eb0330ba05de125807699d56d67146f2bd4874223abd20d3fa988c4b8`. Target draft: `drafts.berrymark-challenge-berry-hello-world`. The fixture's `bm-test` series slug had no published matching `challengeSeries`; the importer did not fabricate a reference. Editorial approval remained pending.
+
+| Stage | Observed result | Interpretation |
+| --- | --- | --- |
+| Offline source-verified dry run | `structuralValid: true`, `importEligible: true`, `writesAttempted: 0` | Source and structural preflight passed without network I/O. |
+| First authenticated apply on `bc1862b` | `writesAttempted: 1`; `BM_IMPORT_READBACK_MISMATCH` | A create mutation was attempted, but the CLI did **not** report successful verification. |
+| Independent read-only raw draft inspection | Exact draft ID present; stored `lastImportedContentSha256` equaled independently recomputed SHA-256 `cfc149dc31500b78645d87a33d64091b131556421319a094ae0867ab5d91e943` | Confirms that the unpublished development draft exists and importer-owned content fingerprint matches. The readback exposed `series: null` for the absent optional reference. |
+| Corrective engineering | [Issue #12](https://github.com/ContraPhilosophy/BerryMark/issues/12), [PR #13](https://github.com/ContraPhilosophy/BerryMark/pull/13), merged as `1a635584d8a954be15c3d876ee8bfa9aaab3bf9d`; 185 tests passed and CI succeeded | Verification now treats an omitted optional series reference and Sanity GROQ's projected `series: null` as equivalent, while retaining strict checks for actual references, publishing fields, content and provenance. |
+| Live same-source apply after PR #13 | `lookup.challenge.documentCount: 1`, `proposedAction: "none"`, `apply.status: "verified-noop"`, `readbackVerified: true`, `writesAttempted: 0`, `errors: []` | The fixed importer identified and verified the existing draft without creating, updating, deleting, or publishing anything. |
+
+**Acceptance conclusion:** The development-dataset authenticated lookup, actual draft presence with independently matching imported-content digest, and post-fix exact-source **zero-write no-op** are verified against real Sanity. The first live creation occurred on the pre-fix version and returned a readback mismatch; therefore a fresh post-fix live `created-and-verified` outcome has **not** yet been demonstrated. This record does not constitute approval to publish, to write to `production`, or to use real editorial manuscripts in this test dataset.
