@@ -72,3 +72,54 @@ Observed `ok: true`, one screen, nine blocks. In Bibleberry development server (
 The planned evening goal is met. Storage and local rendering fidelity of the nine synthetic types are demonstrated. **Not yet demonstrated:** direct live development-draft reader rendering, public catalog or production release, licensed/public-domain provided-passage ingest, or comprehensive automated visual/accessibility coverage.
 
 No credentials or tokens are included in this record.
+
+
+## November 6 follow-up: rapid BigMac acceptance sweep
+
+**Operator:** Aaron; all checks executed locally using the unchanged Milestone 3 synthetic source `examples/milestone-3-all-blocks.berry.md`.
+
+**1. Full automated regression: PASS.**
+
+```bash
+cd /home/aaron/BerryMark
+node --test
+```
+
+Observed final summary: **185 tests, 185 pass, 0 fail, 0 skipped, 0 cancelled, 0 todo**; approximately 2.33 seconds. The suite covers parser and compiler mapping for CB1–CB9, exact/secure Markdown and metadata handling, deterministic keys/fingerprints, import planning, fail-closed lookup and credential behavior, readback equivalence, create-only/no-op and conflict handling. A passing suite does not replace actual live-reader integration.
+
+**2. Byte-identical repeat compilation: PASS.**
+
+```bash
+node src/compiler-cli.js examples/milestone-3-all-blocks.berry.md \
+  | cmp -s examples/milestone-3-all-blocks.compiled.json - \
+  && echo "PASS: Deterministic compilation" \
+  || echo "FAIL: Compilation output differs"
+```
+
+Observed stdout: `PASS: Deterministic compilation`. The second compilation matched the prior generated JSON byte-for-byte.
+
+**3. Live same-source repeat import: PASS with zero writes.**
+
+```bash
+set -o pipefail
+node src/sanity-draft-apply-cli.js \
+  examples/milestone-3-all-blocks.berry.md \
+  --apply --operator aaron.development \
+  | jq '{action: .proposedAction, writes: .writesAttempted, status: .apply.status, verified: .apply.readbackVerified, errors: .errors}'
+```
+
+Observed:
+
+```json
+{
+  "action": "none",
+  "writes": 0,
+  "status": "verified-noop",
+  "verified": true,
+  "errors": []
+}
+```
+
+`proposedAction: none` is consistent with a verified no-op; it is **not** a failure. Importer did not write to Sanity, and existing draft content passed verification. No token is included in the evidence.
+
+**Verdict:** BerryMark v0.1's **currently implemented, scoped** syntax, nine-block compilation, deterministic output, and controlled create-only development-draft importer passed this acceptance sweep, in addition to the November 5 storage and local-visual tests described above. Remaining integration work (direct live dev draft -> Bibleberry reader, actual WEBP supplied text/source authorization, broader accessibility and automated fidelity coverage) is explicitly outside this acceptance claim.
