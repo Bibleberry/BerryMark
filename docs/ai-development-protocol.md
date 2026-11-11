@@ -3,6 +3,8 @@
 **Status:** Proposed standing development procedure, pending maintainer review and merge  
 **Scope:** The BerryMark authoring language, parser, validator, compiler, demonstrations, and related documentation
 
+**Sanity topology (November 11, 2026):** The current datasets are `production` and private `staging`. The online read-only planner intentionally targets `production` and must not be interpreted as write authorization. By current owner-authorized policy, private `staging` is the sole supported non-production target for BerryMark's create-only Challenge-draft apply path; operators must configure both dataset settings exactly as `staging` and use a separate restricted credential. The existing code-level check rejects `production` and requires an explicit valid dataset matching its authorization setting, but does not enforce `staging` by name. Any other dataset is outside policy and unauthorized; no live staging write permission is granted by this issue. Production mutation remains prohibited.
+
 ## Authority and scope
 
 - Aaron authorizes technical scope, acceptance, branch merges, and releases. Alexis retains approval over theological, editorial, and ministry-facing presentation decisions.

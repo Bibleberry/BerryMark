@@ -15,7 +15,7 @@ const helloWorldSource = readFileSync(new URL('../examples/hello-world.berry.md'
 const allBlocksSource = readFileSync(new URL('../examples/compiler-all-blocks.berry.md', import.meta.url), 'utf8')
 const eligibleAllBlocksSource = allBlocksSource
   .replace('Text Status: provided\nPassage: Rights-safe synthetic passage written only for this fixture.\nUsage Rights Confirmed: true\nPractice Status: configured', 'Text Status: referenceOnly\nUsage Rights Confirmed: false\nPractice Status: notConfigured')
-const target = { projectId: '80016lrq', dataset: 'berrymark-development', authorizedDataset: 'berrymark-development', apiVersion: '2026-11-01' }
+const target = { projectId: '80016lrq', dataset: 'staging', authorizedDataset: 'staging', apiVersion: '2026-11-01' }
 const token = 'synthetic-restricted-write-token'
 const operator = 'aaron.test-operator'
 const importedAt = '2026-11-05T12:00:00Z'
@@ -129,14 +129,15 @@ test('dry-run is the default, performs no target/credential/network/write work, 
   assert.equal(Object.hasOwn(report, 'unresolvedEditorialDecisions'), false)
 })
 
-test('missing write credential and every unsafe or unauthorized target stop before lookup', async () => {
+test('missing write credential, target, and every unsafe or unauthorized target stop before lookup', async () => {
   const cases = [
     { token: undefined },
     { target: { ...target, dataset: 'production', authorizedDataset: 'production' } },
-    { target: { ...target, authorizedDataset: 'another-development' } },
+    { target: { ...target, authorizedDataset: 'other-staging' } },
     { target: { ...target, projectId: 'another-project' } },
     { target: { ...target, apiVersion: '2025-01-01' } },
-    { target: undefined }
+    { target: undefined },
+    { target: { ...target, dataset: undefined, authorizedDataset: undefined } }
   ]
   for (const options of cases) {
     const fake = fakeTransport()
@@ -505,7 +506,7 @@ test('administrative CLI defaults to dry-run without credentials and rejects imp
   assert.equal(missingApplyArguments.stdout, '')
 })
 
-test('CLI apply requires separate write credential and explicit matching development dataset', () => {
+test('CLI apply requires a separate write credential and explicit matching staging dataset', () => {
   const env = { ...process.env }
   for (const key of Object.keys(env).filter(key => key.startsWith('BERRYMARK_SANITY_'))) delete env[key]
   const missing = spawnSync(process.execPath, [cliPath, rejoicePath, '--apply', '--operator', operator], { encoding: 'utf8', env })
