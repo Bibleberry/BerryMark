@@ -133,7 +133,7 @@ test('missing write credential, target, and every unsafe or unauthorized target 
   const cases = [
     { token: undefined },
     { target: { ...target, dataset: 'production', authorizedDataset: 'production' } },
-    { target: { ...target, authorizedDataset: 'another-development' } },
+    { target: { ...target, authorizedDataset: 'other-staging' } },
     { target: { ...target, projectId: 'another-project' } },
     { target: { ...target, apiVersion: '2025-01-01' } },
     { target: undefined },
