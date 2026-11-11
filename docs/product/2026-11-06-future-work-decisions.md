@@ -2,6 +2,8 @@
 
 **Status:** Decision record and planning inventory. Explicitly distinguish approved product direction from proposed implementation; this file does not modify software, change existing rights gates, or authorize publication.
 
+**Sanity topology supersession — November 11, 2026:** The former `berrymark-development` dataset is deleted. Only `production` and private `staging` are current. Historical acceptance references below are not evidence of staging behavior. Any future live staging acceptance requires Aaron's separate authorization and restricted credentials; this issue grants none.
+
 **Related:** [Milestone 3 acceptance record](../acceptance/milestone-3-content-fidelity-2026-11-06.md) · [Content Block extension procedure](../development/adding-content-blocks.md) · [Next-session handoff](../handoffs/2026-11-06-berrymark-bibleberry.md)
 
 ## 1. Approved: launch Scripture translation is WEBP
@@ -46,7 +48,7 @@ The proposal is to create a standing, reviewable extension process spanning Berr
 
 ## 4. Engineering follow-ups observed in Milestone 3
 
-- **Live draft reader integration:** Local BerryMark JSON preview is working, but we have **not yet rendered the imported `berrymark-development` Sanity draft via a live development-dataset CMS reader path**. Do not conflate this with the established preview or production published-only catalog.
+- **Live draft reader integration:** Local BerryMark JSON preview is working, but the historical draft in the deleted `berrymark-development` dataset has not been rendered via a live CMS reader path. Any future live test must use a separately authorized staging-only read path; it is not approved by this issue. Do not conflate this with the established preview or production published-only catalog.
 - **Offline-vs-online status clarity:** Compiler-side report says `Schema complete: No`, `Import ready: No`, and `Series unresolved`, even after a separate authorized import succeeded and resolved the series. This is contextually correct for an *offline candidate* but needs clearer UI copy; the apply CLI similarly retains inherited offline `BM_SERIES_LOOKUP_REQUIRED` warnings.
 - **Visual polish:** Prayer's two distinct paragraphs have insufficient apparent vertical separation in the local reader screenshot; review CSS. Singular pluralization shows `1 screens` and `1 optional studies`.
 - **Accessibility / UX:** Verify CB8 expandable content and nested Scripture on supported viewports and keyboard/screen-reader interaction. CB7 optional reflection choice states were photographed and work. The second nested Scripture in CB8 was verified in Sanity but was below the captured expanded-study screenshot.

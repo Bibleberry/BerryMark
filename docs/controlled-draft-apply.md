@@ -1,8 +1,10 @@
 # Controlled BerryMark → Sanity Draft Creation
 
-**Status:** Experimental administrative implementation; Milestone 1 and Milestone 2 live development-dataset acceptance evidence recorded below (November 5, 2026 local)  
-**Scope:** Source-verified dry run, authenticated development-dataset preflight, create-only draft mutation, and readback verification  
+**Status:** Experimental administrative implementation; Milestone 1 and Milestone 2 live acceptance evidence from November 5, 2026 is historical
+**Scope:** Source-verified dry run, authenticated explicitly authorized staging preflight, create-only Challenge-draft mutation, and readback verification
 **Not included:** Draft updates, publication, deletion, automatic synchronization, browser UI, reader changes, or production writes
+
+**Supersession — November 11, 2026:** `berrymark-development` has been deleted and is not part of the current two-dataset topology (`production` and private `staging`). The dated records below describe operations genuinely performed on the former dataset; they are not staging test results. This issue grants no live staging write permission. Any further create-only acceptance requires Aaron's separate authorization and a separate restricted credential.
 
 ## Command and default behavior
 
@@ -10,9 +12,9 @@
 # Local source-verified dry run: no credential, target lookup, network request, or write
 node src/sanity-draft-apply-cli.js path/to/source.berry.md
 
-# Explicit administrative apply; requires the separate setup below
+# Explicit administrative apply; staging requires separate approval and setup below
 node src/sanity-draft-apply-cli.js path/to/source.berry.md \
-  --apply --operator aaron.development
+  --apply --operator aaron.staging-test
 ```
 
 The package script `npm run apply:draft` runs the Rejoice Always example in the default dry-run mode. It does not apply a mutation.
@@ -27,8 +29,8 @@ Apply requires all of these environment variables in the protected Node.js proce
 
 ```bash
 export BERRYMARK_SANITY_WRITE_PROJECT_ID=80016lrq
-export BERRYMARK_SANITY_WRITE_DATASET=<separately-authorized-development-dataset>
-export BERRYMARK_SANITY_AUTHORIZED_WRITE_DATASET=<exact-same-development-dataset>
+export BERRYMARK_SANITY_WRITE_DATASET=staging
+export BERRYMARK_SANITY_AUTHORIZED_WRITE_DATASET=staging
 export BERRYMARK_SANITY_WRITE_API_VERSION=2026-11-01
 read -rsp "Restricted Sanity write token: " BERRYMARK_SANITY_WRITE_TOKEN
 export BERRYMARK_SANITY_WRITE_TOKEN
@@ -37,11 +39,11 @@ echo
 
 Kimi does not create or configure the token or dataset. The token must be a restricted administrative write credential, not the existing read-only Viewer token. The CLI rejects an identical `BERRYMARK_SANITY_READ_TOKEN` and `BERRYMARK_SANITY_WRITE_TOKEN`. Do not place credentials in source files, command arguments, chat, GitHub, or logs.
 
-The project and API version must match the approved Bibleberry configuration. `production` is always rejected as an apply target. The selected dataset and independent authorization value must be explicit, valid, and identical. These application checks supplement—not replace—Sanity authorization and Aaron's separate live-acceptance approval.
+The project and API version must match the approved Bibleberry configuration. For the current topology, the only permitted non-production apply target is private `staging`; both dataset variables must be explicitly set to exactly `staging`. `production` is permanently rejected as an apply target. These application checks supplement—not replace—Sanity authorization and Aaron's separate live-acceptance approval. The settings above are examples, not permission to write: this issue grants no live staging write permission.
 
 ## Fresh preflight and permitted outcomes
 
-Immediately before any mutation, the apply transport uses the restricted credential for fixed, parameterized, non-CDN `perspective=raw` reads against the selected development dataset:
+Immediately before any authorized mutation, the apply transport uses the separate restricted credential for fixed, parameterized, non-CDN `perspective=raw` reads against explicitly configured `staging`:
 
 1. Resolve an authored series slug to exactly one eligible published `challengeSeries`, without creating a series or treating its slug as an ID.
 2. Retrieve the exact canonical ID, deterministic draft ID, and every same-slug Challenge variant. For the deterministic draft, include the full importer-owned content and provenance needed for independent fingerprint verification.
@@ -84,7 +86,9 @@ Output includes safe target identity, source-verification state, deterministic i
 
 ## Verification boundary
 
-Automated tests use injected fake transports and synthetic HTTP responses. They cover dry-run zero I/O, credential/target failures, all preflight conflicts, all-block payload fidelity, same-source no-op, edited/approved drafts, create races, mutation/readback failures, safe output, and the single fixed mutation body. These tests do not themselves exercise a real Sanity dataset. The first separately authorized live development-dataset acceptance exercise is recorded below. It did not include publication, production writes, or deployment.
+Automated tests use injected fake transports and synthetic HTTP responses. They cover dry-run zero I/O, credential/target failures, all preflight conflicts, all-block payload fidelity, same-source no-op, edited/approved drafts, create races, mutation/readback failures, safe output, and the single fixed mutation body. These tests do not themselves exercise a real Sanity dataset. The historical, separately authorized live acceptance on the former development dataset is recorded below; it did not include publication, production writes, or deployment. This issue performs no live staging integration.
+
+The Bibleberry R08A-4A synthetic monthly fixtures (`month-2096-02`, `month-2098-02`, `month-2098-03`, `month-2098-04`, and `r08a-stg-*` IDs) are Bibleberry-owned staging test documents. This BerryMark importer creates one-way Challenge drafts only; it does not write `monthlyPublication` documents, month rosters, or modify those fixtures.
 
 ## Live development-dataset acceptance record: November 5, 2026
 

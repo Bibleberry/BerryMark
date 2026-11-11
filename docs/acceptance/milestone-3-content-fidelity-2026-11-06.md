@@ -73,6 +73,8 @@ The planned evening goal is met. Storage and local rendering fidelity of the nin
 
 No credentials or tokens are included in this record.
 
+**Supersession — November 11, 2026:** The `berrymark-development` dataset named in this historical November 5–6 evidence is deleted and is not part of the current `production` / private `staging` topology. The recorded outcomes are not staging verification. This issue performs no live staging integration and grants no live staging write permission.
+
 
 ## November 6 follow-up: rapid BigMac acceptance sweep
 

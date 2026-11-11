@@ -57,7 +57,7 @@ Before assigning CB10, write a one-page block proposal:
 - [ ] Add a rights-safe, `BM-TEST`-labeled source fixture that exercises all new fields plus representative edge cases.
 - [ ] Run offline parser/validator/compilation tests, including expected errors and deterministic recompile.
 - [ ] Test existing CB1–CB9 fixtures remain unchanged; keep tests for no unapproved content mutation.
-- [ ] Perform authorized **development-dataset only** create/readback acceptance if needed, with a fresh unique identity; no production apply, reimport, or overwrite.
+- [ ] If separately authorized by Aaron, perform **staging-only** create/readback acceptance with a fresh unique identity and restricted credential; no production apply, reimport, or overwrite. Documentation or test work alone does not grant live write permission.
 - [ ] Independently query Sanity for nested IDs, ordering, exact plain text, Portable Text marks and links, and editorial status.
 - [ ] Preview through actual Bibleberry reader components; inspect visual behavior and interactions at mobile and desktop sizes.
 - [ ] Document what is actually verified versus not tested. Do not claim CMS live-draft rendering from a local compiled JSON preview.

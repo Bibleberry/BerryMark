@@ -11,7 +11,7 @@
 3. `lookupSanityImportState()` is a Node.js administrative transport. It accepts no GROQ from callers and performs only fixed parameterized GET requests.
 4. `online-import-plan-cli.js` is the admin-only entry point. It loads and compiles the exact manuscript, runs the existing offline planner, stops on local failure, and only then attempts online reads.
 
-The target is Bibleberry project `80016lrq`, dataset `production`, API version `2026-11-01`, using the non-CDN `api.sanity.io` Content Lake endpoint. All queries explicitly use `perspective=raw`; the resolver classifies `drafts.*`, published IDs, and `versions.*` separately. A published-only absence is never used as draft evidence.
+The target is Bibleberry project `80016lrq`, dataset `production`, API version `2026-11-01`, using the non-CDN `api.sanity.io` Content Lake endpoint. This production target is intentional for the **read-only planner only** and does not approve any production write. All queries explicitly use `perspective=raw`; the resolver classifies `drafts.*`, published IDs, and `versions.*` separately. A published-only absence is never used as draft evidence.
 
 ## Administrative setup
 

@@ -4,6 +4,8 @@
 **Purpose:** Standalone handoff to a new ChatGPT conversation for work the following day. Also serves as a durable stopping-point record.  
 **Status:** Milestone 3 achieved Aaron's planned goal. No live software implementation is requested in this documentation PR.
 
+**Supersession — November 11, 2026:** The operational status and next-step references below describe the situation as of November 6. The former `berrymark-development` dataset is deleted; current datasets are `production` and private `staging`. Keep the November 5–6 operations as historical evidence only. There is no live staging write permission from this issue; future create-only acceptance requires Aaron's separate authorization and restricted credentials. The online read-only planner remains intentionally pinned to production and is not a write path.
+
 ## How to work with Aaron
 
 - Aaron is hands-on with BigMac (Linux/Sway, terminal, Firefox), Git and GitHub. He personally reviews/merges PRs and prefers **one concrete terminal step at a time**, then inspects actual output before continuing. Explain engineering decisions rather than pasting many unverified commands.
@@ -54,7 +56,7 @@ See [decision and deferred-work record](../product/2026-11-06-future-work-decisi
 - Prayer paragraphs are separate in data but too visually close in screenshot; optional CSS refinement.
 - Developer report says `1 screens`, `1 optional studies`.
 - No actual passage text in test; WEBP ingest/pinning rights design remains.
-- Need explicit safe strategy to visualize the **development draft in the CMS reader**. Never expose a Contributor/write token to browser and never accidentally mix public production catalog with development-dataset drafts.
+- Need an explicitly approved safe strategy to visualize the **historical development draft in the CMS reader**. Its former dataset is deleted; any future live test must use staging with separately authorized read access. Never expose a write token to the browser or mix the public production catalog with staging drafts.
 - Strengthen automated regression/readback/visual/accessible tests and cross-repo compatibility enforcement, especially for new CB types.
 - BigMac `examples/milestone-2-*.berry.md`, `examples/milestone-3-all-blocks.berry.md`, and `examples/milestone-3-all-blocks.compiled.json` were untracked at stopping point; avoid `git clean`/overwrites and indiscriminate reimports.
 
@@ -78,7 +80,7 @@ See [decision and deferred-work record](../product/2026-11-06-future-work-decisi
 
 **2. Work from the existing repositories and approved product decisions.** Use the linked documentation on `main` as current state after merge. Review impacted code before assignments, and coordinate Kimi/Gemini work through scoped GitHub issues/PRs. Keep one practical step at a time when Aaron is at BigMac.
 
-**3. Return to Sanity integration when there is a concrete need.** Eventually run (a) a safe development-dataset **multi-screen** importer/readback acceptance and (b) read-only rendering of the previously imported draft through the Bibleberry CMS adapter and reader, without browser-embedded write credentials or exposing private development content. Neither requires delaying unrelated app development.
+**3. Return to Sanity integration when there is a concrete need.** Any future multi-screen importer/readback acceptance must use staging, require Aaron's separate authorization and restricted credentials, and remain create-only; this issue grants no live staging write permission. A read-only staging CMS-reader test also requires separately approved access. Neither requires delaying unrelated app development.
 
 **4. Continue future design separately:** WEBP public-domain edition source pinning and text/rights workflow, automated fidelity/visual tests, Content Block expansion checklist and eventual first CB10 pilot, and a faithful Alexis-manuscript-to-BerryMark ChatGPT Project. These remain scheduled planning work, not automatically authorized implementation.
 

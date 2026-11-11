@@ -7,7 +7,7 @@ import {
   readSanityDraftAfterApply
 } from '../src/sanity-draft-apply-transport.js'
 
-const target = { projectId: '80016lrq', dataset: 'berrymark-development', authorizedDataset: 'berrymark-development', apiVersion: '2026-11-01' }
+const target = { projectId: '80016lrq', dataset: 'staging', authorizedDataset: 'staging', apiVersion: '2026-11-01' }
 const token = 'synthetic-write-token-not-a-credential'
 const draftId = 'drafts.berrymark-challenge-synthetic-test'
 const document = { _id: draftId, _type: 'challenge', title: 'Synthetic test', slug: { _type: 'slug', current: 'synthetic-test' } }
@@ -26,7 +26,7 @@ function recorder(bodies) {
   }
 }
 
-test('apply preflight uses fixed raw-perspective reads against only the authorized development target', async () => {
+test('apply preflight uses fixed raw-perspective reads against explicitly authorized staging only', async () => {
   const { calls, fetchImpl } = recorder([
     { result: [{ _id: 'series-id', slug: 'development-series' }] },
     { result: [] },
@@ -40,7 +40,7 @@ test('apply preflight uses fixed raw-perspective reads against only the authoriz
   for (const call of calls) {
     const url = new URL(call.url)
     assert.equal(url.hostname, '80016lrq.api.sanity.io')
-    assert.equal(url.pathname, '/v2026-11-01/data/query/berrymark-development')
+    assert.equal(url.pathname, '/v2026-11-01/data/query/staging')
     assert.equal(url.searchParams.get('perspective'), 'raw')
     assert.equal(call.options.method, 'GET')
     assert.equal(call.options.body, undefined)
@@ -80,7 +80,7 @@ test('the only mutation request asks for result IDs and accepts the documented C
   assert.equal(calls.length, 1)
   const call = calls[0]
   const url = new URL(call.url)
-  assert.equal(url.pathname, '/v2026-11-01/data/mutate/berrymark-development')
+  assert.equal(url.pathname, '/v2026-11-01/data/mutate/staging')
   assert.equal(call.options.method, 'POST')
   assert.equal(url.searchParams.get('returnIds'), 'true')
   assert.deepEqual(JSON.parse(call.options.body), { mutations: [{ createIfNotExists: document }] })
@@ -134,9 +134,20 @@ test('mutation rejects non-draft IDs and marks unexpected or unverifiable result
 })
 
 test('readback accepts exactly the requested raw draft and rejects absence or ambiguous identities', async () => {
-  const success = await readSanityDraftAfterApply({ draftId, target, token, fetchImpl: async () => response({ result: [document] }) })
+  let requestedUrl
+  const success = await readSanityDraftAfterApply({
+    draftId, target, token,
+    fetchImpl: async url => {
+      requestedUrl = String(url)
+      return response({ result: [document] })
+    }
+  })
   assert.equal(success.status, 'complete')
   assert.equal(success.document._id, draftId)
+  const url = new URL(requestedUrl)
+  assert.equal(url.pathname, '/v2026-11-01/data/query/staging')
+  assert.equal(url.searchParams.get('$draftId'), JSON.stringify(draftId))
+  assert.equal(url.searchParams.get('perspective'), 'raw')
   for (const result of [[], [document, document], [{ ...document, _id: 'another-id' }]]) {
     const readback = await readSanityDraftAfterApply({ draftId, target, token, fetchImpl: async () => response({ result }) })
     assert.equal(readback.status, 'failed')
