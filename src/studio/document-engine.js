@@ -33,6 +33,26 @@ const APPROVAL_FIELDS = new Set(['approvalStatus', 'approvedBy', 'approvedAt'])
 const REVIEW_STATE_VERSION = 'berrymark-studio-review-v1'
 const clone = value => value === undefined ? undefined : JSON.parse(JSON.stringify(value))
 
+function freezeData(value) {
+  if (value !== null && typeof value === 'object' && !Object.isFrozen(value)) {
+    Object.freeze(value)
+    for (const child of Object.values(value)) freezeData(child)
+  }
+  return value
+}
+
+function validationSnapshot(validation) {
+  const snapshot = structuredClone(validation)
+  const locations = structuredClone(validation.metadataLocations)
+  for (const location of locations.values()) freezeData(location)
+  Object.defineProperties(snapshot, {
+    sourceSha256: { value: validation.sourceSha256 },
+    // Freezing a Map leaves its entries mutable. Give each reader its own Map.
+    metadataLocations: { get: () => new Map(locations) }
+  })
+  return freezeData(snapshot)
+}
+
 function validationAllowsEditing(validation) {
   return validation.diagnostics.every(item => (
     item.severity !== 'error' ||
@@ -113,6 +133,7 @@ export class BerryMarkStudioDocument {
   #filename
   #index
   #validation
+  #validationSnapshots = new WeakMap()
   #reviewDiagnostics = []
   #dirty = false
 
@@ -131,7 +152,7 @@ export class BerryMarkStudioDocument {
   get status() { return this.editable ? (this.valid ? 'valid' : 'incomplete') : 'unsupported' }
   get eol() { return this.#index.eol }
   get diagnostics() {
-    return [...this.#index.diagnostics, ...this.#validation.diagnostics, ...clone(this.#reviewDiagnostics)]
+    return structuredClone([...this.#index.diagnostics, ...this.#validation.diagnostics, ...this.#reviewDiagnostics])
   }
   get reviewDiagnostics() { return clone(this.#reviewDiagnostics) }
 
@@ -143,7 +164,14 @@ export class BerryMarkStudioDocument {
       approvalStale: this.#reviewDiagnostics.some(item => item.code === 'BM_STUDIO_APPROVAL_STALE')
     })
   }
-  validate() { return this.#validation }
+  validate() {
+    let snapshot = this.#validationSnapshots.get(this.#validation)
+    if (!snapshot) {
+      snapshot = validationSnapshot(this.#validation)
+      this.#validationSnapshots.set(this.#validation, snapshot)
+    }
+    return snapshot
+  }
   getMetadata(path) {
     const metadata = this.#validation.document.metadata
     if (metadata === null) return null
@@ -199,7 +227,7 @@ export class BerryMarkStudioDocument {
     if (state.sourceSha256 !== sha256(this.#source)) {
       throw new BerryMarkEditError('BM_STUDIO_REVIEW_STATE_MISMATCH', 'Review state belongs to different source; reopen the matching saved source')
     }
-    if (state.approvalStale && this.#validation.document.metadata?.editorial?.approvalStatus === 'approved') {
+    if (state.approvalStale) {
       this.#reviewDiagnostics = [this.#approvalStaleWarning()]
     }
   }

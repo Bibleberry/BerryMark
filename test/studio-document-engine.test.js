@@ -432,6 +432,64 @@ test('failed edits after prior successful work restore the prior checkpoint, not
   assert.equal(document.dirty, true)
 })
 
+test('validation snapshots isolate interpreted content and source-bound compilation from callers', () => {
+  const source = allBlocksSource
+  const document = openBerryMarkDocument(source)
+  const validation = document.validate()
+  const originalTitle = document.getMetadata('challenge.title')
+  const originalBlock = document.getBlock('compiler-rich-teaching')
+  const originalDiagnostics = structuredClone(document.diagnostics)
+  const expected = compileBerryMark(source)
+
+  assert.throws(() => { validation.ok = false }, TypeError)
+  assert.throws(() => { validation.document.metadata.challenge.title = 'Forged title' }, TypeError)
+  assert.throws(() => { validation.document.screens[0].blocks[0].text = 'Forged teaching' }, TypeError)
+  assert.throws(() => { validation.document.screens[0].blocks.pop() }, TypeError)
+  assert.throws(() => { validation.diagnostics[0].severity = 'error' }, TypeError)
+  assert.throws(() => { validation.sourceSha256 = 'forged digest' }, TypeError)
+
+  const locations = validation.metadataLocations
+  const locationPath = JSON.stringify(['companionLinks', 1, 'url'])
+  const location = locations.get(locationPath)
+  assert.ok(location)
+  assert.ok(locations instanceof Map)
+  assert.throws(() => { location.line = 999 }, TypeError)
+  locations.clear()
+  locations.set(locationPath, { line: 999, column: 1 })
+  assert.deepEqual(validation.metadataLocations.get(locationPath), location)
+  assert.equal(Object.keys(validation).includes('metadataLocations'), false)
+  assert.equal(Object.keys(validation).includes('sourceSha256'), false)
+
+  document.diagnostics[0].severity = 'error'
+  assert.deepEqual(document.diagnostics, originalDiagnostics)
+  assert.equal(document.getMetadata('challenge.title'), originalTitle)
+  assert.deepEqual(document.getBlock('compiler-rich-teaching'), originalBlock)
+  assert.equal(document.status, 'valid')
+  assert.equal(document.dirty, false)
+  assert.equal(document.serialize(), source)
+  assert.equal(document.validate().sourceSha256, sha256(source))
+  assert.deepEqual(compileValidatedBerryMark(validation, { source }), expected)
+
+  document.setMetadata('challenge.title', 'Authorized title')
+  assert.equal(document.getMetadata('challenge.title'), 'Authorized title')
+  assert.equal(document.dirty, true)
+  assert.equal(validation.document.metadata.challenge.title, originalTitle)
+  assert.equal(validation.sourceSha256, sha256(source))
+})
+
+test('editing gates are unaffected by externally modified diagnostics', () => {
+  const source = sourceWith(cb1() + cb1())
+  const document = openBerryMarkDocument(source)
+  assert.equal(document.status, 'unsupported')
+  for (const item of document.diagnostics) item.severity = 'info'
+  assert.ok(document.diagnostics.some(item => item.code === 'BM_ID_DUPLICATE' && item.severity === 'error'))
+  assert.equal(document.status, 'unsupported')
+  assert.throws(() => document.setMetadata('challenge.title', 'Disallowed edit'),
+    error => error.code === 'BM_STUDIO_READ_ONLY')
+  assert.equal(document.dirty, false)
+  assert.equal(document.serialize(), source)
+})
+
 test('edits change the exact source SHA-256 and compiler content fingerprint', () => {
   const baseline = compileBerryMark(allBlocksSource)
   const document = openBerryMarkDocument(allBlocksSource)
@@ -473,6 +531,32 @@ test('approved-source edits emit stale review state that survives explicit save 
   assert.equal(compilation.sanityCandidate.editorialReview.adaptationReviewed, false)
   assert.equal(compilation.reviewReport.publicationReady, false)
   assert.throws(() => openBerryMarkDocument(allBlocksSource, { reviewState: savedReviewState }), error => error.code === 'BM_STUDIO_REVIEW_STATE_MISMATCH')
+})
+
+test('stale approval survives a pending save and reopen followed by reapproval in metadata', () => {
+  const document = openBerryMarkDocument(allBlocksSource)
+  document.setMetadata('editorial.approvalStatus', 'approved')
+  document.setMetadata('editorial.approvedBy', 'Alexis Waid')
+  document.setMetadata('editorial.approvedAt', '2026-11-20T12:00:00Z')
+  document.updateBlock('compiler-rich-teaching', { body: 'Revision requiring human review.' })
+  document.setMetadata('editorial.approvalStatus', 'pending')
+  const savedSource = document.serialize()
+  const reviewState = document.serializeReviewState()
+  const stale = document.reviewDiagnostics
+  assert.deepEqual(stale.map(item => item.code), ['BM_STUDIO_APPROVAL_STALE'])
+
+  const reopened = openBerryMarkDocument(savedSource, { reviewState })
+  assert.equal(reopened.getMetadata('editorial.approvalStatus'), 'pending')
+  assert.deepEqual(reopened.reviewDiagnostics, stale)
+  assert.equal(reopened.serializeReviewState(), reviewState)
+
+  reopened.setMetadata('editorial.approvalStatus', 'approved')
+  assert.equal(reopened.getMetadata('editorial.approvalStatus'), 'approved')
+  assert.deepEqual(reopened.reviewDiagnostics, stale)
+  const compilation = compileValidatedBerryMark(reopened.validate(), { source: reopened.serialize() })
+  assert.equal(compilation.ok, true)
+  assert.equal(compilation.sanityCandidate.editorialReview.adaptationReviewed, false)
+  assert.equal(compilation.reviewReport.publicationReady, false)
 })
 
 test('source-only reopen neither invents edit history nor transfers an approval certification', () => {

@@ -25,7 +25,7 @@ The read-only `status` property has three values:
 - `incomplete`: safe targeted editing is available, but required fields, required nested items, headers, or other semantic authoring rules remain unresolved.
 - `unsupported`: malformed or ambiguous source is read-only. `serialize()` still returns the exact input.
 
-`valid` does **not** mean import-ready, schema-complete, rights-cleared, approved, or publication-ready. `validate()` returns the existing `parseBerryMark` result, including its exact-source SHA-256 binding. `diagnostics` combines structural, parser, and Studio review diagnostics; `reviewDiagnostics` contains only Studio review state.
+`valid` does **not** mean import-ready, schema-complete, rights-cleared, approved, or publication-ready. `validate()` returns a detached, frozen snapshot in the existing `parseBerryMark` result shape. Its nonenumerable exact-source SHA-256 and metadata locations remain available to the compiler. Each access to `metadataLocations` returns a separate Map with frozen location values. `diagnostics` returns copies of the structural, parser, and Studio review diagnostics. `reviewDiagnostics` returns copies of the Studio review diagnostics alone.
 
 `createBerryMarkDocument({ metadata, screens, lineEnding, filename })` creates front matter and then uses the same screen/block/nested serializers as incremental edits. `lineEnding` is LF by default and may be CRLF. Semantic nested types are inherited from their parent collections, so a card needs an `id` and `fields`, not a redundant `type: 'CARD'`.
 
@@ -165,7 +165,7 @@ const reopened = openBerryMarkDocument(savedSource, {
 })
 ```
 
-A mismatched, malformed, or unsupported review-state string is rejected. No filesystem persistence is implemented by Build 01; the host owns saving both strings.
+A matching review-state string restores any stale warning even when the current approval status is pending. Changing the authored approval fields does not clear that warning. A mismatched, malformed, or unsupported review-state string is rejected. No filesystem persistence is implemented by Build 01; the host owns saving both strings.
 
 **Source-only reopening limitation:** `openBerryMarkDocument(savedSource)` cannot infer whether an approved source was edited in an earlier process, so it does not fabricate a stale warning. This is not approval certification. The existing compiler still keeps `editorialReview.adaptationReviewed: false`, retains the source claim only in its review sidecar, and does not make the document publication-ready. Persist `serializeReviewState()` when the stale warning must survive reopening. There is no Build 01 operation that marks a revised document human-approved or clears its stale warning.
 
