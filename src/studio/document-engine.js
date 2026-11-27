@@ -1,5 +1,7 @@
+import { isDeepStrictEqual } from 'node:util'
 import { parseDocument, stringify } from 'yaml'
 import { parseBerryMark } from '../parser.js'
+import { sha256 } from '../keys.js'
 import { indexBerryMarkSource, nodeSource } from './source-index.js'
 import {
   SEMANTIC_ID,
@@ -28,6 +30,7 @@ const READ_ONLY_CODES = new Set([
 const REPEATABLE = new Set(['CARD', 'STEP', 'CHOICE', 'SCRIPTURE'])
 const SINGULAR = new Set(['LEFT', 'RIGHT', 'FOOTER'])
 const APPROVAL_FIELDS = new Set(['approvalStatus', 'approvedBy', 'approvedAt'])
+const REVIEW_STATE_VERSION = 'berrymark-studio-review-v1'
 const clone = value => value === undefined ? undefined : JSON.parse(JSON.stringify(value))
 
 function validationAllowsEditing(validation) {
@@ -113,11 +116,12 @@ export class BerryMarkStudioDocument {
   #reviewDiagnostics = []
   #dirty = false
 
-  constructor(source, { filename = '<memory>' } = {}) {
+  constructor(source, { filename = '<memory>', reviewState } = {}) {
     if (typeof source !== 'string') throw new TypeError('BerryMark source must be a string')
     this.#source = source
     this.#filename = filename
     this.#refresh()
+    if (reviewState !== undefined) this.#restoreReviewState(reviewState)
   }
 
   get filename() { return this.#filename }
@@ -132,6 +136,13 @@ export class BerryMarkStudioDocument {
   get reviewDiagnostics() { return clone(this.#reviewDiagnostics) }
 
   serialize() { return this.#source }
+  serializeReviewState() {
+    return JSON.stringify({
+      version: REVIEW_STATE_VERSION,
+      sourceSha256: sha256(this.#source),
+      approvalStale: this.#reviewDiagnostics.some(item => item.code === 'BM_STUDIO_APPROVAL_STALE')
+    })
+  }
   validate() { return this.#validation }
   getMetadata(path) {
     const metadata = this.#validation.document.metadata
@@ -157,6 +168,40 @@ export class BerryMarkStudioDocument {
       }
     }
     return null
+  }
+
+  #approvalStaleWarning() {
+    return {
+      severity: 'warning',
+      code: 'BM_STUDIO_APPROVAL_STALE',
+      message: 'Source content changed after an existing approval claim; the prior approval does not certify this revision and requires human review',
+      filename: this.#filename,
+      line: 1,
+      column: 1
+    }
+  }
+
+  #restoreReviewState(serialized) {
+    if (typeof serialized !== 'string') {
+      throw new BerryMarkEditError('BM_STUDIO_REVIEW_STATE_INVALID', 'Review state must be the string returned by serializeReviewState()')
+    }
+    let state
+    try {
+      state = JSON.parse(serialized)
+    } catch {
+      throw new BerryMarkEditError('BM_STUDIO_REVIEW_STATE_INVALID', 'Review state is not valid JSON')
+    }
+    if (state === null || typeof state !== 'object' || Array.isArray(state) ||
+        state.version !== REVIEW_STATE_VERSION || typeof state.sourceSha256 !== 'string' ||
+        typeof state.approvalStale !== 'boolean') {
+      throw new BerryMarkEditError('BM_STUDIO_REVIEW_STATE_INVALID', 'Review state has an unsupported shape or version')
+    }
+    if (state.sourceSha256 !== sha256(this.#source)) {
+      throw new BerryMarkEditError('BM_STUDIO_REVIEW_STATE_MISMATCH', 'Review state belongs to different source; reopen the matching saved source')
+    }
+    if (state.approvalStale && this.#validation.document.metadata?.editorial?.approvalStatus === 'approved') {
+      this.#reviewDiagnostics = [this.#approvalStaleWarning()]
+    }
   }
 
   #refresh(rejectUnsafe = false) {
@@ -190,14 +235,7 @@ export class BerryMarkStudioDocument {
       const isApproved = this.#validation.document.metadata?.editorial?.approvalStatus === 'approved'
       if (this.#source !== prior.source && wasApproved && isApproved && !approvalMutation &&
           !this.#reviewDiagnostics.some(item => item.code === 'BM_STUDIO_APPROVAL_STALE')) {
-        this.#reviewDiagnostics = [...this.#reviewDiagnostics, {
-          severity: 'warning',
-          code: 'BM_STUDIO_APPROVAL_STALE',
-          message: 'Source content changed after an existing approval claim; the prior approval does not certify this revision and requires human review',
-          filename: this.#filename,
-          line: 1,
-          column: 1
-        }]
+        this.#reviewDiagnostics = [...this.#reviewDiagnostics, this.#approvalStaleWarning()]
       }
       return result ?? this
     } catch (error) {
@@ -214,9 +252,11 @@ export class BerryMarkStudioDocument {
     if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end < start || end > this.#source.length) {
       throw new BerryMarkEditError('BM_STUDIO_RANGE', 'Invalid source edit range')
     }
-    this.#source = this.#source.slice(0, start) + replacement + this.#source.slice(end)
+    const updated = this.#source.slice(0, start) + replacement + this.#source.slice(end)
+    if (updated === this.#source) return
+    this.#source = updated
     this.#refresh(true)
-    this.#dirty = this.#source !== '' && (this.#dirty || replacement !== '' || start !== end)
+    this.#dirty = true
   }
 
   #node(id, expected) {
@@ -268,8 +308,16 @@ export class BerryMarkStudioDocument {
 
   #prepareBlock(spec, reserved) {
     const result = this.#prepareId(spec, 'block', reserved)
-    for (const key of ['cards', 'steps', 'choices', 'scriptures']) {
-      if (result[key]) result[key] = result[key].map(item => this.#prepareNested(item, reserved))
+    const nestedKinds = { cards: 'CARD', steps: 'STEP', choices: 'CHOICE', scriptures: 'SCRIPTURE' }
+    for (const [key, kind] of Object.entries(nestedKinds)) {
+      if (!result[key]) continue
+      result[key] = result[key].map(item => {
+        const declared = item.type ?? item.kind
+        if (declared && declared !== kind) {
+          throw new StudioSerializationError('BM_STUDIO_NESTING', `${declared} cannot be constructed in the ${key} collection`)
+        }
+        return this.#prepareNested({ ...item, type: kind }, reserved)
+      })
     }
     return result
   }
@@ -292,8 +340,23 @@ export class BerryMarkStudioDocument {
     if (!Number.isInteger(index) || index < 0 || index > siblings.length) {
       throw new BerryMarkEditError('BM_STUDIO_INDEX', `Insertion index must be an integer from 0 to ${siblings.length}`, parent.openLine + 1)
     }
-    const closing = this.#index.lines[parent.closeLine]
-    const anchor = index < siblings.length ? siblings[index].start : closing.start
+    let anchor
+    if (index < siblings.length) {
+      anchor = siblings[index].start
+    } else {
+      anchor = this.#index.lines[parent.closeLine].start
+      const kind = kinds?.length === 1 ? kinds[0] : null
+      const postField = { STEP: 'Conclusion', CHOICE: 'Closing' }[kind]
+      if (postField) {
+        const range = this.#fieldRange(parent, postField)
+        if (range) anchor = range.start
+      }
+      if (SINGULAR.has(kind)) {
+        const order = ['LEFT', 'RIGHT', 'FOOTER']
+        const following = parent.children.find(child => order.indexOf(child.kind) > order.indexOf(kind))
+        if (following) anchor = following.start
+      }
+    }
     this.#insert(anchor, raw)
   }
 
@@ -351,22 +414,30 @@ export class BerryMarkStudioDocument {
 
   updateBlock(id, changes) {
     return this.#transaction(() => {
-      const block = this.#block(id)
+      const kind = this.#block(id).kind
       if (Object.hasOwn(changes, 'fields')) {
-        for (const [name, value] of Object.entries(changes.fields)) this.#setField(block, name, value)
+        for (const [name, value] of Object.entries(changes.fields)) {
+          this.#setField(this.#block(id), name, value)
+        }
       }
-      if (block.kind === 'CB1' || block.kind === 'CB9') {
-        if (Object.hasOwn(changes, 'text') || Object.hasOwn(changes, 'body')) this.#setBody(block, changes.text ?? changes.body ?? '')
-      } else if (block.kind === 'CB8') {
-        if (Object.hasOwn(changes, 'title')) this.#setTitle(block, changes.title)
-        if (Object.hasOwn(changes, 'body')) this.#setBody(block, changes.body, true)
-      } else if (block.kind === 'CB4') {
+      if (kind === 'CB1' || kind === 'CB9') {
+        if (Object.hasOwn(changes, 'text') || Object.hasOwn(changes, 'body')) {
+          this.#setBody(this.#block(id), changes.text ?? changes.body ?? '')
+        }
+      } else if (kind === 'CB8') {
+        if (Object.hasOwn(changes, 'title')) this.#setTitle(this.#block(id), changes.title)
+        if (Object.hasOwn(changes, 'body')) this.#setBody(this.#block(id), changes.body, true)
+      } else if (kind === 'CB4') {
         for (const section of ['left', 'right', 'footer']) {
           if (!Object.hasOwn(changes, section)) continue
           const reference = section.toUpperCase()
           const value = changes[section]
-          if (value === null) this.#replace(this.#section(block, reference).start, this.#section(block, reference).end, '')
-          else this.#updateSection(block, reference, typeof value === 'string' ? { text: value } : value)
+          if (value === null) {
+            const node = this.#section(this.#block(id), reference)
+            this.#replace(node.start, node.end, '')
+          } else {
+            this.#updateSection(this.#block(id), reference, typeof value === 'string' ? { text: value } : value)
+          }
         }
       }
     })
@@ -413,12 +484,17 @@ export class BerryMarkStudioDocument {
   }
 
   #updateSection(block, reference, changes) {
-    const node = this.#section(block, reference)
+    const blockId = block.id
     if (Object.hasOwn(changes, 'fields')) {
-      for (const [name, value] of Object.entries(changes.fields)) this.#setField(node, name, value)
+      for (const [name, value] of Object.entries(changes.fields)) {
+        this.#setField(this.#section(this.#block(blockId), reference), name, value)
+      }
     }
-    if (Object.hasOwn(changes, 'title')) this.#setTitle(node, changes.title)
+    if (Object.hasOwn(changes, 'title')) {
+      this.#setTitle(this.#section(this.#block(blockId), reference), changes.title)
+    }
     if (Object.hasOwn(changes, 'body') || Object.hasOwn(changes, 'text')) {
+      const node = this.#section(this.#block(blockId), reference)
       this.#setBody(node, changes.text ?? changes.body ?? '', ['LEFT', 'RIGHT'].includes(node.kind))
     }
   }
@@ -465,6 +541,8 @@ export class BerryMarkStudioDocument {
   #editMetadata(path, value, remove) {
     const frontmatter = this.#index.frontmatter
     if (!frontmatter) throw new BerryMarkEditError('BM_STUDIO_METADATA_UNSUPPORTED', 'Safe YAML front matter is required for metadata editing')
+    const current = valueAt(this.#validation.document.metadata, path)
+    if ((remove && current === undefined) || (!remove && isDeepStrictEqual(current, value))) return
     const document = parseDocument(frontmatter.raw, { schema: 'core', strict: true, uniqueKeys: true, version: '1.2' })
     if (document.errors.length) throw new BerryMarkEditError('BM_STUDIO_METADATA_UNSUPPORTED', 'Malformed YAML cannot be edited safely')
     if (remove) document.deleteIn(path)
@@ -555,6 +633,25 @@ export class BerryMarkStudioDocument {
     this.#replacePreservingComments(range.start, range.end, replacement)
   }
 
+  #richHeader(node) {
+    const firstChild = node.parts.findIndex(part => part.kind === 'node')
+    const eligible = node.parts.slice(0, firstChild < 0 ? node.parts.length : firstChild)
+    const entries = eligible.filter(part => part.kind === 'line' && !part.comment)
+    const first = entries.find(part => this.#index.lines[part.line].text.trim())
+    const title = first && this.#index.lines[first.line].text.startsWith('Title:') ? first : null
+    const valid = Boolean(title && /^Title: [^\s]/.test(this.#index.lines[title.line].text))
+    let separator = null
+    if (valid) {
+      const titlePosition = eligible.indexOf(title)
+      for (const part of eligible.slice(titlePosition + 1)) {
+        if (part.kind !== 'line' || part.comment) continue
+        if (this.#index.lines[part.line].text === '') separator = part
+        break
+      }
+    }
+    return { title, valid, separator }
+  }
+
   #setTitle(node, value) {
     if (!['CB8', 'LEFT', 'RIGHT'].includes(node.kind)) {
       throw new BerryMarkEditError('BM_STUDIO_TARGET_TYPE', `${node.kind} does not have a rich-body Title header`, node.openLine + 1)
@@ -562,9 +659,7 @@ export class BerryMarkStudioDocument {
     if (value !== null && (typeof value !== 'string' || /[\r\n]/.test(value))) {
       throw new StudioSerializationError('BM_STUDIO_VALUE_TYPE', 'Rich-body titles must be a single-line string or null')
     }
-    const firstChild = node.parts.findIndex(part => part.kind === 'node')
-    const candidates = node.parts.slice(0, firstChild < 0 ? node.parts.length : firstChild)
-    const title = candidates.find(part => part.kind === 'line' && !part.comment && this.#index.lines[part.line].text.trim() && this.#index.lines[part.line].text.startsWith('Title:'))
+    const { title } = this.#richHeader(node)
     if (title) {
       const line = this.#index.lines[title.line]
       this.#replace(line.start, line.end, value === null ? '' : serializeField('Title', value, this.eol))
@@ -582,14 +677,10 @@ export class BerryMarkStudioDocument {
     const firstChild = node.parts.find(part => part.kind === 'node')
     if (firstChild) end = firstChild.node.start
     if (header) {
-      const eligible = node.parts.slice(0, firstChild ? node.parts.indexOf(firstChild) : node.parts.length)
-      const titlePart = eligible.find(part => part.kind === 'line' && !part.comment && this.#index.lines[part.line].text.trim())
-      if (titlePart) {
-        const titleLine = this.#index.lines[titlePart.line]
-        start = titleLine.end
-        const titlePosition = eligible.indexOf(titlePart)
-        const separator = eligible[titlePosition + 1]
-        if (separator?.kind === 'line' && this.#index.lines[separator.line].text === '') start = this.#index.lines[separator.line].end
+      const headerInfo = this.#richHeader(node)
+      if (headerInfo.valid) {
+        start = this.#index.lines[headerInfo.title.line].end
+        if (headerInfo.separator) start = this.#index.lines[headerInfo.separator.line].end
       }
     }
     this.#replacePreservingComments(start, end, serializeBody(value, this.eol))
@@ -613,17 +704,17 @@ export class BerryMarkStudioDocument {
       this.#replace(start, end, replacement)
       return
     }
-    const segments = []
-    let cursor = start
+    let output = ''
+    let replaced = false
     for (const range of ranges) {
-      segments.push({ start: cursor, end: range.start, replace: cursor === start })
-      cursor = range.end
+      if (!replaced) {
+        output += replacement
+        replaced = true
+      }
+      output += this.#source.slice(range.start, range.end)
     }
-    segments.push({ start: cursor, end, replace: cursor === start })
-    if (!segments.some(segment => segment.replace)) segments[0].replace = true
-    for (const segment of segments.reverse()) {
-      this.#replace(segment.start, segment.end, segment.replace ? replacement : '')
-    }
+    if (!replaced) output = replacement
+    this.#replace(start, end, output)
   }
 }
 
