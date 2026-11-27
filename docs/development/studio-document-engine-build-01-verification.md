@@ -1,7 +1,7 @@
 # BerryMark Studio Build 01 — Verification Record
 
 **Date:** 2026-11-28
-**Branch:** `feat/build-01-studio-document-engine`
+**Branch:** `feature/studio-document-engine`
 **Base:** `main` at `fb3c55ea28aca4ee8043ca8891b9fd817a25c494`
 **Scope:** Source-preserving Studio document engine only
 
@@ -45,4 +45,4 @@ The persistent workspace filesystem cannot create npm `.bin` symlinks and interm
 - YAML presentation is guaranteed for unrelated source; the specific inserted/replaced value may use the YAML library's standard quoting or layout.
 - Rich-body replacement preserves full-line editorial comments but does not infer comment ownership within replaced paragraphs.
 - Authenticated online Sanity reads and all Sanity writes remain unexecuted and out of scope. No credential was supplied or used.
-- GitHub branch creation was attempted but blocked by the Bibleberry organization's third-party OAuth application restrictions. Local commits and test evidence do not claim pushed or CI-verified status.
+- Local commits and test evidence do not by themselves imply pushed or CI-verified status; remote delivery and check results are recorded in the pull-request handoff.
