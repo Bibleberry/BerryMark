@@ -502,3 +502,46 @@ test('synthetic all-block construction validates, compiles, and round-trips with
   assert.deepEqual(compilation.sanityCandidate.screens[0].blocks.map(block => block._key), constructionSpecs.map(spec => spec.id))
   assert.deepEqual(compileBerryMark(openBerryMarkDocument(source).serialize()), compilation)
 })
+
+test('screen and block insertion, header updates, and removal restore unrelated source exactly', () => {
+  const document = openBerryMarkDocument(allBlocksSource)
+  document.updateScreen('compiler-fixture-screen', { label: 'Updated label', heading: 'Updated heading with more text' })
+  assert.equal(document.getScreen('compiler-fixture-screen').label, 'Updated label')
+  assert.equal(document.getScreen('compiler-fixture-screen').heading, 'Updated heading with more text')
+  const checkpoint = document.serialize()
+
+  document.addBlock('compiler-fixture-screen', { type: 'CB1', id: 'temporary-block', body: 'Temporary body.' }, 0)
+  assert.equal(document.getScreen('compiler-fixture-screen').blocks[0].id, 'temporary-block')
+  document.removeBlock('temporary-block')
+  assert.equal(document.getBlock('temporary-block'), null)
+
+  document.addScreen({ id: 'temporary-screen', label: 'Temporary', blocks: [{ type: 'CB1', id: 'temporary-screen-block', body: 'Temporary.' }] })
+  assert.equal(document.listScreens().at(-1).id, 'temporary-screen')
+  document.removeScreen('temporary-screen')
+  assert.equal(document.getScreen('temporary-screen'), null)
+  assert.equal(document.serialize(), checkpoint)
+  assert.equal(document.status, 'valid', JSON.stringify(document.diagnostics))
+})
+
+test('multiline plain-field edits remain localized and preserve literal field-looking content', () => {
+  const source = sourceWith('[[CB3 id=multiline-statement]]\nLabel: Keep\nText: |\n  First line.\n  Text: Literal second line.\n[[/CB3]]\n')
+  const document = openBerryMarkDocument(source)
+  document.updateBlock('multiline-statement', { fields: { Text: 'Replacement first line.\nText: Replacement literal line.', Label: 'Kept label' } })
+  assert.deepEqual(document.getBlock('multiline-statement').fields, {
+    Label: 'Kept label',
+    Text: 'Replacement first line.\nText: Replacement literal line.'
+  })
+  assert.ok(document.serialize().includes('Text: |\n  Replacement first line.\n  Text: Replacement literal line.\n[[/CB3]]'))
+  assert.equal(document.status, 'valid', JSON.stringify(document.diagnostics))
+})
+
+test('generated semantic IDs are deterministic, collision-safe, and never positional', () => {
+  const document = openBerryMarkDocument(allBlocksSource)
+  const first = document.addBlock('compiler-fixture-screen', { type: 'CB1', idHint: 'Repeated Teaching', body: 'First.' })
+  const second = document.addBlock('compiler-fixture-screen', { type: 'CB1', idHint: 'Repeated Teaching', body: 'Second.' })
+  assert.equal(first, 'repeated-teaching')
+  assert.equal(second, 'repeated-teaching-2')
+  document.moveBlock(second, 'compiler-fixture-screen', 0)
+  assert.equal(document.getScreen('compiler-fixture-screen').blocks[0].id, second)
+  assert.throws(() => document.addBlock('compiler-fixture-screen', { type: 'CB1', id: 'not valid', body: 'Invalid ID.' }), error => error.code === 'BM_STUDIO_ID_INVALID')
+})
