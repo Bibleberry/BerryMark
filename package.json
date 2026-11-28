@@ -8,6 +8,7 @@
   },
   "scripts": {
     "test": "npm ci && node --test",
+    "studio": "node src/studio/studio-cli.js",
     "check": "node src/cli.js check examples/hello-world.berry.md",
     "preview": "node src/cli.js preview examples/hello-world.berry.md",
     "compile": "node src/compiler-cli.js examples/compiler-all-blocks.berry.md",
