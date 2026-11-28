@@ -300,6 +300,68 @@ test('an interrupted manuscript write remains unsaved and leaves prepared recove
   expect(companion.transaction.targetReviewState.sourceSha256).toBe(companion.transaction.targetSourceSha256)
 })
 
+for (const identicalSource of [false, true]) {
+  test(`interrupted Save As retains destination review history with ${identicalSource ? 'identical' : 'different'} source bytes`, async ({ page }) => {
+    const destinationName = 'destination.berry.md'
+    const companionName = destinationName + '.review.json'
+    const destinationSource = identicalSource ? fixtureSource : fixtureSource.replace(/^  title: .*$/m, '  title: Previous destination')
+    const destinationDigest = createHash('sha256').update(destinationSource).digest('hex')
+    const targetDigest = createHash('sha256').update(fixtureSource).digest('hex')
+    const companionText = JSON.stringify({
+      format: 'berrymark-studio-review-file-v1',
+      manuscript: destinationName,
+      sourceSha256: destinationDigest,
+      reviewState: {
+        version: 'berrymark-studio-review-v1',
+        sourceSha256: destinationDigest,
+        approvalStale: true
+      }
+    })
+    await openFiles(page, fixtureSource)
+    await expect(page.locator('#diagnostic-list')).not.toContainText('BM_STUDIO_APPROVAL_STALE')
+    await page.evaluate(({ destinationName, companionName, destinationSource, companionText }) => {
+      const files = globalThis.__berryMarkTestFiles
+      files.set(destinationName, destinationSource)
+      files.set(companionName, companionText)
+      files.nextSave(destinationName, companionName)
+      files.failNextWrite(destinationName)
+    }, { destinationName, companionName, destinationSource, companionText })
+    await page.locator('#save-as-button').click()
+    await page.locator('#choose-save-manuscript').click()
+    await page.locator('#choose-save-review').click()
+    page.once('dialog', dialog => dialog.accept())
+    await page.locator('#confirm-save-destinations').click()
+    await expect(page.locator('#notice-text')).toContainText('manuscript write failed or was interrupted')
+    await expect(page.locator('#document-name')).toHaveText('working.berry.md')
+    await expect(page.locator('#diagnostic-list')).not.toContainText('BM_STUDIO_APPROVAL_STALE')
+    expect(await fileText(page, 'working.berry.md')).toBe(fixtureSource)
+    expect(await fileText(page, destinationName)).toBe(destinationSource)
+    const preparedText = await fileText(page, companionName)
+    const { transaction } = JSON.parse(preparedText)
+    expect(transaction).toMatchObject({
+      phase: 'prepared',
+      previousSourceSha256: destinationDigest,
+      previousReviewState: { sourceSha256: destinationDigest, approvalStale: true },
+      targetSourceSha256: targetDigest,
+      targetReviewState: { sourceSha256: targetDigest, approvalStale: identicalSource }
+    })
+    await openFiles(page, destinationSource, { manuscriptName: destinationName, companionName, companionText: preparedText })
+    await expect(page.locator('#review-recovery')).toContainText(
+      identicalSource ? 'safely recovered' : 'retained the previous manuscript'
+    )
+    await expect(page.locator('#diagnostic-list')).toContainText('BM_STUDIO_APPROVAL_STALE')
+
+    if (identicalSource) {
+      // On retried replacement, the open source still starts with its own review state.
+      await openFiles(page, fixtureSource)
+      page.once('dialog', dialog => dialog.accept())
+      await saveAs(page, destinationName, companionName)
+      await expect(page.locator('#diagnostic-list')).toContainText('BM_STUDIO_APPROVAL_STALE')
+      expect(JSON.parse(await fileText(page, companionName)).reviewState.approvalStale).toBe(true)
+    }
+  })
+}
+
 test('denied file permission prevents writes and retains dirty state', async ({ page }) => {
   await createDocument(page, 'Permission check')
   await page.evaluate(() => globalThis.__berryMarkTestFiles.nextSave('denied.berry.md', 'denied.berry.md.review.json'))

@@ -46,6 +46,16 @@ async function readHandle(handle) {
   }
 }
 
+async function inspectDestination(handle) {
+  try {
+    const file = await handle.getFile()
+    return { size: file.size, sourceSha256: await sha256Buffer(await file.arrayBuffer()) }
+  } catch (error) {
+    if (error?.name === 'NotFoundError') return { size: 0, sourceSha256: null }
+    throw error
+  }
+}
+
 export const fileAccess = {
   async openManuscript() {
     const override = pickerOverride('openManuscript')
@@ -84,6 +94,7 @@ export const fileAccess = {
   },
 
   readHandle,
+  inspectDestination,
 
   async ensureReadWrite(handle) {
     if (!handle) throw new StudioFileError('BM_STUDIO_FILE_HANDLE_MISSING', 'Choose a file destination before saving.')
@@ -129,8 +140,14 @@ export const fileAccess = {
     }
   },
 
-  createStore(manuscriptHandle, reviewHandle) {
+  createStore(manuscriptHandle, reviewHandle, previousSourceSha256) {
     return {
+      async verifyManuscript() {
+        const current = await inspectDestination(manuscriptHandle)
+        if (current.sourceSha256 !== previousSourceSha256) {
+          throw new StudioFileError('BM_STUDIO_FILE_EXTERNAL_CHANGE', 'The destination manuscript changed during the save. Studio did not overwrite it. Review the destination and try again.')
+        }
+      },
       async readReviewState() {
         if (!reviewHandle) return null
         return (await readHandle(reviewHandle)).text

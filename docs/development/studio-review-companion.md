@@ -34,14 +34,14 @@ The engine review state also contains the same source digest and an `approvalSta
 
 Two filesystem objects cannot be updated as one atomic transaction through Chromium's File System Access API. Studio uses an explicit recovery record instead:
 
-1. Inspect the existing companion and, when necessary, obtain explicit permission to reset missing, malformed, or mismatched history.
+1. Inspect the selected destination manuscript bytes and the destination companion. Confirm replacement of existing files for Save As, or obtain explicit permission to reset missing, malformed, or mismatched history for Save.
 2. Serialize source and review state through the Build 01 engine.
-3. Write a **prepared** companion containing both the previous and target digests/review states.
-4. Write the manuscript.
+3. Check the destination manuscript digest again. Write a **prepared** companion containing the destination’s previous digest and matching review state, plus the working document’s target digest and review state.
+4. Recheck the destination manuscript digest, then write the manuscript.
 5. Write the **complete** companion with the same transaction ID and target state.
 6. Read back the manuscript and require its SHA-256 to equal the engine output.
 7. Read back the companion and require finalized, matching review state.
-8. Reopen the serialized manuscript through the engine and only then report success.
+8. Reopen the serialized manuscript and verified review state through the engine and only then report success.
 
 Conceptually, the prepared record contains:
 
@@ -62,7 +62,7 @@ Conceptually, the prepared record contains:
 }
 ```
 
-The actual companion also retains the finalized top-level digest and target review state so the target can be recovered if the last write is interrupted.
+The actual companion also retains the finalized top-level digest and target review state so the target can be recovered if the last write is interrupted. If the previous and target digests are identical, Studio retains a stale-approval warning from either state because both refer to the same source bytes.
 
 The transaction protocol cannot make two files atomic. Its guarantee is narrower and explicit: an interrupted phase is marked, save success is withheld, and reopening can select the review state that matches the manuscript bytes actually present.
 

@@ -20,24 +20,26 @@ function parseJson(text) {
   }
 }
 
-function validReviewState(value) {
+function validReviewState(value, digest) {
   return value && typeof value === 'object' && !Array.isArray(value) &&
     value.version === REVIEW_STATE_VERSION &&
-    typeof value.sourceSha256 === 'string' &&
+    typeof digest === 'string' && value.sourceSha256 === digest &&
     typeof value.approvalStale === 'boolean'
 }
 
-function reviewStateString(value) {
-  return validReviewState(value) ? JSON.stringify(value) : null
+function retainStaleApproval(previous, target) {
+  if (previous?.sourceSha256 === target.sourceSha256 && previous.approvalStale && !target.approvalStale) {
+    return { ...target, approvalStale: true }
+  }
+  return target
 }
 
 function transactionState(transaction, key) {
-  const suffix = key === 'target' ? 'target' : 'previous'
-  const digest = transaction?.[`${suffix}SourceSha256`]
-  const reviewState = transaction?.[`${suffix}ReviewState`]
+  const digest = transaction[`${key}SourceSha256`]
+  const reviewState = transaction[`${key}ReviewState`]
   if (typeof digest !== 'string') return null
-  if (reviewState !== null && !validReviewState(reviewState)) return null
-  return { digest, reviewState: reviewStateString(reviewState) }
+  if (reviewState !== null && !validReviewState(reviewState, digest)) return null
+  return { digest, reviewState }
 }
 
 export function companionFilename(manuscriptName) {
@@ -62,10 +64,10 @@ export function recoverReviewCompanion(manuscriptSha256, companionText) {
       message: 'The review companion is malformed or unsupported. The manuscript is preserved, but review history cannot be restored.'
     }
   }
-  if (companion.transaction?.phase !== 'prepared' && companion.sourceSha256 === manuscriptSha256 && validReviewState(companion.reviewState)) {
+  if (companion.transaction?.phase !== 'prepared' && companion.sourceSha256 === manuscriptSha256 && validReviewState(companion.reviewState, manuscriptSha256)) {
     return {
       status: 'matched',
-      reviewState: reviewStateString(companion.reviewState),
+      reviewState: JSON.stringify(companion.reviewState),
       requiresResetConfirmation: false,
       message: 'Review history matches this manuscript.'
     }
@@ -77,15 +79,17 @@ export function recoverReviewCompanion(manuscriptSha256, companionText) {
     if (target?.digest === manuscriptSha256 && target.reviewState) {
       return {
         status: 'recovered-target',
-        reviewState: target.reviewState,
+        reviewState: JSON.stringify(retainStaleApproval(previous?.reviewState, target.reviewState)),
         requiresResetConfirmation: false,
-        message: 'An earlier save stopped after updating the manuscript. Studio safely recovered its matching review history; save again to finalize the companion.'
+        message: previous?.digest === target.digest
+          ? 'An earlier save was interrupted. Studio safely recovered the matching review history for both identical versions; save again to finalize the companion.'
+          : 'An earlier save stopped after updating the manuscript. Studio safely recovered its matching review history; save again to finalize the companion.'
       }
     }
     if (previous?.digest === manuscriptSha256) {
       return {
         status: 'recovered-previous',
-        reviewState: previous.reviewState,
+        reviewState: previous.reviewState ? JSON.stringify(previous.reviewState) : null,
         requiresResetConfirmation: false,
         message: 'An earlier save stopped before changing the manuscript. Studio retained the previous manuscript and its matching review history.'
       }
@@ -108,25 +112,26 @@ function preparedCompanion({
   targetReviewState
 }) {
   const target = parseJson(targetReviewState)
-  if (!validReviewState(target) || target.sourceSha256 !== targetSourceSha256) {
+  if (!validReviewState(target, targetSourceSha256)) {
     throw new ReviewCompanionError('BM_STUDIO_REVIEW_STATE_INVALID', 'The engine returned review state that does not match the manuscript being saved')
   }
   const previous = previousReviewState ? parseJson(previousReviewState) : null
-  if (previousReviewState && !validReviewState(previous)) {
+  if (previousReviewState && !validReviewState(previous, previousSourceSha256)) {
     throw new ReviewCompanionError('BM_STUDIO_REVIEW_STATE_INVALID', 'The previous review state is invalid')
   }
+  const retainedTarget = retainStaleApproval(previous, target)
   return {
     format: REVIEW_FILE_FORMAT,
     manuscript: manuscriptName,
     sourceSha256: targetSourceSha256,
-    reviewState: target,
+    reviewState: retainedTarget,
     transaction: {
       id: transactionId,
       phase: 'prepared',
       previousSourceSha256: previousSourceSha256 ?? null,
       previousReviewState: previous,
       targetSourceSha256,
-      targetReviewState: target
+      targetReviewState: retainedTarget
     }
   }
 }
@@ -174,6 +179,7 @@ export async function saveReviewBoundDocument({
     transaction: { ...prepared.transaction, phase: 'complete' }
   }
 
+  await store.verifyManuscript?.()
   onPhase('prepare-review')
   try {
     await store.writeReviewState(`${JSON.stringify(prepared, null, 2)}\n`)
@@ -181,6 +187,7 @@ export async function saveReviewBoundDocument({
     throw new ReviewCompanionError('BM_STUDIO_SAVE_REVIEW_PREPARE_FAILED', 'Studio could not prepare the review companion. The manuscript was not written; changes remain unsaved.', 'prepare-review')
   }
 
+  await store.verifyManuscript?.()
   onPhase('write-manuscript')
   try {
     await store.writeManuscript(source)

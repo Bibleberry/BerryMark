@@ -534,17 +534,25 @@ async function saveDocument(saveAsRequested = false, destinations = null) {
     try {
       if (!manuscriptHandle?.name.endsWith('.berry.md')) throw new Error('Choose a filename ending in .berry.md so the authored product remains a BerryMark manuscript.')
       if (!reviewHandle) throw new Error('Choose a review companion destination before saving. No manuscript write has occurred.')
+      if (manuscriptHandle === reviewHandle || await manuscriptHandle.isSameEntry?.(reviewHandle)) {
+        throw new Error('Choose separate files for the manuscript and its review companion.')
+      }
       await Promise.all([
         fileAccess.ensureReadWrite(manuscriptHandle),
         fileAccess.ensureReadWrite(reviewHandle)
       ])
 
+      let previousSourceSha256
       if (saveAs) {
-        const manuscriptExists = await fileAccess.hasExistingContent(manuscriptHandle)
-        const reviewExists = await fileAccess.hasExistingContent(reviewHandle)
-        if ((manuscriptExists || reviewExists) && !confirmAction('The selected destination already contains data. Replace the selected manuscript and/or review companion with this working document?')) return
+        const [destination, reviewExists] = await Promise.all([
+          fileAccess.inspectDestination(manuscriptHandle),
+          fileAccess.hasExistingContent(reviewHandle)
+        ])
+        if ((destination.size > 0 || reviewExists) && !confirmAction('The selected destination already contains data. Replace the selected manuscript and/or review companion with this working document?')) return
+        previousSourceSha256 = destination.sourceSha256
       } else {
-        await fileAccess.assertUnchanged(manuscriptHandle, [state.savedDigest, state.partialSave?.targetSha256])
+        const destination = await fileAccess.assertUnchanged(manuscriptHandle, [state.savedDigest, state.partialSave?.targetSha256])
+        previousSourceSha256 = destination.sourceSha256
       }
 
       const resetConfirmed = !saveAs && state.reviewRecovery?.requiresResetConfirmation
@@ -553,13 +561,13 @@ async function saveDocument(saveAsRequested = false, destinations = null) {
       if (!saveAs && state.reviewRecovery?.requiresResetConfirmation && !resetConfirmed) return
 
       serialized = await studioApi.serialize(state.document)
-      const store = fileAccess.createStore(manuscriptHandle, reviewHandle)
-      await saveReviewBoundDocument({
+      const store = fileAccess.createStore(manuscriptHandle, reviewHandle, previousSourceSha256)
+      const saved = await saveReviewBoundDocument({
         store,
         source: serialized.source,
         sourceSha256: serialized.sourceSha256,
         reviewState: serialized.reviewState,
-        previousSourceSha256: state.savedDigest,
+        previousSourceSha256,
         manuscriptName: manuscriptHandle.name,
         allowCompanionReset: saveAs || resetConfirmed,
         onPhase: phase => {
@@ -570,11 +578,14 @@ async function saveDocument(saveAsRequested = false, destinations = null) {
       const manuscriptReadback = await fileAccess.readHandle(manuscriptHandle)
       if (manuscriptReadback.sourceSha256 !== serialized.sourceSha256) throw new Error('The manuscript read-back did not match the engine output. Studio is keeping the document marked unsaved.')
       const reviewReadback = recoverReviewCompanion(serialized.sourceSha256, (await fileAccess.readHandle(reviewHandle)).text)
-      if (reviewReadback.status !== 'matched') throw new Error('The review companion read-back was not finalized. Studio is keeping the document marked unsaved.')
+      if (reviewReadback.status !== 'matched' ||
+          JSON.parse(reviewReadback.reviewState).approvalStale !== saved.companion.reviewState.approvalStale) {
+        throw new Error('The review companion read-back did not match the finalized review state. Studio is keeping the document marked unsaved.')
+      }
       const reopened = await studioApi.open({
         source: serialized.source,
         filename: manuscriptHandle.name,
-        reviewState: serialized.reviewState
+        reviewState: reviewReadback.reviewState
       })
       adoptDocument(reopened, {
         savedDigest: serialized.sourceSha256,

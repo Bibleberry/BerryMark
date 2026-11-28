@@ -141,6 +141,86 @@ test('an interrupted final review write recovers the new manuscript and its targ
   })
 })
 
+test('replacement preserves destination review history before the manuscript write and target history after it', async () => {
+  await fileHarness(async ({ store, manuscriptPath, reviewPath }) => {
+    const destination = openBerryMarkDocument(fixture)
+    destination.setMetadata('editorial.approvalStatus', 'approved')
+    destination.setMetadata('editorial.approvedBy', 'Synthetic QA reviewer')
+    destination.setMetadata('editorial.approvedAt', '2026-11-20T12:00:00Z')
+    destination.setMetadata('challenge.title', 'Destination with stale approval')
+    const destinationSource = await save(store, destination)
+    const destinationDigest = sha256(destinationSource)
+    const target = openBerryMarkDocument(fixture)
+
+    const interruptedWrite = {
+      ...store,
+      async writeManuscript() { throw new Error('simulated interruption') }
+    }
+    await assert.rejects(save(interruptedWrite, target, destinationDigest, true), {
+      code: 'BM_STUDIO_SAVE_MANUSCRIPT_FAILED'
+    })
+    assert.equal(await readFile(manuscriptPath, 'utf8'), destinationSource)
+    const prepared = JSON.parse(await readFile(reviewPath, 'utf8'))
+    assert.equal(prepared.transaction.previousSourceSha256, destinationDigest)
+    assert.equal(prepared.transaction.previousReviewState.approvalStale, true)
+    assert.equal(prepared.transaction.targetSourceSha256, sha256(fixture))
+    assert.equal(prepared.transaction.targetReviewState.approvalStale, false)
+    const previous = recoverReviewCompanion(destinationDigest, JSON.stringify(prepared))
+    assert.equal(previous.status, 'recovered-previous')
+    assert.equal(previous.reviewState, destination.serializeReviewState())
+
+    let reviewWrites = 0
+    const interruptedFinalization = {
+      ...store,
+      async writeReviewState(text) {
+        if (++reviewWrites === 2) throw new Error('simulated finalization failure')
+        await store.writeReviewState(text)
+      }
+    }
+    await assert.rejects(save(interruptedFinalization, target, destinationDigest, true), {
+      code: 'BM_STUDIO_SAVE_FINALIZE_FAILED'
+    })
+    assert.equal(await readFile(manuscriptPath, 'utf8'), fixture)
+    const journal = await readFile(reviewPath, 'utf8')
+    const recovered = recoverReviewCompanion(sha256(fixture), journal)
+    assert.equal(recovered.status, 'recovered-target')
+    assert.equal(recovered.reviewState, target.serializeReviewState())
+    assert.equal(recoverReviewCompanion(destinationDigest, journal).reviewState, previous.reviewState)
+  })
+})
+
+test('identical replacement bytes retain a destination stale-approval warning in prepared and complete companions', async () => {
+  await fileHarness(async ({ store, manuscriptPath, reviewPath }) => {
+    const target = openBerryMarkDocument(fixture)
+    const digest = sha256(fixture)
+    const previous = openBerryMarkDocument(fixture, {
+      reviewState: JSON.stringify({ ...JSON.parse(target.serializeReviewState()), approvalStale: true })
+    })
+    await save(store, previous)
+    const interrupted = {
+      ...store,
+      async writeManuscript() { throw new Error('simulated interruption') }
+    }
+    await assert.rejects(save(interrupted, target, digest, true), { code: 'BM_STUDIO_SAVE_MANUSCRIPT_FAILED' })
+    assert.equal(await readFile(manuscriptPath, 'utf8'), fixture)
+    const prepared = JSON.parse(await readFile(reviewPath, 'utf8'))
+    assert.equal(prepared.transaction.previousReviewState.approvalStale, true)
+    assert.equal(prepared.transaction.targetReviewState.approvalStale, true)
+    const recovered = recoverReviewCompanion(digest, JSON.stringify(prepared))
+    assert.equal(JSON.parse(recovered.reviewState).approvalStale, true)
+
+    // A prepared companion from before the correction can contain both claims.
+    prepared.transaction.targetReviewState.approvalStale = false
+    const older = recoverReviewCompanion(digest, JSON.stringify(prepared))
+    assert.equal(JSON.parse(older.reviewState).approvalStale, true)
+
+    await save(store, target, digest, true)
+    const complete = recoverReviewCompanion(digest, await readFile(reviewPath, 'utf8'))
+    assert.equal(complete.status, 'matched')
+    assert.equal(JSON.parse(complete.reviewState).approvalStale, true)
+  })
+})
+
 test('missing, malformed, and mismatched review information never fabricates history and requires explicit reset confirmation', async () => {
   const digest = sha256(fixture)
   for (const [text, status] of [[null, 'missing'], ['{bad', 'malformed'], ['{}', 'malformed']]) {
