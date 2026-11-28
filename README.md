@@ -26,6 +26,25 @@ The validator uses the exactly pinned `yaml` dependency for safe YAML 1.2 parsin
 
 Bibleberry R08A-4A monthly fixtures (`month-2096-02`, `month-2098-02`, `month-2098-03`, `month-2098-04`, and `r08a-stg-*` IDs) are Bibleberry-owned staging test documents. BerryMark's importer handles one-way Challenge drafts only; it does not handle `monthlyPublication`, month rosters, or fixture mutation.
 
+## BerryMark Studio (Build 02)
+
+Studio is a locally hosted Chromium workspace for creating, inspecting, organizing, and saving `.berry.md` manuscripts. Node.js 22 is the primary development and verification runtime; the package remains compatible with Node.js 20 or newer.
+
+```bash
+npm ci
+npm run studio
+```
+
+Open the exact loopback address printed by the command in Chrome or Chromium. Stop Studio with **Ctrl+C**. No separate frontend process, database, account, external hosting service, AI service, or Sanity connection is used during ordinary editing.
+
+The manuscript remains the authored product. Studio also saves a `<manuscript-name>.review.json` companion so source-digest-bound editorial review warnings survive reopening. Keep the two files together. Studio does not grant editorial or publication approval, and Build 02 intentionally provides read-only Content Block cards rather than specialized block editors.
+
+- [Installation, startup, and author workflow](docs/development/studio-browser-application.md)
+- [Architecture and API integration](docs/development/studio-application-architecture.md)
+- [Review companion and interrupted-save recovery](docs/development/studio-review-companion.md)
+- [Build 02 verification and manual-test record](docs/development/studio-build-02-verification.md)
+- [Implementation handoff](docs/development/studio-build-02-handoff.md)
+
 ## Project references
 
 - [Language specification](docs/language-spec.md)

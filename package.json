@@ -8,6 +8,8 @@
   },
   "scripts": {
     "test": "npm ci && node --test",
+    "test:browser": "node node_modules/@playwright/test/cli.js test",
+    "studio": "node src/studio/studio-cli.js",
     "check": "node src/cli.js check examples/hello-world.berry.md",
     "preview": "node src/cli.js preview examples/hello-world.berry.md",
     "compile": "node src/compiler-cli.js examples/compiler-all-blocks.berry.md",
@@ -20,5 +22,8 @@
   "dependencies": {
     "marked": "18.1.3",
     "yaml": "2.9.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1"
   }
 }

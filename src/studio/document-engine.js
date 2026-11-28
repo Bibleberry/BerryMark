@@ -156,6 +156,16 @@ export class BerryMarkStudioDocument {
   }
   get reviewDiagnostics() { return clone(this.#reviewDiagnostics) }
 
+  // Stage a group of edits without affecting the original working document.
+  fork() {
+    const copy = new BerryMarkStudioDocument(this.#source, {
+      filename: this.#filename,
+      reviewState: this.serializeReviewState()
+    })
+    copy.#dirty = this.#dirty
+    return copy
+  }
+
   serialize() { return this.#source }
   serializeReviewState() {
     return JSON.stringify({

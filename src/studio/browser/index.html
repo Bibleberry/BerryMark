@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <link rel="icon" href="data:,">
+  <title>BerryMark Studio</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#workspace">Skip to document workspace</a>
+  <div class="application" id="application">
+    <header class="toolbar" aria-label="Application toolbar">
+      <div class="brand" aria-label="BerryMark Studio">
+        <span class="brand-mark" aria-hidden="true">B</span>
+        <span>BerryMark <strong>Studio</strong></span>
+      </div>
+      <div class="file-actions" role="group" aria-label="Document actions">
+        <button type="button" id="new-button" class="button button-quiet">New</button>
+        <button type="button" id="open-button" class="button button-quiet">Open</button>
+        <button type="button" id="save-button" class="button button-primary" disabled>Save</button>
+        <button type="button" id="save-as-button" class="button button-quiet" disabled>Save As</button>
+      </div>
+      <div class="document-identity">
+        <span class="document-name" id="document-name">No document open</span>
+        <span class="unsaved-indicator" id="unsaved-indicator" hidden>Unsaved changes</span>
+      </div>
+      <div class="validation-summary" id="validation-summary" data-status="empty">
+        <span class="status-symbol" aria-hidden="true">—</span>
+        <span id="validation-text">No document</span>
+      </div>
+    </header>
+
+    <div class="notice" id="notice" role="status" aria-live="polite" hidden>
+      <span id="notice-text"></span>
+      <button type="button" id="dismiss-notice" aria-label="Dismiss message">Dismiss</button>
+    </div>
+
+    <div class="application-grid">
+      <aside class="screen-navigator" aria-labelledby="screens-title">
+        <div class="panel-heading">
+          <div>
+            <p class="panel-kicker">Manuscript</p>
+            <h2 id="screens-title">Screens</h2>
+          </div>
+          <button type="button" id="add-screen-button" class="button button-small" disabled>Add screen</button>
+        </div>
+        <p class="screen-count" id="screen-count">Open or create a document to begin.</p>
+        <ol class="screen-list" id="screen-list"></ol>
+        <div class="navigator-note">
+          <span class="small-rule" aria-hidden="true"></span>
+          <p>Screens keep their semantic identity when renamed or moved.</p>
+        </div>
+      </aside>
+
+      <main class="document-workspace" id="workspace" tabindex="-1">
+        <section class="welcome" id="welcome-view">
+          <p class="welcome-kicker">Local manuscript workspace</p>
+          <h1>Author with the source<br>still in view.</h1>
+          <p class="welcome-copy">Create a BerryMark document or open an existing <code>.berry.md</code> manuscript. Studio keeps the document engine in charge of every structural change.</p>
+          <div class="welcome-actions">
+            <button type="button" id="welcome-open" class="button button-primary">Open a manuscript</button>
+            <button type="button" id="welcome-new" class="button button-secondary">Create a document</button>
+          </div>
+          <dl class="welcome-facts">
+            <div><dt>Authoritative product</dt><dd>Your <code>.berry.md</code> file</dd></div>
+            <div><dt>Network boundary</dt><dd>This computer only</dd></div>
+            <div><dt>Content Blocks</dt><dd>All nine types, read-only in Build 02</dd></div>
+          </dl>
+        </section>
+
+        <section class="screen-document" id="document-view" hidden aria-labelledby="screen-heading">
+          <header class="workspace-heading">
+            <div>
+              <p class="screen-position" id="screen-position"></p>
+              <h1 id="screen-heading"></h1>
+              <p class="screen-label" id="screen-label"></p>
+            </div>
+            <button type="button" class="button button-secondary" id="edit-screen-button">Edit screen</button>
+          </header>
+          <div class="empty-screen" id="empty-screen" hidden>
+            <h2>This screen has no Content Blocks.</h2>
+            <p>The empty structure remains editable and will be reported as incomplete. Graphical block editing is scheduled for Build 03.</p>
+          </div>
+          <div class="block-list" id="block-list"></div>
+        </section>
+
+        <section class="no-screen" id="no-screen-view" hidden>
+          <h1>Begin with a screen.</h1>
+          <p>This document has no ordered screens yet. Add one to establish its reading structure. Incomplete documents are welcome during composition.</p>
+          <button type="button" class="button button-primary" id="empty-add-screen">Add the first screen</button>
+        </section>
+      </main>
+
+      <aside class="inspector" aria-label="Document information and diagnostics">
+        <section class="document-information" aria-labelledby="document-info-title">
+          <div class="panel-heading inspector-heading">
+            <div>
+              <p class="panel-kicker">Challenge</p>
+              <h2 id="document-info-title">Document information</h2>
+            </div>
+          </div>
+          <p class="inspector-intro" id="metadata-intro">No manuscript is open.</p>
+          <form id="metadata-form" hidden>
+            <div class="field-group">
+              <label for="challenge-title">Title <span class="required-note">Required for completion</span></label>
+              <input id="challenge-title" name="title" type="text" autocomplete="off" maxlength="500">
+            </div>
+            <div class="field-group">
+              <div class="label-row">
+                <label for="challenge-summary">Summary <span class="optional-note">Optional</span></label>
+                <select id="summary-state" aria-label="Summary value state">
+                  <option value="authored">Authored value</option>
+                  <option value="null">Explicit null</option>
+                  <option value="missing">Missing</option>
+                </select>
+              </div>
+              <textarea id="challenge-summary" name="summary" rows="3" maxlength="4000"></textarea>
+              <p class="field-state" id="summary-state-description"></p>
+            </div>
+            <div class="field-group">
+              <label for="challenge-slug">Stable slug <span class="required-note">Required for completion</span></label>
+              <input id="challenge-slug" name="slug" type="text" autocomplete="off" maxlength="500" spellcheck="false">
+            </div>
+            <div class="field-group">
+              <label for="challenge-type">Challenge type <span class="required-note">Required for completion</span></label>
+              <select id="challenge-type" name="type">
+                <option value="">Not supplied</option>
+                <option value="teaching">Teaching</option>
+                <option value="discipline">Discipline</option>
+                <option value="reflection">Reflection</option>
+                <option value="memorization">Memorization</option>
+              </select>
+            </div>
+            <button type="submit" class="button button-secondary metadata-submit" id="apply-metadata">Apply document information</button>
+            <p class="form-note" id="metadata-draft-note" hidden>Document information has unapplied edits.</p>
+            <p class="form-note">Changes go through the Build 01 metadata API. Saving the file is a separate action.</p>
+          </form>
+          <div class="readonly-metadata" id="readonly-metadata" hidden>
+            <h3>Publishing and editorial record <span>Read-only</span></h3>
+            <dl id="publishing-values"></dl>
+            <p>Studio never grants approval, schedules publication, or certifies a revision.</p>
+          </div>
+        </section>
+
+        <section class="diagnostics-panel" aria-labelledby="diagnostics-title">
+          <div class="panel-heading inspector-heading">
+            <div>
+              <p class="panel-kicker">Review</p>
+              <h2 id="diagnostics-title">Diagnostics</h2>
+            </div>
+            <span class="diagnostic-count" id="diagnostic-count">0</span>
+          </div>
+          <p class="diagnostic-explainer">Validation is not import readiness, editorial approval, or publication readiness.</p>
+          <div class="review-recovery" id="review-recovery" hidden></div>
+          <ul class="diagnostic-list" id="diagnostic-list"></ul>
+          <p class="no-diagnostics" id="no-diagnostics">No document diagnostics to display.</p>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <dialog id="new-dialog" class="studio-dialog" aria-labelledby="new-dialog-title">
+    <form method="dialog" id="new-form">
+      <div class="dialog-heading">
+        <p class="panel-kicker">New manuscript</p>
+        <h2 id="new-dialog-title">Create a document</h2>
+      </div>
+      <p>Start incompletely and add only what you know. Studio will not invent dates, approval, Scripture, rights, or publishing metadata.</p>
+      <div class="field-group">
+        <label for="new-filename">Working filename</label>
+        <input id="new-filename" type="text" value="untitled.berry.md" required pattern=".*\.berry\.md$" autocomplete="off">
+      </div>
+      <div class="field-group">
+        <label for="new-title">Challenge title <span class="optional-note">May remain empty</span></label>
+        <input id="new-title" type="text" autocomplete="off" maxlength="500">
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="button button-quiet" data-close-dialog="new-dialog">Cancel</button>
+        <button type="submit" class="button button-primary" value="create">Create document</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="screen-dialog" class="studio-dialog" aria-labelledby="screen-dialog-title">
+    <form method="dialog" id="screen-form">
+      <div class="dialog-heading">
+        <p class="panel-kicker">Screen structure</p>
+        <h2 id="screen-dialog-title">Add a screen</h2>
+      </div>
+      <div class="field-group">
+        <label for="screen-label-input">Label <span class="required-note">Used as the visible screen name</span></label>
+        <input id="screen-label-input" type="text" required autocomplete="off" maxlength="500">
+      </div>
+      <div class="field-group">
+        <label for="screen-heading-input">Heading <span class="optional-note">Optional</span></label>
+        <input id="screen-heading-input" type="text" autocomplete="off" maxlength="1000">
+      </div>
+      <p class="form-note" id="screen-id-note">Studio generates and preserves the semantic ID. You never need to manage it.</p>
+      <div class="dialog-actions">
+        <button type="button" class="button button-quiet" data-close-dialog="screen-dialog">Cancel</button>
+        <button type="submit" class="button button-primary" id="screen-dialog-submit" value="save">Add screen</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="save-dialog" class="studio-dialog" aria-labelledby="save-dialog-title">
+    <form method="dialog" id="save-form">
+      <div class="dialog-heading">
+        <p class="panel-kicker">Verified two-file save</p>
+        <h2 id="save-dialog-title">Choose save destinations</h2>
+      </div>
+      <p>Select each destination with its own button so Chromium receives a clear user gesture. Studio prepares review recovery information before writing the manuscript, then finalizes and reads back both files.</p>
+      <div class="destination-row">
+        <div><span class="destination-label">Manuscript</span><strong id="save-manuscript-name">Not selected</strong></div>
+        <button type="button" class="button button-secondary" id="choose-save-manuscript">Choose manuscript</button>
+      </div>
+      <div class="destination-row">
+        <div><span class="destination-label">Review companion</span><strong id="save-review-name">Not selected</strong></div>
+        <button type="button" class="button button-secondary" id="choose-save-review">Choose companion</button>
+      </div>
+      <p class="form-note">Cancellation before the final save action leaves the current files and working document untouched.</p>
+      <div class="dialog-actions">
+        <button type="button" class="button button-quiet" data-close-dialog="save-dialog">Cancel</button>
+        <button type="submit" class="button button-primary" id="confirm-save-destinations" value="save">Save both files</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
