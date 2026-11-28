@@ -119,6 +119,77 @@ test('revision conflicts and failed mutations cannot silently overwrite or parti
   })
 })
 
+test('grouped edits commit once or retain the exact source, validation, dirty flag, and review state', async () => {
+  await harness(async ({ request }) => {
+    const approved = fixture
+      .replace('approvalStatus: pending', 'approvalStatus: approved')
+      .replace('approvedBy: null', 'approvedBy: Synthetic QA reviewer')
+      .replace('approvedAt: null', 'approvedAt: "2026-11-20T12:00:00Z"')
+    const source = '\ufeff' + approved.trimEnd().replace(/\n/g, '\r\n')
+    const opened = await request('/api/documents', {
+      method: 'POST',
+      body: { action: 'open', source, filename: 'approved.berry.md' }
+    })
+    assert.equal(opened.status, 201)
+    const original = opened.body
+    assert.equal(original.status, 'valid')
+    const path = `/api/documents/${original.id}`
+    const title = { operation: 'metadata.set', payload: { path: 'challenge.title', value: 'Grouped title' } }
+    const slug = { operation: 'metadata.set', payload: { path: 'challenge.slug', value: '' } }
+    const summary = { operation: 'metadata.delete', payload: { path: 'challenge.summary' } }
+    const group = (revision, operations) => request(`${path}/operations`, {
+      method: 'POST', body: { revision, operations }
+    })
+    const serialize = revision => request(`${path}/serialize`, { method: 'POST', body: { revision } })
+    const before = await serialize(0)
+    assert.equal(before.body.source, source)
+
+    const failed = await group(0, [
+      title, { ...slug, payload: { ...slug.payload, path: 'challenge.invalid' } }, summary
+    ])
+    assert.equal(failed.status, 422)
+    assert.equal(failed.body.error.code, 'BM_STUDIO_METADATA_PATH')
+    assert.deepEqual((await request(path)).body, original)
+    assert.deepEqual(await serialize(0), before)
+
+    const stale = await group(-1, [title, slug, summary])
+    assert.equal(stale.status, 409)
+    assert.equal(stale.body.error.code, 'BM_STUDIO_REVISION_CONFLICT')
+    assert.deepEqual(await serialize(0), before)
+
+    const applied = await group(0, [title, slug, summary])
+    assert.equal(applied.status, 200)
+    assert.equal(applied.body.revision, 1)
+    assert.equal(applied.body.metadata.challenge.title, 'Grouped title')
+    assert.equal(applied.body.metadata.challenge.slug, '')
+    assert.equal(applied.body.metadata.challenge.summary, undefined)
+    assert.equal(applied.body.status, 'incomplete')
+    assert.equal(applied.body.dirty, true)
+    assert.deepEqual(applied.body.metadata.editorial, original.metadata.editorial)
+    assert.equal(applied.body.reviewDiagnostics[0].code, 'BM_STUDIO_APPROVAL_STALE')
+    assert.equal((await serialize(0)).status, 409)
+    assert.equal((await group(0, [title])).status, 409)
+    const after = await serialize(1)
+    assert.equal(after.body.source.startsWith('\ufeff---\r\n'), true)
+    assert.equal(after.body.source.includes('\n') && !after.body.source.replaceAll('\r\n', '').includes('\n'), true)
+    assert.equal(after.body.source.slice(after.body.source.indexOf('\r\n---\r\n')), source.slice(source.indexOf('\r\n---\r\n')))
+    assert.equal(JSON.parse(after.body.reviewState).approvalStale, true)
+    assert.equal(JSON.parse(after.body.reviewState).sourceSha256, after.body.sourceSha256)
+
+    const noOp = await group(1, [title, summary])
+    assert.equal(noOp.status, 200)
+    assert.equal(noOp.body.revision, 1)
+    assert.deepEqual(await serialize(1), after)
+    const failedWhileDirty = await group(1, [
+      { ...title, payload: { ...title.payload, value: 'Another title' } },
+      { operation: 'metadata.set', payload: { path: 'berrymark', value: '0.0' } }
+    ])
+    assert.equal(failedWhileDirty.body.error.code, 'BM_STUDIO_EDIT_UNSAFE')
+    assert.deepEqual(await serialize(1), after)
+    assert.equal((await request(path)).body.dirty, true)
+  })
+})
+
 test('document sessions are isolated from one another', async () => {
   await harness(async ({ request }) => {
     const first = await createDocument(request)

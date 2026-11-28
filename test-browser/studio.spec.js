@@ -155,6 +155,78 @@ test('open, inspect all blocks, edit, organize, save, and reopen with digest-bou
   await expect(page.locator('#unsaved-indicator')).toBeHidden()
 })
 
+base('metadata Apply rolls back a rejected group and retains form inputs for retry', async ({ page }) => {
+  await page.addInitScript(installMemoryFileHarness)
+  await page.goto('/')
+  const errors = []
+  page.on('pageerror', error => errors.push(error.message))
+  const source = fixtureSource
+    .replace('approvalStatus: pending', 'approvalStatus: approved')
+    .replace('approvedBy: null', 'approvedBy: Synthetic QA reviewer')
+    .replace('approvedAt: null', 'approvedAt: "2026-11-20T12:00:00Z"')
+  const openResponse = page.waitForResponse(response => new URL(response.url()).pathname === '/api/documents')
+  await openFiles(page, source)
+  const original = await (await openResponse).json()
+  const title = page.locator('#challenge-title')
+  const slug = page.locator('#challenge-slug')
+  const summary = page.locator('#challenge-summary')
+  const notice = page.locator('#notice-text')
+  const routePattern = '**/api/documents/*/operations'
+  const requestOptions = { headers: { 'X-BerryMark-Studio': '1' } }
+  const resource = `/api/documents/${original.id}`
+  const current = async () => (await page.request.get(resource, requestOptions)).json()
+  const requests = []
+  let fault = 'stale-revision'
+  await page.route(routePattern, async route => {
+    const body = route.request().postDataJSON()
+    requests.push(structuredClone(body))
+    if (fault === 'stale-revision') body.revision -= 1
+    if (fault === 'later-operation') body.operations[1].payload.path = 'challenge.invalid'
+    await route.continue({ postData: JSON.stringify(body) })
+  })
+
+  await title.fill('Atomic browser title')
+  await slug.fill('atomic-browser-slug')
+  await summary.fill('Atomic browser summary')
+  for (const [nextFault, status] of [['stale-revision', 409], ['later-operation', 422]]) {
+    fault = nextFault
+    const rejected = page.waitForResponse(response => response.url().endsWith('/operations'))
+    await page.locator('#apply-metadata').click()
+    expect((await rejected).status()).toBe(status)
+    await expect(notice).toContainText('No document information changes were applied. Your inputs are still in the form.')
+    await expect(title).toHaveValue('Atomic browser title')
+    await expect(slug).toHaveValue('atomic-browser-slug')
+    await expect(summary).toHaveValue('Atomic browser summary')
+    await expect(page.locator('#metadata-draft-note')).toBeVisible()
+    await expect(page.locator('#unsaved-indicator')).toBeHidden()
+    await expect(page.locator('#validation-text')).toHaveText('Valid working document')
+    await expect(page.locator('#diagnostic-list')).not.toContainText('BM_STUDIO_APPROVAL_STALE')
+    expect(await current()).toEqual(original)
+    expect(await fileText(page, 'working.berry.md')).toBe(source)
+  }
+  expect(requests).toHaveLength(2)
+  for (const body of requests) {
+    expect(body.revision).toBe(0)
+    expect(body.operations.map(item => item.payload.path)).toEqual(['challenge.title', 'challenge.slug', 'challenge.summary'])
+  }
+
+  await page.getByRole('button', { name: 'Select Test', exact: true }).click()
+  await expect(summary).toHaveValue('Atomic browser summary')
+  await page.unroute(routePattern)
+  await page.locator('#apply-metadata').click()
+  await expect(notice).toContainText('Applied 3 document information changes')
+  await expect(page.locator('#metadata-draft-note')).toBeHidden()
+  await expect(page.locator('#unsaved-indicator')).toBeVisible()
+  await expect(page.locator('#diagnostic-list')).toContainText('BM_STUDIO_APPROVAL_STALE')
+  const updated = await current()
+  expect(updated.revision).toBe(1)
+  expect(updated.metadata.challenge).toMatchObject({
+    title: 'Atomic browser title', slug: 'atomic-browser-slug', summary: 'Atomic browser summary'
+  })
+  expect(updated.metadata.editorial).toEqual(original.metadata.editorial)
+  expect(errors).toEqual([])
+})
+
 test('unsupported source remains read-only, diagnosable, and byte-preserved through Save As', async ({ page }) => {
   const source = 'not a BerryMark document\n'
   await openFiles(page, source, { manuscriptName: 'broken.berry.md' })

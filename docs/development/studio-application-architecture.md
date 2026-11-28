@@ -37,7 +37,7 @@ Supported operations are deliberately limited to Build 02 scope:
 - `screen.move`
 - `screen.remove`
 
-Each operation includes the revision on which it was based. A stale revision receives a conflict response rather than silently overwriting another edit. Failed engine operations do not partially mutate the session. Revisions advance only when exact serialized source changes. Session IDs are random and sessions are isolated; the server provides no list-all-documents route.
+An operation request carries one expected revision. The operations endpoint accepts either `{ revision, operation, payload }` or `{ revision, operations: [{ operation, payload }, ...] }`. For a group, the session stages each operation through the existing engine on an isolated working copy. A failure leaves the session and revision unchanged. A successful group advances the revision once when the exact serialized source changes. Group responses return ordered `results`; individual requests return `result`. Serialize requests from the browser also carry the expected revision so a stale snapshot cannot silently write a different revision. Session IDs are random and sessions are isolated; the server provides no list-all-documents route.
 
 New documents contain only the engine's minimal BerryMark version and an empty Challenge title. Studio does not supply editorial, publishing, Scripture, or rights values.
 
@@ -51,8 +51,8 @@ All API requests require `X-BerryMark-Studio: 1`. Mutation requests use JSON bod
 | `POST /api/documents` with `action: "new"` | Create an incomplete document |
 | `POST /api/documents` with `action: "open"` | Open exact source and optional engine review state |
 | `GET /api/documents/:id` | Read the current engine snapshot |
-| `POST /api/documents/:id/operations` | Apply one revision-checked operation |
-| `POST /api/documents/:id/serialize` | Obtain exact engine source, source digest, and serialized review state |
+| `POST /api/documents/:id/operations` | Apply one operation or an atomic group at the expected revision |
+| `POST /api/documents/:id/serialize` | Obtain exact engine source, source digest, and serialized review state, with an optional revision check |
 
 Engine and request failures become structured JSON errors with stable codes and appropriate 4xx statuses. Unexpected internal errors return a generic message rather than a raw stack trace.
 

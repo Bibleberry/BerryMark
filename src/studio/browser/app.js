@@ -13,6 +13,8 @@ const state = {
   reviewRecovery: null,
   hostDiagnostics: [],
   partialSave: null,
+  metadataBaseline: null,
+  metadataDraft: null,
   busy: false,
   screenDialogMode: null,
   saveDialog: null
@@ -54,6 +56,9 @@ function confirmAction(message) {
 }
 
 function ensureDiscardAllowed() {
+  if (state.metadataDraft) {
+    return confirmAction('This document has unapplied document information. Continue and discard it and any unsaved changes? The last saved file will not be changed.')
+  }
   return !isDirty() || confirmAction('This document has unsaved changes. Continue and discard those working changes? The last saved file will not be changed.')
 }
 
@@ -112,6 +117,18 @@ function renderScreens() {
   })
 }
 
+const metadataControls = ['challenge-title', 'challenge-slug', 'challenge-type', 'summary-state', 'challenge-summary']
+
+function readMetadataForm() {
+  return Object.fromEntries(metadataControls.map(id => [id, byId(id).value]))
+}
+
+function updateMetadataDraft() {
+  const form = readMetadataForm()
+  state.metadataDraft = metadataControls.some(id => form[id] !== state.metadataBaseline[id]) ? form : null
+  byId('metadata-draft-note').hidden = !state.metadataDraft
+}
+
 function renderMetadata() {
   const metadata = state.document?.metadata
   const editable = Boolean(state.document?.editable && !state.busy)
@@ -130,6 +147,11 @@ function renderMetadata() {
   const summaryState = summary === undefined ? 'missing' : summary === null ? 'null' : 'authored'
   byId('summary-state').value = summaryState
   byId('challenge-summary').value = summary ?? ''
+  state.metadataBaseline = readMetadataForm()
+  if (state.metadataDraft) {
+    for (const id of metadataControls) byId(id).value = state.metadataDraft[id]
+  }
+  updateMetadataDraft()
   updateSummaryState()
   for (const id of ['challenge-title', 'challenge-slug', 'challenge-type', 'summary-state', 'apply-metadata']) byId(id).disabled = !editable
   byId('challenge-summary').disabled = !editable || byId('summary-state').value !== 'authored'
@@ -254,7 +276,8 @@ function adoptDocument(document, {
   manuscriptHandle = null,
   reviewHandle = null,
   reviewRecovery = null,
-  hostDiagnostics = []
+  hostDiagnostics = [],
+  metadataDraft = null
 } = {}) {
   state.document = document
   state.selectedScreenId = document.screens[0]?.id ?? null
@@ -263,6 +286,7 @@ function adoptDocument(document, {
   state.reviewHandle = reviewHandle
   state.reviewRecovery = reviewRecovery
   state.hostDiagnostics = hostDiagnostics
+  state.metadataDraft = metadataDraft
   state.partialSave = null
 }
 
@@ -400,43 +424,46 @@ async function removeScreen(screen) {
 
 async function applyMetadata(event) {
   event.preventDefault()
-  if (!state.document?.editable) return
-  // Capture the author's edits before runBusy renders disabled controls. That
-  // render intentionally restores values from the authoritative snapshot.
-  const metadata = state.document.metadata
+  if (!state.document?.editable || state.busy) return
+  updateMetadataDraft()
+  const form = readMetadataForm()
+  const baseline = state.metadataBaseline
   const operations = []
-  const scalarFields = [
-    ['challenge.title', byId('challenge-title').value],
-    ['challenge.slug', byId('challenge-slug').value],
-    ['challenge.type', byId('challenge-type').value]
-  ]
-  for (const [path, value] of scalarFields) {
-    const current = path.split('.').reduce((value, key) => value?.[key], metadata) ?? ''
-    if (current !== value) operations.push(['metadata.set', { path, value }])
+  for (const field of ['title', 'slug', 'type']) {
+    const id = `challenge-${field}`
+    if (form[id] !== baseline[id]) {
+      operations.push({ operation: 'metadata.set', payload: { path: `challenge.${field}`, value: form[id] } })
+    }
   }
-  const summary = metadata?.challenge?.summary
-  const summaryState = byId('summary-state').value
-  if (summaryState === 'missing' && summary !== undefined) operations.push(['metadata.delete', { path: 'challenge.summary' }])
-  if (summaryState === 'null' && summary !== null) operations.push(['metadata.set', { path: 'challenge.summary', value: null }])
-  if (summaryState === 'authored') {
-    const value = byId('challenge-summary').value
-    if (summary !== value) operations.push(['metadata.set', { path: 'challenge.summary', value }])
+  const path = 'challenge.summary'
+  const summaryState = form['summary-state']
+  const summaryStateChanged = summaryState !== baseline['summary-state']
+  if (summaryState === 'missing' && summaryStateChanged) {
+    operations.push({ operation: 'metadata.delete', payload: { path } })
+  } else if (summaryState === 'null' && summaryStateChanged) {
+    operations.push({ operation: 'metadata.set', payload: { path, value: null } })
+  } else if (summaryState === 'authored' && (summaryStateChanged || form['challenge-summary'] !== baseline['challenge-summary'])) {
+    operations.push({ operation: 'metadata.set', payload: { path, value: form['challenge-summary'] } })
   }
   if (!operations.length) {
+    if (state.metadataDraft) {
+      state.metadataDraft = null
+      renderMetadata()
+    }
     showNotice('No document information changes to apply.')
     return
   }
   await runBusy(async () => {
-    let applied = 0
     try {
-      for (const [operation, payload] of operations) {
-        state.document = await studioApi.mutate(state.document, operation, payload)
-        applied += 1
-      }
-      showNotice(`Applied ${applied} document information ${applied === 1 ? 'change' : 'changes'}. Save to write them to the manuscript.`, 'success')
+      state.document = await studioApi.mutateGroup(state.document, operations)
+      state.metadataDraft = null
+      const count = operations.length
+      showNotice(`Applied ${count} document information ${count === 1 ? 'change' : 'changes'}. Save to write them to the manuscript.`, 'success')
     } catch (error) {
-      const prefix = applied ? `${applied} earlier ${applied === 1 ? 'change was' : 'changes were'} applied before the failure. ` : ''
-      showNotice(`${prefix}${meaningfulFileError(error)}`, 'error')
+      const outcome = error.status >= 400 && error.status < 500
+        ? 'No document information changes were applied.'
+        : 'Studio could not confirm whether the changes were applied.'
+      showNotice(`${outcome} Your inputs are still in the form. ${meaningfulFileError(error)}`, 'error')
     }
   })
 }
@@ -553,7 +580,8 @@ async function saveDocument(saveAsRequested = false, destinations = null) {
         savedDigest: serialized.sourceSha256,
         manuscriptHandle,
         reviewHandle,
-        reviewRecovery: reviewReadback
+        reviewRecovery: reviewReadback,
+        metadataDraft: state.metadataDraft
       })
       showNotice('Saved the manuscript and finalized its matching review companion. Read-back verification passed.', 'success')
     } catch (error) {
@@ -576,7 +604,11 @@ byId('save-form').addEventListener('submit', submitSaveDestinations)
 byId('choose-save-manuscript').addEventListener('click', chooseSaveManuscript)
 byId('choose-save-review').addEventListener('click', chooseSaveReview)
 byId('metadata-form').addEventListener('submit', applyMetadata)
-byId('summary-state').addEventListener('change', updateSummaryState)
+byId('metadata-form').addEventListener('input', updateMetadataDraft)
+byId('summary-state').addEventListener('change', () => {
+  updateSummaryState()
+  updateMetadataDraft()
+})
 byId('add-screen-button').addEventListener('click', () => openScreenDialog('add'))
 byId('empty-add-screen').addEventListener('click', () => openScreenDialog('add'))
 byId('edit-screen-button').addEventListener('click', () => openScreenDialog('edit', currentScreen()))
@@ -586,7 +618,7 @@ for (const button of document.querySelectorAll('[data-close-dialog]')) {
 }
 
 globalThis.addEventListener('beforeunload', event => {
-  if (!isDirty()) return
+  if (!isDirty() && !state.metadataDraft) return
   event.preventDefault()
   event.returnValue = ''
 })

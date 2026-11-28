@@ -103,8 +103,10 @@ export class StudioDocumentSessions {
     return snapshot(this.#get(id))
   }
 
-  serialize(id) {
-    const { document, revision } = this.#get(id)
+  serialize(id, expectedRevision) {
+    const session = this.#get(id)
+    if (expectedRevision !== undefined) this.#assertRevision(session, expectedRevision)
+    const { document, revision } = session
     const source = document.serialize()
     return {
       id,
@@ -117,11 +119,37 @@ export class StudioDocumentSessions {
     }
   }
 
-  mutate(id, expectedRevision, request = {}) {
-    const session = this.#get(id)
+  #assertRevision(session, expectedRevision) {
     if (!Number.isInteger(expectedRevision) || expectedRevision !== session.revision) {
       throw new StudioRequestError('BM_STUDIO_REVISION_CONFLICT', 'The document changed in another request; refresh before editing again', 409)
     }
+  }
+
+  mutate(id, expectedRevision, request = {}) {
+    const session = this.#get(id)
+    this.#assertRevision(session, expectedRevision)
+    const before = session.document.serialize()
+    if (request && Object.hasOwn(request, 'operations')) {
+      const { operations } = request
+      if (!Array.isArray(operations) || operations.length === 0 ||
+          Object.hasOwn(request, 'operation') || Object.hasOwn(request, 'payload')) {
+        throw new StudioRequestError('BM_STUDIO_REQUEST_OPERATIONS', 'Supply a nonempty array of operations without a separate operation or payload')
+      }
+      const working = session.document.fork()
+      const results = operations.map(operation => this.#runOperation(working, operation))
+      if (working.serialize() !== before) {
+        session.document = working
+        session.revision += 1
+      }
+      return { ...snapshot(session), results }
+    }
+
+    const result = this.#runOperation(session.document, request)
+    if (session.document.serialize() !== before) session.revision += 1
+    return { ...snapshot(session), result }
+  }
+
+  #runOperation(document, request) {
     if (!request || typeof request !== 'object' || Array.isArray(request) || !OPERATIONS.has(request.operation)) {
       throw new StudioRequestError('BM_STUDIO_OPERATION_UNSUPPORTED', 'The requested editing operation is not supported')
     }
@@ -129,18 +157,16 @@ export class StudioDocumentSessions {
     if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
       throw new StudioRequestError('BM_STUDIO_REQUEST_PAYLOAD', 'An operation payload object is required')
     }
-    const before = session.document.serialize()
     let result
     try {
-      result = this.#apply(session.document, request.operation, payload)
+      result = this.#apply(document, request.operation, payload)
     } catch (error) {
       if (error?.code && typeof error.code === 'string') {
         throw new StudioRequestError(error.code, error.message, error.code === 'BM_STUDIO_READ_ONLY' ? 409 : 422)
       }
       throw error
     }
-    if (session.document.serialize() !== before) session.revision += 1
-    return { ...snapshot(session), result: result ?? null }
+    return result ?? null
   }
 
   #apply(document, operation, payload) {

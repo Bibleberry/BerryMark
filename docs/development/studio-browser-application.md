@@ -60,7 +60,7 @@ If the working document has unsaved changes, Studio asks before replacing it. Ca
 
 ## Edit document information
 
-The **Document information** panel supports Challenge title, summary, stable slug, and Challenge type. Choose **Apply document information** after editing. Applying changes updates the working document; it does not write the file until Save or Save As succeeds.
+The **Document information** panel supports Challenge title, summary, stable slug, and Challenge type. Choose **Apply document information** after editing. Apply updates the working document as one group. If an edit fails, the whole group stays unapplied and the form keeps your input for retry. Save and Save As write the applied working document to disk.
 
 Summary has three explicit states:
 

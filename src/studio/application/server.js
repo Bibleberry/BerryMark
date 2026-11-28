@@ -132,8 +132,8 @@ export function createStudioServer({
           return
         }
         if (action === 'serialize' && request.method === 'POST') {
-          await readJson(request)
-          sendJson(response, 200, sessions.serialize(id))
+          const body = await readJson(request)
+          sendJson(response, 200, sessions.serialize(id, body.revision))
           return
         }
         throw new StudioRequestError('BM_STUDIO_METHOD', 'Method not allowed', 405)

@@ -43,7 +43,13 @@ export const studioApi = {
       body: { revision: document.revision, operation, payload }
     })
   },
+  mutateGroup(document, operations) {
+    return request(`/api/documents/${document.id}/operations`, {
+      method: 'POST',
+      body: { revision: document.revision, operations }
+    })
+  },
   serialize(document) {
-    return request(`/api/documents/${document.id}/serialize`, { method: 'POST', body: {} })
+    return request(`/api/documents/${document.id}/serialize`, { method: 'POST', body: { revision: document.revision } })
   }
 }
